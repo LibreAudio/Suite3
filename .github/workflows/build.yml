@@ -1,0 +1,72 @@
+name: build
+
+on:
+  push:
+
+jobs:
+  linux:
+    strategy:
+      matrix:
+        target: [linux-arm64, linux-armhf, linux-i686, linux-riscv64, linux-x86_64]
+    runs-on: ubuntu-latest
+    # NOTE 24.04 is required because of https://github.com/SpotlightKid/faustdoctor/issues/4
+    container: ubuntu:24.04
+    steps:
+      - name: Install git
+        run: |
+          apt-get update -qq && apt-get install -yqq --no-install-recommends ca-certificates curl git git-lfs openssl
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+          submodules: recursive
+      - uses: distrho/dpf-cmake-action@v1
+        with:
+          target: ${{ matrix.target }}
+          extraargs: -DFAUSTDR="~/.local/bin/faustdr"
+          dpf_path: ./deps/DPF
+          faust: true
+
+  macos:
+    strategy:
+      matrix:
+        target: [macos-universal]
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+          submodules: recursive
+      - uses: distrho/dpf-cmake-action@v1
+        with:
+          target: ${{ matrix.target }}
+          dpf_path: ./deps/DPF
+          faust: true
+
+  windows:
+    strategy:
+      matrix:
+        target: [win32, win64]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+          submodules: recursive
+      - uses: distrho/dpf-cmake-action@v1
+        with:
+          target: ${{ matrix.target }}
+          dpf_path: ./deps/DPF
+          faust: true
+
+  pluginval:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+          submodules: recursive
+      - uses: distrho/dpf-cmake-action@v1
+        with:
+          target: pluginval
+          dpf_path: ./deps/DPF
+          faust: true

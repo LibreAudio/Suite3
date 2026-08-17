@@ -1,0 +1,103 @@
+{% block ImplementationDescription %}
+// --------------------------------------------------------------------------------------------------------------------
+// This file was generated using the Faust compiler (https://faust.grame.fr),
+// and the Faust post-processor (https://github.com/SpotlightKid/faustdoctor).
+//
+// Source: {{filename}}
+// Name: {{name}}
+// Author: {{author}}
+// License: {{license}}
+// FAUST version: {{faustversion}}
+// FAUST compilation options: {{meta.compile_options}}
+// --------------------------------------------------------------------------------------------------------------------
+{% endblock %}
+
+{% block ImplementationPrologue %}
+{% if fdrversioninfo is undefined or fdrversioninfo < (0, 2, 0) %}
+{{fail("This template is not compatible with faustdoctor version < 0.2.0.")}}
+{% endif %}
+{% if not (id is defined and id == cid(id)) %}
+{{fail("`id` is undefined or invalid.")}}
+{% endif %}
+{% endblock %}
+
+#include "{{id}}-parameters.hpp"
+
+#include <array>
+
+namespace {{id}} {
+
+// --------------------------------------------------------------------------------------------------------------------
+
+const std::vector<FaustParameter>& getFaustParameters()
+{
+    {% for w in (active + passive) if w.symbol not in ["latency_samples"] and w.entries %}
+    static constexpr const FaustParameterEnumerationValue kFaustScalePoints_{{w.varname}}[{{w.entries|length}} + 1] = {
+        {% for label, value in w.entries %}
+        { {{cstr(label)}}, {{value|int}} },
+        {% endfor %}
+        { nullptr, -1 }
+    };
+    {% endfor %}
+    static constexpr const std::array<FaustParameter, kFaustParameterCount> kFaustParameters = {
+    {
+        {% for w in (active + passive) if w.symbol not in ["latency_samples"] %}
+        {
+            .bracket = "{{w.meta.bracket}}",
+            .label = "{{w.meta.label}}",
+            .name = "{{w.label}}",
+            .symbol = "{{w.symbol}}",
+            .tooltip = "{{w.tooltip}}",
+            .unit = "{{w.unit}}",
+            .init = {{w.init}},
+            .min = {{w.min}},
+            .max = {{w.max}},
+            .step = {{w.step}},
+            .scalePoints = {{ 'kFaustScalePoints_' + w.varname if w.entries else 'nullptr' }},
+            .scalePointCount = {{ w.entries | length }},
+            {% if w.meta.requires is defined %}
+            .requirement = {
+                .context = "{{w.meta.requires}}",
+                .symbol = "{{w.meta.requires[ : w.meta.requires.index(':')]}}",
+                .value = {{w.meta.requires[w.meta.requires.index(':') + 1 : ]|int}},
+            },
+            {% else %}
+            .requirement = {
+                .context = nullptr,
+                .symbol = nullptr,
+                .value = -1,
+            },
+            {% endif %}
+            .isBoolean = {{ 'true' if w.type in ["button", "checkbox"] or w.meta.boolean is defined else 'false' }},
+            .isEasy = {{ 'true' if w.meta.easy is defined else 'false' }},
+            .isEnumerator = {{ 'true' if w.style in ["menu", "radio"] else 'false' }},
+            .isDynamic = {{ 'true' if w.meta.requires is defined else 'false' }},
+            .isInteger = {{ 'true' if w.type in ["button", "checkbox"] or w.meta.boolean is defined or w.meta.integer is defined else 'false' }},
+            .isLogarithmic = {{ 'true'  if w.scale == "log" else 'false' }},
+            .isOutput = {{ 'true' if w in passive else 'false' }},
+            .isTrigger = {{ 'true' if w.type == "button" or w.meta.trigger is defined else 'false' }},
+        },
+        {% endfor %}
+    }};
+    static const std::vector<FaustParameter> parameters(kFaustParameters.begin(), kFaustParameters.end());
+    return parameters;
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+{% if not id.startswith("common_") %}
+
+START_NAMESPACE_DISTRHO
+
+const std::vector<FaustParameter>& getFaustParameters()
+{
+    return {{id}}::getFaustParameters();
+}
+
+END_NAMESPACE_DISTRHO
+
+{% endif %}

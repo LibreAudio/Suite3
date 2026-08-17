@@ -1,0 +1,36 @@
+{% block ImplementationDescription %}
+// --------------------------------------------------------------------------------------------------------------------
+// This file was generated using the Faust compiler (https://faust.grame.fr),
+// and the Faust post-processor (https://github.com/SpotlightKid/faustdoctor).
+//
+// Source: {{filename}}
+// Name: {{name}}
+// Author: {{author}}
+// License: {{license}}
+// FAUST version: {{faustversion}}
+// FAUST compilation options: {{meta.compile_options}}
+// --------------------------------------------------------------------------------------------------------------------
+{% endblock %}
+
+{% block HeaderPrologue %}
+{% if fdrversioninfo is undefined or fdrversioninfo < (0, 2, 0) %}
+{{fail("This template is not compatible with faustdoctor version < 0.2.0.")}}
+{% endif %}
+{% endblock %}
+
+#pragma once
+
+{% block ImplementationIncludeHeader %}
+#include "FaustDSP.hpp"
+{% endblock %}
+{% block ImplementationIncludeExtra %}
+{% endblock %}
+
+namespace {{id}} {
+
+FaustDSP* createDSP();
+
+}
+
+{% block HeaderEpilogue %}
+{% endblock %}

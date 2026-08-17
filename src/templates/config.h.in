@@ -1,0 +1,60 @@
+{% block HeaderDescription %}
+//------------------------------------------------------------------------------
+// This file was generated using the Faust compiler (https://faust.grame.fr),
+// and the Faust post-processor (https://github.com/SpotlightKid/faustdoctor).
+//
+// Source: {{filename}}
+// Name: {{name}}
+// Author: {{author}}
+// License: {{license}}
+// FAUST version: {{faustversion}}
+// FAUST compilation options: {{meta.compile_options}}
+//------------------------------------------------------------------------------
+{% endblock %}
+
+{% block HeaderPrologue %}
+{% if fdrversioninfo is undefined or fdrversioninfo < (0, 2, 0) %}
+{{fail("This template is not compatible with faustdoctor version < 0.2.0.")}}
+{% endif %}
+{% endblock %}
+
+#pragma once
+
+namespace {{id}} {
+
+enum FaustParameterList {
+    {% for w in (active + passive) if w.symbol not in ["latency_samples"] %}
+    kFaustParameter{{ w.symbol | title() }},
+    {% endfor %}
+    kFaustParameterCount
+};
+
+}
+
+#define DISTRHO_PLUGIN_CLAP_ID "org.libreaudio.{{id}}"
+#define DISTRHO_PLUGIN_DESCRIPTION "{{meta.description}}"
+#define DISTRHO_PLUGIN_LABEL "{{id}}"
+#define DISTRHO_PLUGIN_NAME "LA {{name}}"
+#define DISTRHO_PLUGIN_NUM_INPUTS {{inputs}}
+#define DISTRHO_PLUGIN_NUM_OUTPUTS {{outputs}}
+#define DISTRHO_PLUGIN_UNIQUE_ID {{meta.unique_id}}
+#define DISTRHO_PLUGIN_URI "https://libreaudio.org/plugins/{{id}}"
+{% for w in passive if w.symbol == "latency_samples" %}
+#define DISTRHO_PLUGIN_WANT_LATENCY 1
+#define LIBREAUDIO_MAX_LATENCY_SAMPLES {{w.max|int}}
+{% endfor %}
+
+#define LIBREAUDIO_WANT_DRYWET {{1 if meta.drywet == "true" else 0}}
+
+{% for w in active if w.symbol == "vad_ext" %}
+#define LIBREAUDIO_WANT_SPEECH_DETECTION 1
+{% endfor %}
+
+#ifndef LIBREAUDIO_WANT_SPEECH_DETECTION
+#define LIBREAUDIO_WANT_SPEECH_DETECTION 0
+#endif
+
+#define LIBREAUDIO_PLUGIN__{{id}}
+
+{% block HeaderEpilogue %}
+{% endblock %}

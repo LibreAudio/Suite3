@@ -1,0 +1,132 @@
+{% block ImplementationDescription %}
+// --------------------------------------------------------------------------------------------------------------------
+// This file was generated using the Faust compiler (https://faust.grame.fr),
+// and the Faust post-processor (https://github.com/SpotlightKid/faustdoctor).
+//
+// Source: {{filename}}
+// Name: {{name}}
+// Author: {{author}}
+// License: {{license}}
+// FAUST version: {{faustversion}}
+// FAUST compilation options: {{meta.compile_options}}
+// --------------------------------------------------------------------------------------------------------------------
+{% endblock %}
+
+{% block ImplementationPrologue %}
+{% if fdrversioninfo is undefined or fdrversioninfo < (0, 2, 0) %}
+{{fail("This template is not compatible with faustdoctor version < 0.2.0.")}}
+{% endif %}
+{% if not (id is defined and id == cid(id)) %}
+{{fail("`id` is undefined or invalid.")}}
+{% endif %}
+{% endblock %}
+
+#include "{{id}}-dsp.hpp"
+
+#define FAUSTDR_BEGIN_NAMESPACE namespace {{id}} {
+#define FAUSTDR_END_NAMESPACE }
+
+// --------------------------------------------------------------------------------------------------------------------
+// faust generated code
+
+{% block ImplementationFaustCode %}
+
+{{ classcode
+    | replace('#include <math.h>\n', '')
+    | replace('\n\t\n', '\n\n')
+    | replace(' \n', '\n')
+    | replace('\t' + id + '() {', '\tfloat latency() const;\n\tfloat get(uint32_t) const;\n\tvoid set(uint32_t, float);\n\n\t' + id + '(){')
+    | replace('\t', '    ')
+    | replace(' FAUSTDR_PRIVATE', 'private')
+    | replace(' FAUSTDR_PROTECTED', 'protected')
+    | replace('FAUSTDR_VIRTUAL ', '')
+    | replace(', FAUSTFLOAT** RESTRICT inputs,', ', const FAUSTFLOAT* const* RESTRICT inputs,')
+    | replace('  FAUSTFLOAT* input', '  const FAUSTFLOAT* RESTRICT input')
+    | replace('  FAUSTFLOAT* output', '  FAUSTFLOAT* RESTRICT output')
+}}
+
+{% endblock %}
+
+FAUSTDR_BEGIN_NAMESPACE
+
+// --------------------------------------------------------------------------------------------------------------------
+// custom extensions to faust generated code
+
+inline float {{id}}::get(uint32_t index) const
+{
+    switch (index) {
+    {% for w in (active + passive) if w.symbol not in ["latency_samples"] %}
+    case {{loop.index0}}:
+        return {{w.varname}};
+    {% endfor %}
+    default:
+        return 0.f;
+    }
+}
+
+inline void {{id}}::set(uint32_t index, float value)
+{
+    switch (index) {
+    {% for w in active %}
+    case {{loop.index0}}:
+        {{w.varname}} = value;
+        break;
+    {% endfor %}
+    }
+}
+
+{% for w in passive if w.symbol == "latency_samples" %}
+#define FIXME_LATENCY_CALL_DEFINED
+inline float {{id}}::latency() const
+{
+    return {{w.varname}};
+}
+{% endfor %}
+
+#ifndef FIXME_LATENCY_CALL_DEFINED
+inline float {{id}}::latency() const
+{
+    return 0.f;
+}
+#endif
+
+#undef FIXME_LATENCY_CALL_DEFINED
+
+// --------------------------------------------------------------------------------------------------------------------
+
+FaustDSP* createDSP()
+{
+    return new {{id}};
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+FAUSTDR_END_NAMESPACE
+
+// --------------------------------------------------------------------------------------------------------------------
+// cleanup
+
+#undef FAUSTDR_BEGIN_NAMESPACE
+#undef FAUSTDR_END_NAMESPACE
+#undef FAUSTCLASS
+#undef RESTRICT
+
+#ifdef __APPLE__
+#undef exp10f
+#undef exp10
+#endif
+
+// --------------------------------------------------------------------------------------------------------------------
+
+{% if not id.startswith("common_") %}
+
+START_NAMESPACE_DISTRHO
+
+FaustDSP* createDSP()
+{
+    return new {{id}}::{{id}};
+}
+
+END_NAMESPACE_DISTRHO
+
+{% endif %}
