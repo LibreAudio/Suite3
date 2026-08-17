@@ -1,0 +1,43 @@
+// Libre Audio Suite
+// Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#pragma once
+
+#include "../base/empty.hpp"
+
+START_NAMESPACE_DISTRHO
+
+// --------------------------------------------------------------------------------------------------------------------
+// reference empty widget class, useful for making space and alignment of other widgets
+
+template<class R>
+class LibreAudioReferenceEmptyWidget final : public LibreAudioWidget
+{
+public:
+    explicit LibreAudioReferenceEmptyWidget(LibreAudioWidget* const parent)
+        : LibreAudioWidget(parent)
+    {
+        _initSize();
+    }
+
+    explicit LibreAudioReferenceEmptyWidget(LibreAudioTopLevelWidget* const parent)
+        : LibreAudioWidget(parent)
+    {
+        _initSize();
+    }
+
+private:
+    void _initSize()
+    {
+        if constexpr (R::width != 0)
+            setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
+
+        if constexpr (R::height != 0)
+            setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
+    }
+};
+
+// --------------------------------------------------------------------------------------------------------------------
+
+END_NAMESPACE_DISTRHO

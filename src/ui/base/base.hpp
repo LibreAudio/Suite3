@@ -92,65 +92,6 @@ private:
 };
 
 // --------------------------------------------------------------------------------------------------------------------
-// reference widget class
-
-using LibreAudioWidget = LibreAudioBaseWidget<NanoSubWidget>;
-
-template <class R>
-class LibreAudioReferenceWidget : public LibreAudioBaseWidget<NanoSubWidget>
-{
-public:
-    explicit LibreAudioReferenceWidget(LibreAudioBaseWidget<NanoSubWidget>* const parent)
-        : LibreAudioBaseWidget(parent)
-    {
-        _initSize();
-    }
-
-    explicit LibreAudioReferenceWidget(LibreAudioBaseWidget<NanoTopLevelWidget>* const parent)
-        : LibreAudioBaseWidget(parent)
-    {
-        _initSize();
-    }
-
-protected:
-    void onNanoDisplay() override
-    {
-        const float w = getWidth();
-        const float h = getHeight();
-
-        beginPath();
-
-        if constexpr (R::borderRadius != 0)
-            roundedRect(0, 0, w, h, R::borderRadius * fScaleFactor);
-        else
-            rect(0, 0, w, h);
-
-        if constexpr (d_isNotZero(R::backgroundColor.alpha))
-        {
-            fillColor(R::backgroundColor);
-            fill();
-        }
-
-        if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
-        {
-            strokeColor(R::borderColor);
-            strokeWidth(R::border * 2 * fScaleFactor);
-            stroke();
-        }
-    }
-
-private:
-    void _initSize()
-    {
-        if constexpr (R::width != 0)
-            setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
-
-        if constexpr (R::height != 0)
-            setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
-    }
-};
-
-// --------------------------------------------------------------------------------------------------------------------
 // top-level widget class
 
 class LibreAudioTopLevelWidget : public LibreAudioBaseWidget<NanoTopLevelWidget>
@@ -163,6 +104,19 @@ protected:
     void onNanoDisplay() override
     {
     }
+};
+
+// --------------------------------------------------------------------------------------------------------------------
+// (sub) widget class
+
+class LibreAudioWidget : public LibreAudioBaseWidget<NanoSubWidget>
+{
+public:
+    explicit LibreAudioWidget(LibreAudioTopLevelWidget* const parent)
+        : LibreAudioBaseWidget(parent) {}
+
+    explicit LibreAudioWidget(LibreAudioWidget* const parent)
+        : LibreAudioBaseWidget(parent) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------

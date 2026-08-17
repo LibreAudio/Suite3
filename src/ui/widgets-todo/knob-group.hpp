@@ -5,8 +5,8 @@
 #pragma once
 
 #include "../reference.hpp"
-#include "../base/container.hpp"
-#include "../base/image.hpp"
+#include "../reference/container.hpp"
+#include "../reference/image.hpp"
 #include "DistrhoUtils.hpp"
 #include "knob.hpp"
 
@@ -31,7 +31,7 @@ class LibreAudioKnobGroupWidget : public LibreAudioReferenceContainerWidget<Libr
     static constexpr const uint kMaxNumParameters = 5;
 
     std::vector<std::unique_ptr<KnobWidget>> fKnobs;
-    std::vector<std::unique_ptr<LibreAudioWidget>> fSpacers;
+    std::vector<std::unique_ptr<LibreAudioEmptyWidget>> fSpacers;
 
     struct Bracket {
         uint start;
@@ -108,8 +108,13 @@ public:
             }
 
             fKnobs.emplace_back(std::move(widget));
-            addSpacer();
+            addSpacer(idOffset + i);
         }
+
+       #if defined(LIBREAUDIO_PLUGIN__vocalDoubler)
+        // add last spacer for consistency
+        // addSpacer();
+       #endif
 
         if (update())
             addIdleCallback(this);
@@ -143,9 +148,10 @@ private:
     float cachedValue1;
     float cachedValue2;
 
-    void addSpacer()
+    void addSpacer(const uint id = 0)
     {
-        std::unique_ptr<LibreAudioEmptyWidget<>> spacer { new LibreAudioEmptyWidget(this) };
+        std::unique_ptr<LibreAudioEmptyWidget> spacer { new LibreAudioEmptyWidget(this) };
+        spacer->setId(id);
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
     }
@@ -157,14 +163,25 @@ private:
         update();
     }
 
-    [[nodiscard]] KnobWidget* getKnobById(const uint32_t id) const
+    void updateVisibilityById(const uint32_t id, const bool visible)
     {
         for (const std::unique_ptr<KnobWidget>& knob : fKnobs)
+        {
             if (KnobWidget* const knobPtr = knob.get(); knobPtr->getId() == id)
-                return knobPtr;
+            {
+                knobPtr->setVisible(visible);
+                break;
+            }
+        }
 
-        d_stderr2("getKnobById with invalid id %u", id);
-        return nullptr;
+        for (const std::unique_ptr<LibreAudioEmptyWidget>& spacer : fSpacers)
+        {
+            if (LibreAudioEmptyWidget* const spacerPtr = spacer.get(); spacerPtr->getId() == id)
+            {
+                spacerPtr->setVisible(visible);
+                break;
+            }
+        }
     }
 
     bool update()
@@ -174,11 +191,13 @@ private:
         static_assert(kLabel == "chorus", "wrong plugin");
         // if constexpr (kLabel == "chorus")
         {
-            if (fKnobs.front()->getId() != kParametersMainStart + chorus::kFaustParameterDctr)
+            using namespace chorus;
+
+            if (fKnobs.front()->getId() != kParametersMainStart + kFaustParameterDctr)
                 return false;
 
-            const float fmode = fInterface->getParameterValue(kParametersMainStart + chorus::kFaustParameterMode);
-            const float fstereo = fInterface->getParameterValue(kParametersMainStart + chorus::kFaustParameterStereo);
+            const float fmode = fInterface->getParameterValue(kParametersMainStart + kFaustParameterMode);
+            const float fstereo = fInterface->getParameterValue(kParametersMainStart + kFaustParameterStereo);
 
             if (fHasCachedValues && d_isEqual(cachedValue1, fmode) && d_isEqual(cachedValue2, fstereo))
                 return false;
@@ -187,22 +206,24 @@ private:
             cachedValue2 = fstereo;
 
             const uint mode = d_roundToUnsignedInt(fmode);
-            getKnobById(kParametersMainStart + chorus::kFaustParameterDctr)->setVisible(mode == 0 || mode == 1 || mode == 2);
-            getKnobById(kParametersMainStart + chorus::kFaustParameterDdepth)->setVisible(mode == 0 || mode == 1 || mode == 2);
-            getKnobById(kParametersMainStart + chorus::kFaustParameterRate1)->setVisible(mode == 0 || mode == 1 || mode == 2);
-            getKnobById(kParametersMainStart + chorus::kFaustParameterRate2)->setVisible(mode == 1 || mode == 2);
-            getKnobById(kParametersMainStart + chorus::kFaustParameterDim)->setVisible(mode == 3);
-            getKnobById(kParametersMainStart + chorus::kFaustParameterDetune)->setEnabled(d_isNotZero(fstereo), false);
+            getKnobById(kParametersMainStart + kFaustParameterDctr)->setVisible(mode == 0 || mode == 1 || mode == 2);
+            getKnobById(kParametersMainStart + kFaustParameterDdepth)->setVisible(mode == 0 || mode == 1 || mode == 2);
+            getKnobById(kParametersMainStart + kFaustParameterRate1)->setVisible(mode == 0 || mode == 1 || mode == 2);
+            getKnobById(kParametersMainStart + kFaustParameterRate2)->setVisible(mode == 1 || mode == 2);
+            getKnobById(kParametersMainStart + kFaustParameterDim)->setVisible(mode == 3);
+            getKnobById(kParametersMainStart + kFaustParameterDetune)->setEnabled(d_isNotZero(fstereo), false);
         }
 #elif defined(LIBREAUDIO_PLUGIN__vocalDoubler)
         static_assert(kLabel == "vocalDoubler", "wrong plugin");
         // if constexpr (kLabel == "vocalDoubler")
         {
-            if (fKnobs.front()->getId() != kParametersMainStart + vocalDoubler::kFaustParameterAdt_delay)
+            using namespace vocalDoubler;
+
+            if (fKnobs.front()->getId() != kParametersMainStart + kFaustParameterAdt_delay)
                 return false;
 
-            const float fmode = fInterface->getParameterValue(kParametersMainStart + vocalDoubler::kFaustParameterMode);
-            const float f2voices = fInterface->getParameterValue(kParametersMainStart + vocalDoubler::kFaustParameterAdt_2voice);
+            const float fmode = fInterface->getParameterValue(kParametersMainStart + kFaustParameterMode);
+            const float f2voices = fInterface->getParameterValue(kParametersMainStart + kFaustParameterAdt_2voice);
 
             if (fHasCachedValues && d_isEqual(cachedValue1, fmode) && d_isEqual(cachedValue2, f2voices))
                 return false;
@@ -211,22 +232,29 @@ private:
             cachedValue2 = f2voices;
 
             const uint mode = d_roundToUnsignedInt(fmode);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterAdt_delay)->setVisible(mode == 0);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterAdt_2voice)->setVisible(mode == 0);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterAdt_wow_rate)->setVisible(mode == 0);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterAdt_wow_depth)->setVisible(mode == 0);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterAdt_pan)->setVisible(mode == 0 && d_isEqual(f2voices, 2.f));
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterAdt_width)->setVisible(mode == 0 && d_isNotEqual(f2voices, 2.f));
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterDoubler_base_delay)->setVisible(mode == 1);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterDoubler_detune)->setVisible(mode == 1);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterDoubler_wander_rate)->setVisible(mode == 1);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterDoubler_wander_depth)->setVisible(mode == 1);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterDoubler_width)->setVisible(mode == 1);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterTake_base_delay)->setVisible(mode == 2);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterTake_timing)->setVisible(mode == 2);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterTake_pitch)->setVisible(mode == 2);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterTake_character)->setVisible(mode == 2);
-            getKnobById(kParametersMainStart + vocalDoubler::kFaustParameterTake_width)->setVisible(mode == 2);
+
+            for (uint id : { kFaustParameterAdt_delay,
+                             kFaustParameterAdt_2voice,
+                             kFaustParameterAdt_wow_rate,
+                             kFaustParameterAdt_wow_depth })
+                updateVisibilityById(kParametersMainStart + id, mode == 0);
+
+            for (uint id : { kFaustParameterDoubler_base_delay,
+                             kFaustParameterDoubler_detune,
+                             kFaustParameterDoubler_wander_rate,
+                             kFaustParameterDoubler_wander_depth,
+                             kFaustParameterDoubler_width })
+                updateVisibilityById(kParametersMainStart + id, mode == 1);
+
+            for (uint id : { kFaustParameterTake_base_delay,
+                             kFaustParameterTake_timing,
+                             kFaustParameterTake_pitch,
+                             kFaustParameterTake_character,
+                             kFaustParameterTake_width })
+                updateVisibilityById(kParametersMainStart + id, mode == 2);
+
+            updateVisibilityById(kParametersMainStart + kFaustParameterAdt_pan, mode == 0 && d_isNotEqual(f2voices, 2.f));
+            updateVisibilityById(kParametersMainStart + kFaustParameterAdt_width, mode == 0 && d_isEqual(f2voices, 2.f));
         }
 #else
         return false;
@@ -238,8 +266,6 @@ private:
         for (uint i = 0, size = fKnobs.size(); i < size; ++i)
         {
             const std::unique_ptr<KnobWidget>& knob = fKnobs[i];
-            if (! knob->isVisible())
-                continue;
 
             const FaustParameter& parameter = fParameters.at(knob->getId() - fParametersOffset);
 
@@ -247,14 +273,15 @@ private:
             {
                 if (fBrackets.empty())
                 {
-                    fBrackets.push_back({ i, i, parameter.bracket });
+                    if (knob->isVisible())
+                        fBrackets.push_back({ i, i, parameter.bracket });
                 }
                 else
                 {
-                    if (*lastBracket != '\0')
+                    if (*lastBracket != '\0' && ! fBrackets.empty())
                         fBrackets.back().end = i - 1;
 
-                    if (*parameter.bracket != '\0')
+                    if (*parameter.bracket != '\0' && knob->isVisible())
                         fBrackets.push_back({ i, i, parameter.bracket });
                 }
             }
@@ -262,8 +289,11 @@ private:
             lastBracket = parameter.bracket;
         }
 
-        if (*lastBracket != '\0')
+        if (*lastBracket != '\0' && ! fBrackets.empty())
             fBrackets.back().end = fKnobs.size() - 1;
+
+        for (const Bracket& bracket : fBrackets)
+            d_stdout("bracket %s: %u -> %u", bracket.label, bracket.start, bracket.end);
 
         if (fHasCachedValues)
         {
@@ -287,8 +317,8 @@ private:
             const KnobWidget* const knobE = fKnobs[bracket.end].get();
 
             const float lw = 2;
-            const float sx = knobS->getAbsoluteX() - knobS->getWidth();
-            const float ex = knobE->getAbsoluteX() + knobE->getWidth();
+            const float sx = knobS->getAbsoluteX() /*- knobS->getWidth()*/;
+            const float ex = knobE->getAbsoluteX() /*+ knobE->getWidth()*/;
             const float y = 20;
 
             beginPath();
@@ -392,7 +422,7 @@ private:
 
     void addSpacer()
     {
-        std::unique_ptr<LibreAudioEmptyWidget<>> spacer { new LibreAudioEmptyWidget(this) };
+        std::unique_ptr<LibreAudioEmptyWidget> spacer { new LibreAudioEmptyWidget(this) };
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
     }

@@ -1,0 +1,70 @@
+// Libre Audio Suite
+// Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#pragma once
+
+#include "../base/base.hpp"
+
+START_NAMESPACE_DISTRHO
+
+// --------------------------------------------------------------------------------------------------------------------
+// reference widget class
+
+template<class R>
+class LibreAudioReferenceWidget : public LibreAudioWidget
+{
+public:
+    explicit LibreAudioReferenceWidget(LibreAudioTopLevelWidget* const parent)
+        : LibreAudioWidget(parent)
+    {
+        _initSize();
+    }
+
+    explicit LibreAudioReferenceWidget(LibreAudioWidget* const parent)
+        : LibreAudioWidget(parent)
+    {
+        _initSize();
+    }
+
+protected:
+    void onNanoDisplay() override
+    {
+        const float w = getWidth();
+        const float h = getHeight();
+
+        beginPath();
+
+        if constexpr (R::borderRadius != 0)
+            roundedRect(0, 0, w, h, R::borderRadius * fScaleFactor);
+        else
+            rect(0, 0, w, h);
+
+        if constexpr (d_isNotZero(R::backgroundColor.alpha))
+        {
+            fillColor(R::backgroundColor);
+            fill();
+        }
+
+        if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
+        {
+            strokeColor(R::borderColor);
+            strokeWidth(R::border * 2 * fScaleFactor);
+            stroke();
+        }
+    }
+
+private:
+    void _initSize()
+    {
+        if constexpr (R::width != 0)
+            setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
+
+        if constexpr (R::height != 0)
+            setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
+    }
+};
+
+// --------------------------------------------------------------------------------------------------------------------
+
+END_NAMESPACE_DISTRHO

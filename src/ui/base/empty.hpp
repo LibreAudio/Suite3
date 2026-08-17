@@ -9,26 +9,21 @@
 START_NAMESPACE_DISTRHO
 
 // --------------------------------------------------------------------------------------------------------------------
-// empty widget, useful for making space and alignment of other widgets
+// empty widget class, useful for making space and alignment of other widgets
 
-struct LibreAudioEmptyReference {
-    static constexpr const Color backgroundColor { 0.f, 0.f, 0.f, 0.f };
-    static constexpr const Color borderColor { 0.f, 0.f, 0.f, 0.f };
-    static constexpr const uint border = 0;
-    static constexpr const uint borderRadius = 0;
-    static constexpr const uint height = 0;
-    static constexpr const uint width = 0;
-};
-
-template<class R = LibreAudioEmptyReference>
-class LibreAudioEmptyWidget final : public LibreAudioReferenceWidget<R>
+class LibreAudioEmptyWidget final : public LibreAudioWidget
 {
 public:
     explicit LibreAudioEmptyWidget(LibreAudioWidget* const parent)
-        : LibreAudioReferenceWidget<R>(parent) {}
+        : LibreAudioWidget(parent) {}
 
     explicit LibreAudioEmptyWidget(LibreAudioTopLevelWidget* const parent)
-        : LibreAudioReferenceWidget<R>(parent) {}
+        : LibreAudioWidget(parent) {}
+
+private:
+    void onNanoDisplay() final
+    {
+    }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
