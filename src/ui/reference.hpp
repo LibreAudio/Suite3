@@ -13,7 +13,7 @@ START_NAMESPACE_DISTRHO
 
 struct LibreAudioReference {
     struct Common {
-        static constexpr const float fontSize = 19;
+        static constexpr const float fontSize = 17;
         static constexpr const float letterSpacing = fontSize * 0.01;
         static constexpr const uint margin = 12;
     };
