@@ -163,6 +163,18 @@ private:
         update();
     }
 
+    void updateEnabledById(const uint32_t id, const bool enabled)
+    {
+        for (const std::unique_ptr<KnobWidget>& knob : fKnobs)
+        {
+            if (KnobWidget* const knobPtr = knob.get(); knobPtr->getId() == id)
+            {
+                knobPtr->setEnabled(enabled, false);
+                break;
+            }
+        }
+    }
+
     void updateVisibilityById(const uint32_t id, const bool visible)
     {
         for (const std::unique_ptr<KnobWidget>& knob : fKnobs)
@@ -206,12 +218,12 @@ private:
             cachedValue2 = fstereo;
 
             const uint mode = d_roundToUnsignedInt(fmode);
-            getKnobById(kParametersMainStart + kFaustParameterDctr)->setVisible(mode == 0 || mode == 1 || mode == 2);
-            getKnobById(kParametersMainStart + kFaustParameterDdepth)->setVisible(mode == 0 || mode == 1 || mode == 2);
-            getKnobById(kParametersMainStart + kFaustParameterRate1)->setVisible(mode == 0 || mode == 1 || mode == 2);
-            getKnobById(kParametersMainStart + kFaustParameterRate2)->setVisible(mode == 1 || mode == 2);
-            getKnobById(kParametersMainStart + kFaustParameterDim)->setVisible(mode == 3);
-            getKnobById(kParametersMainStart + kFaustParameterDetune)->setEnabled(d_isNotZero(fstereo), false);
+            updateVisibilityById(kParametersMainStart + kFaustParameterDctr, mode == 0 || mode == 1 || mode == 2);
+            updateVisibilityById(kParametersMainStart + kFaustParameterDdepth, mode == 0 || mode == 1 || mode == 2);
+            updateVisibilityById(kParametersMainStart + kFaustParameterRate1, mode == 0 || mode == 1 || mode == 2);
+            updateVisibilityById(kParametersMainStart + kFaustParameterRate2, mode == 1 || mode == 2);
+            updateVisibilityById(kParametersMainStart + kFaustParameterDim, mode == 3);
+            updateEnabledById(kParametersMainStart + kFaustParameterDetune, d_isNotZero(fstereo));
         }
 #elif defined(LIBREAUDIO_PLUGIN__vocalDoubler)
         static_assert(kLabel == "vocalDoubler", "wrong plugin");
@@ -262,6 +274,7 @@ private:
 
         fBrackets.clear();
 
+#if 0
         const char* lastBracket = "";
         for (uint i = 0, size = fKnobs.size(); i < size; ++i)
         {
@@ -294,6 +307,7 @@ private:
 
         for (const Bracket& bracket : fBrackets)
             d_stdout("bracket %s: %u -> %u", bracket.label, bracket.start, bracket.end);
+#endif
 
         if (fHasCachedValues)
         {
