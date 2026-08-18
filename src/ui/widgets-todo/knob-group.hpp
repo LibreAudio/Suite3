@@ -221,7 +221,8 @@ private:
             updateVisibilityById(kParametersMainStart + kFaustParameterDctr, mode == 0 || mode == 1 || mode == 2);
             updateVisibilityById(kParametersMainStart + kFaustParameterDdepth, mode == 0 || mode == 1 || mode == 2);
             updateVisibilityById(kParametersMainStart + kFaustParameterRate1, mode == 0 || mode == 1 || mode == 2);
-            updateVisibilityById(kParametersMainStart + kFaustParameterRate2, mode == 1 || mode == 2);
+            updateVisibilityById(kParametersMainStart + kFaustParameterRate2, mode == 0 || mode == 1 || mode == 2);
+            updateEnabledById(kParametersMainStart + kFaustParameterRate2, mode == 1 || mode == 2);
             updateVisibilityById(kParametersMainStart + kFaustParameterDim, mode == 3);
             updateEnabledById(kParametersMainStart + kFaustParameterDetune, d_isNotZero(fstereo));
         }
