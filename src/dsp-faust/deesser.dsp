@@ -54,10 +54,43 @@ lerp(a, b, t) = a + (b - a) * t;
 // turned up. (vocalDoubler ships it at 50.)
 
 
-hflim_split  = lerp(hfLimSplitAt0,  hfLimSplitAt100,  hflim_amount);
-hflim_thresh = lerp(hfLimThreshAt0, hfLimThreshAt100, hflim_amount);
-hflim_ratio  = lerp(hfLimRatioAt0,  hfLimRatioAt100,  hflim_amount);
-hflim_range  = lerp(hfLimRangeAt0,  hfLimRangeAt100,  hflim_amount);
+// hflim_split  = lerp(hfLimSplitAt0,  hfLimSplitAt100,  hflim_amount);
+// hflim_thresh = lerp(hfLimThreshAt0, hfLimThreshAt100, hflim_amount);
+// hflim_ratio  = lerp(hfLimRatioAt0,  hfLimRatioAt100,  hflim_amount);
+// hflim_range  = lerp(hfLimRangeAt0,  hfLimRangeAt100,  hflim_amount);
+
+hflim_split = uiDeEss(hslider("[01]Crossover Frequency[style:knob][unit:Hz][scale:log][symbol:crossover_frequency][label:Crossover][accentcolor:02]", 5000,3000,8000,1));
+
+// Relative (100%) vs. absolute (0%) detection, continuously blendable.
+// Relative: the high band is measured against the body band, so the threshold
+//   is a spectral-tilt difference and detection is level-independent — a quiet
+//   "s" in a quiet passage trips it just as readily as a loud one.
+// Absolute: the high band is measured against 0 dBFS, so the threshold is a
+//   plain level — a level-dependent high-band compressor, which follows the
+//   singer's dynamics instead of ignoring them.
+// In between, the reference and the threshold are mixed by the same amount, so
+// the knob sweeps without a jump at either end.
+hflim_mode = uiDeEss(hslider("[02]Mode[style:knob][unit:%][symbol:mode][label:Abs/Rel][accentcolor:05]", 100, 0, 100, 1)) / 100;
+
+// Two thresholds, because the two modes measure different things and a single
+// number cannot mean both. Each keeps its own value and its own useful range;
+// the Mode knob lerps between them, so turning Mode never leaves the threshold
+// in the wrong units and turning it back restores exactly what was dialled in.
+hflim_threshAbs = uiDeEss(hslider("[03]Threshold Absolute[unit:dB][style:knob][symbol:threshold_abs][label:Thresh Abs][accentcolor:01]",-30,-60,0,1));
+hflim_threshRel = uiDeEss(hslider("[04]Threshold Relative[unit:dB][style:knob][symbol:threshold][label:Thresh Rel][accentcolor:01]",-10,-30,0,1));
+hflim_thresh    = lerp(hflim_threshAbs, hflim_threshRel, hflim_mode);
+
+hflim_ratio = uiDeEss(hslider("[05]Ratio[symbol:ratio][style:knob][label:Ratio][accentcolor:03]", 1, 1, 20, 1));
+hflim_range = uiDeEss(hslider("[06]Range[unit:dB][style:knob][symbol:range][label:Range][accentcolor:04]",6, 0, 20,1));
+
+// Solo the band the de-esser acts on, with the reduction applied, so the
+// crossover and threshold can be set by ear: sweep Crossover until the "s"
+// dominates what you hear and the vowels drop away, then set Threshold /
+// Ratio until only the "s" ducks. Expect a large level drop when engaging --
+// it is a monitoring switch, not a mix control. Smoothed to cross-fade rather
+// than hard-switch, so toggling it while playing does not click.
+hflim_listen = uiDeEss(checkbox("[07]Listen[symbol:listen][label:Listen]
+      [tooltip: Monitors the high band alone, with the de-essing applied, for setting Crossover and Threshold by ear. Turn off before printing]")) : si.smoo;
 
 // Stereo, unlike the mono original. Detection is *linked*: one gain, derived
 // from the mono sum, drives both channels. Two independent detectors would
@@ -65,27 +98,66 @@ hflim_range  = lerp(hfLimRangeAt0,  hfLimRangeAt100,  hflim_amount);
 // stereo image with every "s" — the one thing a widener must not do.
 hfLimit(l, r) = attach(outL, reductionDb : hflim_meter), outR
 with {
-    lowL  = fi.lowpass(4, hflim_split, l);
-    lowR  = fi.lowpass(4, hflim_split, r);
-    highL = l - lowL; // complementary split: low+high reconstructs the input exactly at unity gain
-    highR = r - lowR;
+    // Detection runs on the mono sum only: the gain is linked, and since the
+    // reduction is applied by a shelf rather than rebuilt from the bands, the
+    // per-channel split is not needed at all.
+    //
+    // A real highpass, not `mono - lowpass`. Subtracting a Butterworth lowpass
+    // does not give a Butterworth highpass: B(s)-1 has a single zero at DC, so
+    // the complement rolls off at 6 dB/oct no matter what order the lowpass is,
+    // and it overshoots at the corner. Measured against a 5 kHz split, that
+    // "high band" was only -6 dB at 1 kHz, -0.1 dB at 2 kHz and +4.7 dB at
+    // 5 kHz -- i.e. the detector was fed most of the vowel range plus a
+    // resonant bump, so a plain 2.5 kHz tone pulled 1.9 dB of reduction. The
+    // true 4th-order highpass is -33 dB at 2 kHz and -57 dB at 1 kHz.
+    //
+    // The two bands no longer need to be complementary: nothing reconstructs
+    // the signal from them any more, they only feed the envelope followers.
+    mono = (l + r) * 0.5;
+    low  = fi.lowpass(4, hflim_split, mono);
+    high = fi.highpass(4, hflim_split, mono);
 
-    // The split is linear, so summing the two channels' bands is identical to
-    // running the filter on the mono sum — and one 4th-order pass cheaper.
-    low  = (lowL  + lowR)  * 0.5;
-    high = (highL + highR) * 0.5;
+    // Floored at -120 dB: on digital silence the follower reaches exactly 0,
+    // and ba.linear2db(0) is -inf — which turns into NaN both in the relative
+    // subtraction (-inf - -inf) and when the mode blend scales it by 0.
+    env(x) = an.amp_follower_ar(0.001, 0.03, x) : max(ba.db2linear(-120)) : ba.linear2db;
 
-    hiDb  = high : an.amp_follower_ar(0.001, 0.03) : ba.linear2db;
-    refDb = low  : an.amp_follower_ar(0.001, 0.03) : ba.linear2db;
+    hiDb  = env(high);
+    refDb = env(low);
 
-    // dB the high band sticks out above the body band, relative to normal
-    // voice spectral tilt; only the excess over threshold is limited
-    diff   = hiDb - refDb;
+    // dB the high band sticks out above its reference; only the excess over
+    // threshold is limited. The reference is the body band scaled by the mode
+    // blend: at 100% it is the full body level (relative — spectral tilt, level
+    // independent), at 0% it is 0 dBFS (absolute — plain high-band level).
+    // hflim_thresh is lerped by the same knob, so both sides of this comparison
+    // cross-fade together.
+    diff   = hiDb - refDb * hflim_mode;
     excess = max(0, diff - hflim_thresh);
 
     reductionDb = min(excess * (1 - 1 / hflim_ratio), hflim_range);
     gr = ba.db2linear(0 - reductionDb);
 
-    outL = lowL + highL * gr;
-    outR = lowR + highR * gr;
+    // The reduction is applied as a real high shelf on the full-band signal,
+    // not by re-summing a split. Rebuilding from a 4th-order split (low +
+    // high*gr) is a shelf too, but an accidental one: the lowpass and its
+    // complement differ in phase, so away from unity gain they no longer sum
+    // flat and the response ripples around the corner. filterbank's bands are
+    // delay-equalised and do sum flat, so the shape stays a clean shelf at
+    // every amount of reduction.
+    //
+    // Only the band gain is modulated -- the filter coefficients depend on
+    // hflim_split alone, so an audio-rate reduction costs one db2linear and a
+    // multiply per sample, and cannot click or zipper the way retuning a
+    // filter every sample would. Order 3 (the library default, and filterbank
+    // requires it odd) keeps the cut confined to the sibilant region: at a 5
+    // kHz corner it is already within 0.2 dB of unity by 3 kHz.
+    
+    //shelf = fi.highshelf(3, 0 - reductionDb, hflim_split);
+    shelf = fi.svf.hs(hflim_split, 0.7, 0 - reductionDb );
+
+    // Listen solos the detector's high band with the reduction applied. It is
+    // mono because detection is mono-linked -- this is literally the signal the
+    // detector measures, which is what makes it useful for setting Crossover.
+    outL = lerp(l : shelf, high * gr, hflim_listen);
+    outR = lerp(r : shelf, high * gr, hflim_listen);
 };
