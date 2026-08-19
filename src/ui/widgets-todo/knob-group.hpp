@@ -56,8 +56,6 @@ public:
         fKnobs.reserve(kMaxNumParameters);
         fSpacers.reserve(kMaxNumParameters + 1);
 
-        addSpacer();
-
         for (uint32_t i = parameterOffset, numVisibleWidgets = 0, count = parameters.size(); i < count && numVisibleWidgets < kMaxNumParameters; ++i)
         {
             const FaustParameter& parameter = parameters[i];
@@ -65,6 +63,10 @@ public:
                 d_stdout("knob-group skipped parameter %s", parameter.name);
                 continue;
             }
+
+            if (! fKnobs.empty())
+                addSpacer(idOffset + i);
+
             std::unique_ptr<KnobWidget> widget { new KnobWidget(this, parameter, idOffset + i) };
             widgets.push_back({ widget.get(), Fixed });
             if (widget->getSize().isNull())
@@ -108,13 +110,7 @@ public:
             }
 
             fKnobs.emplace_back(std::move(widget));
-            addSpacer(idOffset + i);
         }
-
-       #if defined(LIBREAUDIO_PLUGIN__vocalDoubler)
-        // add last spacer for consistency
-        // addSpacer();
-       #endif
 
         if (update())
             addIdleCallback(this);
@@ -148,7 +144,7 @@ private:
     float cachedValue1;
     float cachedValue2;
 
-    void addSpacer(const uint id = 0)
+    void addSpacer(const uint id)
     {
         std::unique_ptr<LibreAudioEmptyWidget> spacer { new LibreAudioEmptyWidget(this) };
         spacer->setId(id);
