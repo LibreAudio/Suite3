@@ -290,18 +290,28 @@ hflim_range  = lerp(hfLimRangeAt0,  hfLimRangeAt100,  hflim_amount);
 // stereo image with every "s" — the one thing a widener must not do.
 hfLimit(l, r) = attach(outL, reductionDb : hflim_meter), outR
 with {
-    lowL  = fi.lowpass(4, hflim_split, l);
-    lowR  = fi.lowpass(4, hflim_split, r);
-    highL = l - lowL; // complementary split: low+high reconstructs the input exactly at unity gain
-    highR = r - lowR;
+    // Detection runs on the mono sum only. The gain is linked anyway, and since
+    // the reduction is applied by a shelf rather than rebuilt from the bands,
+    // the per-channel split is not needed at all: one pass per band, not two.
+    //
+    // A real highpass, not `mono - lowpass`. Subtracting a Butterworth lowpass
+    // does not give a Butterworth highpass: B(s)-1 has a single zero at DC, so
+    // the complement rolls off at 6 dB/oct no matter what order the lowpass is,
+    // and it overshoots at the corner. Measured against a 5 kHz split, that
+    // "high band" was only -6 dB at 1 kHz, -0.1 dB at 2 kHz and +4.7 dB at
+    // 5 kHz -- i.e. the detector was fed most of the vowel range plus a
+    // resonant bump. The two bands no longer need to be complementary: nothing
+    // reconstructs the signal from them, they only feed the followers.
+    mono = (l + r) * 0.5;
+    low  = fi.lowpass(4, hflim_split, mono);
+    high = fi.highpass(4, hflim_split, mono);
 
-    // The split is linear, so summing the two channels' bands is identical to
-    // running the filter on the mono sum — and one 4th-order pass cheaper.
-    low  = (lowL  + lowR)  * 0.5;
-    high = (highL + highR) * 0.5;
+    // Floored at -120 dB: on digital silence the follower reaches exactly 0,
+    // and ba.linear2db(0) is -inf, which makes diff come out NaN.
+    env(x) = an.amp_follower_ar(0.001, 0.03, x) : max(ba.db2linear(-120)) : ba.linear2db;
 
-    hiDb  = high : an.amp_follower_ar(0.001, 0.03) : ba.linear2db;
-    refDb = low  : an.amp_follower_ar(0.001, 0.03) : ba.linear2db;
+    hiDb  = env(high);
+    refDb = env(low);
 
     // dB the high band sticks out above the body band, relative to normal
     // voice spectral tilt; only the excess over threshold is limited
@@ -309,12 +319,24 @@ with {
     excess = max(0, diff - hflim_thresh);
 
     reductionDb = min(excess * (1 - 1 / hflim_ratio), hflim_range);
-    gr = ba.db2linear(0 - reductionDb);
 
-    outL = lowL + highL * gr;
-    outR = lowR + highR * gr;
+    // The reduction is applied as a real high shelf on the full-band signal,
+    // not by re-summing the split -- low + high*gr is a shelf too, but an
+    // accidental one: the lowpass and its complement differ in phase, so away
+    // from unity gain they stop summing flat and the response ripples around
+    // the corner.
+    //
+    // A TPT state variable filter, which is stable under coefficient
+    // modulation, and whose shelf mix collapses to (1,0,0) at 0 dB -- so an
+    // idle de-esser passes the signal through untouched (measured bit-exact in
+    // isolation; within single-precision rounding in the full chain). That matters here: this sits in
+    // the wet branch of a dry/wet mixer, and a wet path that was merely
+    // magnitude-flat rather than identical would comb against the dry half.
+    shelf = fi.svf.hs(hflim_split, 0.7, 0 - reductionDb);
+
+    outL = l : shelf;
+    outR = r : shelf;
 };
-
 dryWetMixerUnity(dw, X) = _,_ <: (*(dG),*(dG)), (X : *(wG),*(wG)) :> _,_
 with { dG = min(1.0, 2.0*(1.0-dw)); wG = min(1.0, 2.0*dw); };
 

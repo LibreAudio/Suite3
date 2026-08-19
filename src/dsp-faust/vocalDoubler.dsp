@@ -153,10 +153,18 @@ hflim_thresh = lerp(hfLimThreshAt0, hfLimThreshAt100, hflim_amount);
 hflim_ratio  = lerp(hfLimRatioAt0,  hfLimRatioAt100,  hflim_amount);
 hflim_range  = lerp(hfLimRangeAt0,  hfLimRangeAt100,  hflim_amount);
 
-hfLimit(x) = (low + high * gr) : attach(_, (reductionDb) : hflim_meter)
+hfLimit(x) = (x : shelf) : attach(_, (reductionDb) : hflim_meter)
 with {
+    // A real highpass, not `x - lowpass`. Subtracting a Butterworth lowpass
+    // does not give a Butterworth highpass: B(s)-1 has a single zero at DC, so
+    // the complement rolls off at 6 dB/oct no matter what order the lowpass is,
+    // and it overshoots at the corner. Measured against a 5 kHz split, that
+    // "high band" was only -6 dB at 1 kHz, -0.1 dB at 2 kHz and +4.7 dB at
+    // 5 kHz -- i.e. the detector was fed most of the vowel range plus a
+    // resonant bump. The two bands no longer need to be complementary: nothing
+    // reconstructs the signal from them, they only feed the followers.
     low  = fi.lowpass(4, hflim_split, x);
-    high = x - low; // complementary split: low+high reconstructs x exactly at unity gain
+    high = fi.highpass(4, hflim_split, x);
 
     // The EPSILON floor is not cosmetic: on a truly silent input both envelopes
     // are 0, log10(0) is -inf, and diff comes out NaN.
@@ -179,9 +187,21 @@ with {
     // Gating the reduction rather than the detector keeps the meter honest: it
     // reads 0 when nothing is being done.
     reductionDb = min(excess * (1 - 1 / hflim_ratio), hflim_range) * gate;
-    gr = ba.db2linear(0 - reductionDb);
-};
 
+    // The reduction is applied as a real high shelf on the full-band signal,
+    // not by re-summing the split -- low + high*gr is a shelf too, but an
+    // accidental one: the lowpass and its complement differ in phase, so away
+    // from unity gain they stop summing flat and the response ripples around
+    // the corner.
+    //
+    // A TPT state variable filter, which is stable under coefficient
+    // modulation, and whose shelf mix collapses to (1,0,0) at 0 dB -- so an
+    // idle de-esser passes the signal through untouched (measured bit-exact in
+    // isolation; within single-precision rounding in the full chain). That matters here: this feeds the
+    // wet branch only, and a wet path that was merely magnitude-flat rather
+    // than identical would comb against the dry half.
+    shelf = fi.svf.hs(hflim_split, 0.7, 0 - reductionDb);
+};
 //======================= Wet EQ =======================
 // Shapes the double only, never the dry — the usual move is to roll off
 // lows and top so the double sits behind the lead instead of thickening

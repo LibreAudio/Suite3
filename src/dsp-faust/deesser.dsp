@@ -141,17 +141,18 @@ with {
     // not by re-summing a split. Rebuilding from a 4th-order split (low +
     // high*gr) is a shelf too, but an accidental one: the lowpass and its
     // complement differ in phase, so away from unity gain they no longer sum
-    // flat and the response ripples around the corner. filterbank's bands are
-    // delay-equalised and do sum flat, so the shape stays a clean shelf at
-    // every amount of reduction.
+    // flat and the response ripples around the corner.
     //
-    // Only the band gain is modulated -- the filter coefficients depend on
-    // hflim_split alone, so an audio-rate reduction costs one db2linear and a
-    // multiply per sample, and cannot click or zipper the way retuning a
-    // filter every sample would. Order 3 (the library default, and filterbank
-    // requires it odd) keeps the cut confined to the sibilant region: at a 5
-    // kHz corner it is already within 0.2 dB of unity by 3 kHz.
-    
+    // A TPT state variable filter: the structure is designed for exactly this,
+    // coefficients that move every sample. At 0 dB the shelf mix collapses to
+    // (1,0,0), so an idle de-esser passes the signal through untouched -- no
+    // phase shift to comb against a dry path. The cost is one pow and one sqrt
+    // per sample; tan(fc) depends only on hflim_split, so Faust hoists it out
+    // of the sample loop.
+    //
+    // Second order, so gentler than a 3rd-order shelf: at a 5 kHz corner and
+    // -12 dB it is -6.0 dB at the corner and still -1.6 dB down at 3 kHz.
+    // Raise Q to confine the cut closer to the corner.
     //shelf = fi.highshelf(3, 0 - reductionDb, hflim_split);
     shelf = fi.svf.hs(hflim_split, 0.7, 0 - reductionDb );
 
