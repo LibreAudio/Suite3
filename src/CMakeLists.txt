@@ -177,7 +177,7 @@ function(las_add_plugin LABEL)
   if (TRUE)
     dpf_add_plugin(${TARGET}
       TARGETS
-        clap lv2 vst3 jack
+        au clap lv2 vst3 jack
       FILES_COMMON
         ${CMAKE_CURRENT_BINARY_DIR}/common_input-parameters.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/common_input-parameters.hpp
