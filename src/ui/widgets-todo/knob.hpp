@@ -29,6 +29,16 @@ public:
 
         fKnobStyle.bipolar = d_isZero(parameter.init) && parameter.min < 0 && parameter.max > 0;
         fKnobStyle.invert = d_isEqual(parameter.init, parameter.max);
+
+        Rectangle<float> bounds;
+        fontFace("mono");
+        fontSize(R::Unit::fontSize * this->fScaleFactor);
+        textAlign(0);
+        // textLetterSpacing(R::Unit::letterSpacing * this->fScaleFactor);
+        textBounds(0, 0, fParameter.unit, nullptr, bounds);
+
+        fUnitTextSpacing = std::abs(bounds.getX() * 2);
+        fUnitTextWidth = bounds.getWidth();
     }
 
 private:
@@ -66,12 +76,14 @@ private:
             else
             {
                 // has unit, put value on the left
-                text(w * 0.4f, h, textBuffer);
+                textAlign(ALIGN_RIGHT | ALIGN_BOTTOM);
+                text(w - fUnitTextWidth - fUnitTextSpacing, h, textBuffer);
 
                 // then unit on the right
                 fillColor(isEnabled() ? R::Unit::color : fKnobStyle.colorDisabled);
                 fontSize(R::Unit::fontSize * fScaleFactor);
-                text(w * 0.8f, h - (R::Value::fontSize - R::Unit::fontSize) * 0.5f * fScaleFactor, fParameter.unit);
+                textAlign(ALIGN_LEFT | ALIGN_BOTTOM);
+                text(w - fUnitTextWidth, h, fParameter.unit);
             }
         }
         else
@@ -201,6 +213,9 @@ private:
 
     double fLastParameterChangedByHostTime = 0.0;
     double fLastStateChangedTime = 0.0;
+
+    float fUnitTextSpacing;
+    float fUnitTextWidth;
 
 #if 1
     struct KnobStyle {
