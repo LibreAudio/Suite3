@@ -129,7 +129,7 @@ public:
     LibreAudioUI()
         : LibreAudioBaseUI()
     {
-        fShaderBackground.reset(new LibreAudioBackgroundShaderWidget<SHADERS_SHADERTOY_AURORA_FRAG_DATA, SHADERS_SHADERTOY_AURORA_FRAG_LEN>(this, this));
+        fShaderBackground.reset(new LibreAudioBackgroundShaderWidget<SHADERS_SHADERTOY_COLORCLOUDS_FRAG_DATA, SHADERS_SHADERTOY_COLORCLOUDS_FRAG_LEN>(this, this));
 
         static constexpr const std::string_view label = DISTRHO_PLUGIN_LABEL;
         if constexpr (label == "chorus")

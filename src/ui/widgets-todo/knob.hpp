@@ -122,47 +122,53 @@ private:
         scale(S, S);
         translate(-50.0f, -50.0f);
 
-        // /* --- gutter track: full sweep, near-black inset -------------------- */
-        knobBand(50, 50, rArc, AW, MIN_A, MAX_A, nullptr, Color(0x14, 0x14, 0x16));
+        // /* --- gutter track: full sweep, accent-tinted inset ----------------- */
+        // color-mix(in srgb, accent 40%, #0a0a0d)
+        const Color gutter = Color(Color(0x0a, 0x0a, 0x0d), accent, 0.4f);
+        knobBand(50, 50, rArc, AW, MIN_A, MAX_A, nullptr, gutter);
 
-        /* --- value arc: accent, faded toward the start (alpha 0.8 -> 1.0) --- */
-        if (std::abs(valAngle - startAngle) > 2.0f) {
-            float gx0, gy0, gx1, gy1;
-            knobPt(50, 50, rArc, startAngle, gx0, gy0);
-            knobPt(50, 50, rArc, valAngle, gx1, gy1);
+        /* --- value fill: flat accent, recessed into the gutter -------------- */
+        knobBand(50, 50, rArc, AW, startAngle, valAngle, nullptr, accent);
 
-            const Color c0 = accent.withAlpha(0.8f);
-            const Color c1 = accent.withAlpha(1.0f);
-            Paint fade = linearGradient(gx0, gy0, gx1, gy1, c0, c1);
-            knobBand(50, 50, rArc, AW, startAngle, valAngle, &fade, accent);
+        /* inset shadow (SVG filter #gutter-inset): darken both band edges */
+        {
+            constexpr float insetDepth = 1.5f;
+            const float rIn = rArc - AW * 0.5f;
+            const float rOut = rArc + AW * 0.5f;
+            const Color dark = Color(0, 0, 0, 70.f / 255.f);
+            const Color clear = Color(0, 0, 0, 0.f);
+
+            Paint insetIn = radialGradient(50, 50, rIn, rIn + insetDepth, dark, clear);
+            knobBand(50, 50, rArc, AW, startAngle, valAngle, &insetIn, accent);
+
+            Paint insetOut = radialGradient(50, 50, rOut - insetDepth, rOut, clear, dark);
+            knobBand(50, 50, rArc, AW, startAngle, valAngle, &insetOut, accent);
         }
 
-        /* --- cast shadow under the cap ------------------------------------- */
-        Paint sh = radialGradient(50, 53, rBody * 0.4f, rBody * 1.15f,
-                                  Color(0, 0, 0, 180.f / 100.f), Color(0, 0, 0, 0));
-        beginPath();
-        circle(50, 53, rBody + 2.0f);
-        fillPaint(sh);
-        fill();
+        /* --- cast shadow under the cap, clipped to the gutter band --------- */
+        /* full-alpha core out to rBody+0.5, then a short blur to transparent */
+        Paint sh = radialGradient(50, 53, rBody + 0.5f, rBody + 3.2f,
+                                  Color(0, 0, 0, 70.f / 255.f), Color(0, 0, 0, 0));
+        knobBand(50, 50, rArc, AW, MIN_A, MAX_A, &sh, Color(0, 0, 0, 0));
 
         /* --- knob body: vertical gradient + dark rim ----------------------- */
         Paint body = linearGradient(50, 50 - rBody, 50, 50 + rBody,
-                                       Color(0x46, 0x46, 0x4d), Color(0x2c, 0x2c, 0x31));
+                                       Color(0x4a,0x4a,0x51), Color(0x3a,0x3a,0x41));
         beginPath();
         circle(50, 50, rBody);
         fillPaint(body);
         fill();
-        strokeColor(Color(0x0d, 0x0d, 0x0f));
+        strokeColor(Color(0x0d,0x0d,0x0f));
         strokeWidth(1.0f);
         stroke();
 
         /* --- top bevel highlight (screen-blend approximated by additive-ish
         *     white with low alpha along the upper rim) --------------------- */
         Paint bevel = linearGradient(50, 50 - rBody, 50, 50,
-                                     Color(255, 255, 255, 140.f / 100.f), Color(255, 255, 255, 0));
+                                     Color(255, 255, 255, 140.f / 255.f), Color(255, 255, 255, 0));
         beginPath();
         circle(50, 49.4f, rBody - 0.9f);
-        strokeWidth(0.8f);
+        strokeWidth(1.0f);
         strokePaint(bevel);
         stroke();
 
@@ -174,7 +180,7 @@ private:
         moveTo(lx0, ly0);
         lineTo(lx1, ly1);
         strokeColor(accent);
-        strokeWidth(size > 100 ? 2.4f : 2.0f * 100.0f / size);
+        strokeWidth(size > 100.0f ? 2.0f : 2.0f * 100.0f / size);
         lineCap(ROUND);
         stroke();
 
@@ -253,7 +259,7 @@ private:
         beginPath();
         arc(cx, cy, rArc, knobRad(lo), knobRad(hi), CW);
         strokeWidth(w);
-        lineCap(ROUND);
+        lineCap(BUTT);
 
         if (paint)
             strokePaint(*paint);

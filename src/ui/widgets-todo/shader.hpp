@@ -15,6 +15,7 @@
 
 #include "las-resources.h"
 
+#include <cstring>
 #include <vector>
 
 #ifdef DISTRHO_OS_WINDOWS
@@ -177,6 +178,8 @@ public:
         gl3.iResolution = glGetUniformLocation(program, "iResolution");
         gl3.iScaleFactor = glGetUniformLocation(program, "iScaleFactor");
         gl3.iTime = glGetUniformLocation(program, "iTime");
+        gl3.iLevelSlow = glGetUniformLocation(program, "iLevelSlow");
+        gl3.iLevelFast = glGetUniformLocation(program, "iLevelFast");
 
         gl3.dpfBounds = glGetAttribLocation(program, "_dpf_bounds");
         gl3.dpfBorderRadius = glGetUniformLocation(program, "_dpf_border_radius");
@@ -189,11 +192,37 @@ public:
 
             for (uint32_t i = 0; i < count; ++i)
             {
+                // null for the common parameters, which have no Faust symbol
+                const char* const parameterSymbol = fInterface->getParameterSymbol(i);
+
                 symbol = "u_";
-                symbol += fInterface->getParameterSymbol(i);
+                symbol += parameterSymbol;
                 gl3.parameterValues[i] = glGetUniformLocation(program, symbol);
+
+                if (parameterSymbol == nullptr)
+                    continue;
+
+                // remember the input meters so the level smoothers can follow them
+                if (std::strcmp(parameterSymbol, "input_peak_L") == 0)
+                    fPeakParameterL = static_cast<int>(i);
+                else if (std::strcmp(parameterSymbol, "input_peak_R") == 0)
+                    fPeakParameterR = static_cast<int>(i);
             }
         }
+
+        // Shaders cannot smooth anything themselves -- a fragment program keeps no
+        // state between frames -- so the two brightness envelopes are integrated
+        // here and handed over as plain uniforms. They advance once per repaint,
+        // which the idle callback above fixes at 16 ms.
+        fLevelSlow.setSampleRate(1.f / 0.016f);
+        fLevelSlow.setTimeConstant(kLevelSlowSeconds);
+        fLevelSlow.setTargetValue(kLevelSilenceDb);
+        fLevelSlow.clearToTargetValue();
+
+        fLevelFast.setSampleRate(1.f / 0.016f);
+        fLevelFast.setTimeConstant(kLevelFastSeconds);
+        fLevelFast.setTargetValue(kLevelSilenceDb);
+        fLevelFast.clearToTargetValue();
 
         fMouseX.setSampleRate(1.0 / 0.008);
         fMouseX.setTimeConstant(0.5);
@@ -235,11 +264,38 @@ private:
         glUniform1f(gl3.iTime, static_cast<float>(getApp().getTime() - fStartTime));
         glUniform1f(gl3.dpfBorderRadius, fBorderRadius);
 
+        // Peak of the two input meters, in dBFS, run through a slow and a fast
+        // envelope. Shaders blend the two to decide how bright to draw.
+        {
+            float peakDb = kLevelSilenceDb;
+
+            if (fPeakParameterL >= 0)
+            {
+                const float v = fInterface->getParameterValue(fPeakParameterL);
+                if (v > peakDb)
+                    peakDb = v;
+            }
+            if (fPeakParameterR >= 0)
+            {
+                const float v = fInterface->getParameterValue(fPeakParameterR);
+                if (v > peakDb)
+                    peakDb = v;
+            }
+
+            fLevelSlow.setTargetValue(peakDb);
+            fLevelFast.setTargetValue(peakDb);
+
+            glUniform1f(gl3.iLevelSlow, fLevelSlow.next());
+            glUniform1f(gl3.iLevelFast, fLevelFast.next());
+        }
+
         if (const uint32_t count = fInterface->getParameterCount())
         {
             for (uint32_t i = 0; i < count; ++i)
             {
-                if (gl3.parameterValues[i] != 0)
+                // glGetUniformLocation returns -1 when the shader does not use the
+                // uniform; 0 is a valid location, so this must not test against 0.
+                if (gl3.parameterValues[i] >= 0)
                     glUniform1f(gl3.parameterValues[i], fInterface->getParameterValue(i));
             }
         }
@@ -310,13 +366,25 @@ private:
         GLint iResolution;
         GLint iScaleFactor;
         GLint iTime;
+        GLint iLevelSlow;
+        GLint iLevelFast;
         GLint* parameterValues;
     } gl3 = {};
+
+    // Brightness envelope timing, as T60 in seconds, plus the level stood in for
+    // silence (the input meters bottom out at -70 dBFS).
+    static constexpr const float kLevelSlowSeconds = 5.0f;
+    static constexpr const float kLevelFastSeconds = 0.5f;
+    static constexpr const float kLevelSilenceDb = -70.0f;
 
     TopLevelWidget* const fParent;
     const float fScaleFactor;
     const double fStartTime;
     bool fFirstResize = true;
+    ExponentialValueSmoother fLevelSlow;
+    ExponentialValueSmoother fLevelFast;
+    int fPeakParameterL = -1;
+    int fPeakParameterR = -1;
     LinearValueSmoother fMouseX;
     LinearValueSmoother fMouseY;
     float fMouseZ = 0.f;
