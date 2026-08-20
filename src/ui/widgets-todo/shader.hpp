@@ -371,10 +371,16 @@ private:
         GLint* parameterValues;
     } gl3 = {};
 
-    // Brightness envelope timing, as T60 in seconds, plus the level stood in for
-    // silence (the input meters bottom out at -70 dBFS).
+    // Brightness envelope timing, plus the level stood in for silence (the input
+    // meters bottom out at -70 dBFS).
+    //
+    // These are T60 -- time to cover 99.9% of a step -- which is a lot brisker than
+    // it reads: ExponentialValueSmoother divides by 6.91 internally, so the actual
+    // one-pole tau is T60/6.91 and most of the movement lands in the first seventh
+    // of the quoted time. 1.5 s here is a tau of ~0.22 s, which reads as "follows
+    // the phrase" rather than the twitch that 0.5 s gave.
     static constexpr const float kLevelSlowSeconds = 5.0f;
-    static constexpr const float kLevelFastSeconds = 0.5f;
+    static constexpr const float kLevelFastSeconds = 1.5f;
     static constexpr const float kLevelSilenceDb = -70.0f;
 
     TopLevelWidget* const fParent;

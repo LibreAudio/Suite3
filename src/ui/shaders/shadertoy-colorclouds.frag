@@ -40,7 +40,7 @@ const float cloudSpreadX = 0.60; // same, horizontally, measured from the middle
 #define brightness 1.0
 #else
 // Peak of the two input meters in dBFS, smoothed by the host over two different
-// time constants: iLevelSlow settles in about 5 s, iLevelFast in about 0.5 s.
+// time constants: iLevelSlow settles in about 5 s, iLevelFast in about 1.5 s.
 // The smoothing cannot live here -- a fragment shader keeps no state between
 // frames -- so these arrive already integrated. See LibreAudioBackgroundShaderWidget.
 uniform float iLevelSlow;

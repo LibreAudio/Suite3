@@ -55,7 +55,7 @@ const float starOcclusion  = 0.;  // how much the clouds hide the stars behind t
 #define brightness 1.0
 #else
 // Peak of the two input meters in dBFS, smoothed by the host over two different
-// time constants: iLevelSlow settles in about 5 s, iLevelFast in about 0.5 s.
+// time constants: iLevelSlow settles in about 5 s, iLevelFast in about 1.5 s.
 // The smoothing cannot live here -- a fragment shader keeps no state between
 // frames -- so these arrive already integrated. See LibreAudioBackgroundShaderWidget.
 uniform float iLevelSlow;
@@ -69,7 +69,7 @@ const float meterCeilDb  =   0.0;
 
 // How far the picture is allowed to dim once the input reaches meterFloorDb.
 // 0.5 keeps silence at half brightness rather than fully dark.
-const float meterDimDepth = 0.5;
+const float meterDimDepth = 0.8;
 
 // How much of the fast envelope rides on top of the slow one. 0.0 leaves the
 // brightness following the 5 s average alone; 1.0 makes it purely 0.5 s and
