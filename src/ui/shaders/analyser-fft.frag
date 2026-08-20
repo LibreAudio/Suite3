@@ -1,5 +1,5 @@
 // Libre Audio Suite
-// Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
+// Copyright (C) 2026 LibreAudio.Org
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /* ===========================================================================
@@ -26,7 +26,7 @@
 const float fMin = 20.0;      // left edge, Hz
 const float fMax = 20000.0;   // right edge, Hz (log axis between the two)
 const float dbTop   =   6.0;  // top of the widget, dBFS
-const float dbFloor = -72.0;  // bottom of the widget, dBFS
+const float dbFloor = -55.0;  // bottom of the widget, dBFS
 
 const int fftBins = 64;       // number of analyser bins across the width
 
