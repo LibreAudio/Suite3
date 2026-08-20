@@ -84,18 +84,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
     float y1a = traceY(t0, H, hz1, a1, ph1), y1b = traceY(t1, H, hz1, a1, ph1);
     float d1  = segDist(vec2(px,py), vec2(x0,y1a), vec2(x1,y1b));
-    float cov = max(1.0-smoothstep(2.0,4.0,d1), (1.0-smoothstep(6.0,12.0,d1))*glow);
+    float cov = max(1.0-smoothstep(2.0,4.0,d1), (1.0-smoothstep(3.5,7.0,d1))*glow);
 
     float fill = 0.0;
     if (mode2)
     {
         float y2a = traceY(t0, H, hz2, a2, ph2), y2b = traceY(t1, H, hz2, a2, ph2);
         float d2  = segDist(vec2(px,py), vec2(x0,y2a), vec2(x1,y2b));
-        cov = max(cov, max(1.0-smoothstep(2.0,4.0,d2), (1.0-smoothstep(6.0,12.0,d2))*glow));
+        cov = max(cov, max(1.0-smoothstep(2.0,4.0,d2), (1.0-smoothstep(3.5,7.0,d2))*glow));
         float lo = min(y1a, y2a), hi = max(y1a, y2a);
         fill = smoothstep(lo-0.5,lo+0.5,py) * (1.0-smoothstep(hi-0.5,hi+0.5,py)) * fillO;
     }
 
     float alpha = cov + fill*(1.0-cov);
-    fragColor   = vec4(rainbow(t) * alpha, alpha);
+    // straight (non-premultiplied) alpha -- DPF blends with GL_SRC_ALPHA
+    fragColor   = vec4(rainbow(t), alpha);
 }

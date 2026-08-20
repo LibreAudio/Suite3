@@ -148,7 +148,7 @@ private:
         /* --- cast shadow under the cap, clipped to the gutter band --------- */
         /* full-alpha core out to rBody+0.5, then a short blur to transparent */
         Paint sh = radialGradient(50, 53, rBody + 0.5f, rBody + 3.2f,
-                                  Color(0, 0, 0, 70.f / 255.f), Color(0, 0, 0, 0));
+                                  Color(0, 0, 0, 50.f / 255.f), Color(0, 0, 0, 0));
         knobBand(50, 50, rArc, AW, MIN_A, MAX_A, &sh, Color(0, 0, 0, 0));
 
         /* --- knob body: vertical gradient + dark rim ----------------------- */

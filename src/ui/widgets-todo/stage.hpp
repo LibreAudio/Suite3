@@ -47,7 +47,7 @@ private:
             fill();
         }
 
-        fillPaint(linearGradient(0, h - h * 0.4f, 0, h - h * 0.2f, LibreAudioReference::Colors::transparent, Color(0.f, 0.f, 0.f, 0.75f)));
+        fillPaint(linearGradient(0, h - h * 0.4f, 0, h - h * 0.2f, LibreAudioReference::Colors::transparent, Color(0.f, 0.f, 0.f, 0.2f)));
         fill();
 
         if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
@@ -98,7 +98,7 @@ private:
             fill();
         }
 
-        fillPaint(linearGradient(0, h - h * 0.4f, 0, h - h * 0.2f, LibreAudioReference::Colors::transparent, Color(0.f, 0.f, 0.f, 0.75f)));
+        fillPaint(linearGradient(0, h - h * 0.4f, 0, h - h * 0.2f, LibreAudioReference::Colors::transparent, Color(0.f, 0.f, 0.f, 0.2f)));
         fill();
 
         if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))

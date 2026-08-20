@@ -31,7 +31,7 @@
 #define R1       0.55 /* LFO 1 rate, Hz (0.05 .. 5) */
 #define R2       0.85 /* LFO 2 rate, Hz (0.05 .. 5) */
 #define SHOWB    1.0  /* draw the 2nd trace? (0 or 1) */
-#define GLOWW    7.0  /* glow radius, pixels */
+#define GLOWW    4.0  /* glow radius, pixels */
 #define THICK    3.0  /* line thickness, pixels */
 #else
 /* adjustable plugin parameters */
@@ -50,7 +50,7 @@ uniform float u_rate2;
 #define R1 u_rate1
 #define R2 u_rate2
 #define SHOWB (u_mode == 1. || u_mode == 2. ? 1. : 0.)
-#define GLOWW (3.5 * iScaleFactor)
+#define GLOWW (2.0 * iScaleFactor)
 #define THICK (1.5 * iScaleFactor)
 #endif
 
@@ -187,6 +187,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord){
     float a = fill;
     a = glow + a * (1.0 - glow);
     a = cov  + a * (1.0 - cov);
-    /* premultiplied output: black background is alpha 0 and lifts away cleanly */
-    fragColor = vec4(col * a, a);
+    /* Straight (non-premultiplied) alpha: DPF draws with
+       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA), so premultiplying here
+       would darken the colour a second time -- the glow and the antialiased
+       edges would fringe towards black instead of fading to transparent. */
+    fragColor = vec4(col, a);
 }

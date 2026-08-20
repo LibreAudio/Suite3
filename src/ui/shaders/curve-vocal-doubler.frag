@@ -16,7 +16,7 @@
 #define WIN  2.0     /* time window shown, seconds */
 #define THICK 3.0    /* line thickness, pixels */
 #define GLOW 0.60    /* glow strength (0 .. 1) */
-#define GLOWW 7.0    /* glow radius, pixels */
+#define GLOWW 4.0    /* glow radius, pixels */
 #define FILL 0.35    /* fill opacity between the two voices (0 .. 1) */
 #define FMIN 20.0    /* frequency axis min, Hz (left edge) */
 #define FMAX 10000.0 /* frequency axis max, Hz (right edge) */
@@ -205,6 +205,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord){
     float a = fill;
     a = glow + a * (1.0 - glow);
     a = cov  + a * (1.0 - cov);
-    /* premultiplied output: black background is alpha 0 and lifts away cleanly */
-    fragColor = vec4(col * a, a);
+    /* Straight (non-premultiplied) alpha: DPF draws with
+       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA), so premultiplying here
+       would darken the colour a second time -- the glow and the antialiased
+       edges would fringe towards black instead of fading to transparent. */
+    fragColor = vec4(col, a);
 }

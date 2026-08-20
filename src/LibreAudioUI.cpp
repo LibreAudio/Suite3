@@ -122,6 +122,7 @@ class LibreAudioUI : public LibreAudioBaseUI
 
     double fScaleFactor = getScaleFactor();
     std::unique_ptr<LibreAudioShaderBaseWidget> fShaderBackground;
+    std::unique_ptr<LibreAudioShaderBaseWidget> fShaderAnalyser;
     std::unique_ptr<LibreAudioShaderBaseWidget> fShaderLine;
     std::unique_ptr<LibreAudioRootWidget> fRoot { new LibreAudioRootWidget(getWindow(), this) };
 
@@ -129,7 +130,10 @@ public:
     LibreAudioUI()
         : LibreAudioBaseUI()
     {
-        fShaderBackground.reset(new LibreAudioBackgroundShaderWidget<SHADERS_SHADERTOY_COLORCLOUDS_FRAG_DATA, SHADERS_SHADERTOY_COLORCLOUDS_FRAG_LEN>(this, this));
+        fShaderBackground.reset(new LibreAudioBackgroundShaderWidget<SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_DATA, SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_LEN>(this, this));
+
+        // spectrum overlay: above the background, below the response curves
+        fShaderAnalyser.reset(new LibreAudioBackgroundShaderWidget<SHADERS_ANALYSER_FFT_FRAG_DATA, SHADERS_ANALYSER_FFT_FRAG_LEN>(this, this));
 
         static constexpr const std::string_view label = DISTRHO_PLUGIN_LABEL;
         if constexpr (label == "chorus")
@@ -191,6 +195,12 @@ private:
     void updateShaderPosition()
     {
         if (LibreAudioShaderBaseWidget* const sw = fShaderBackground.get())
+        {
+            sw->setAbsolutePos(fRoot->getStageAreaAbsolutePos());
+            sw->setSize(fRoot->getStageAreaSize());
+            sw->setBorderRadius(LibreAudioReference::Stage::borderRadius * fScaleFactor);
+        }
+        if (LibreAudioShaderBaseWidget* const sw = fShaderAnalyser.get())
         {
             sw->setAbsolutePos(fRoot->getStageAreaAbsolutePos());
             sw->setSize(fRoot->getStageAreaSize());
