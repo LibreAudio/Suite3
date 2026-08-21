@@ -359,7 +359,7 @@ reverb = _,_ <: dry, wet :> _,_
 with {
 
     // --- early reflection controls ---
-    predelay = in_group(hslider("[6] Pre-delay [unit:ms] [style:knob] [symbol:predelay]",
+    predelay = in_group(hslider("[4] Pre-delay [unit:ms] [style:knob] [symbol:predelay]",
                                 0, 0, 250, 0.1)) : si.smoo;
 
     // Scales every tap time and every diffuser delay. This is the distance
@@ -452,9 +452,9 @@ with {
     // The de-esser's own control sits alongside them; it runs ahead of both, so
     // its detector always compares two full-bandwidth bands and the amount of
     // de-essing does not drift as LP moves.
-    lowcut = in_group(hslider("[4] HP [unit:Hz] [scale:log] [style:knob] [symbol:lowcut]",
+    lowcut = in_group(hslider("[2] HP [unit:Hz] [scale:log] [style:knob] [symbol:lowcut]",
                               60, 20, 1000, 1));
-    highcut = in_group(hslider("[5] LP [unit:Hz] [scale:log] [style:knob] [symbol:highcut]",
+    highcut = in_group(hslider("[3] LP [unit:Hz] [scale:log] [style:knob] [symbol:highcut]",
                                18000, 1000, 20000, 1)) : min(0.45 * ma.SR);
 
     // --- dimension ---
@@ -581,26 +581,31 @@ with {
     // would be measuring a high band that High Cut had already thinned, and the
     // amount of de-essing would drift as that knob moved.
     //
-    // src is then shared: all three stages hang off the same de-essed, cut,
-    // pre-delayed signal, so Pre-delay and the two cuts move the whole reverb.
+    // incutd is then shared two ways: it feeds the reverb, and it is the
+    // ducker's sidechain. Everything downstream of it hangs off one signal, so
+    // Pre-delay and the two cuts move the whole reverb together.
     //
-    //   in --> hfLimit --> cuts --> pre-delay --> dimension = src
-    //                                  |
-    //          +-----------------------+------------------+
-    //          |                       |                  |
-    //       erstage --------------> ER out * erlevel      |
-    //          |                                          |
-    //          +--> feedmix ----> tdiffuse --> tank  --+   |
-    //          |                                       +--+-- * taillevel
-    //          +--> loopfeedmix -> gdiffuse -> gtank --+   |
-    //                                                      |
-    //                                  width, eq, duck ---+--> + dry * drylevel
+    //   in --> hfLimit --> cuts = incutd --+---------------- key (mono) --+
+    //                        |             |                             |
+    //                  pre-delay --> dimension                           |
+    //                        |                                           |
+    //          +-------------+---------------+                           |
+    //          |                             |                           |
+    //       erstage ------------------> ER out * erlevel                 |
+    //          |                                                         |
+    //          +--> feedmix ----> tdiffuse --> tank  --+                 |
+    //          |                                       +--- * taillevel  |
+    //          +--> loopfeedmix -> gdiffuse -> gtank --+                 |
+    //                                    |                               |
+    //                              width --> eq --> duck <--------------+
+    //                                                        |
+    //                                             + dry * drylevel
     //
     // Both tails read the same Feed knob and the same parameter set; the tank
     // and gtank outputs are crossfaded by Tail Blend before Tail Level scales
     // the pair. The bus arithmetic below carries ten signals at its widest:
     // three copies of the ER output (one for the output sum, one per tank feed)
-    // and two of src.
+    // and two of the pre-delayed input.
     dry = par(i, 2, *(drylevel));
 
     // Everything up to and including the input filters. Named because it is
@@ -608,11 +613,11 @@ with {
     // Taking the key from here rather than from the plugin input means HP and
     // LP shape what the ducker listens to — park LP low and a bright source
     // stops triggering it — which is the point of keying post-filter.
-    incutd = compressor : hfLimit : par(i, 2, incut);
+    incutd = hfLimit : par(i, 2, incut);
 
     // The key is tapped BEFORE the pre-delay, so the duck follows the source
     // rather than a delayed copy of it.
-    src = incutd : par(i, 2, de.fdelay(MAXPDD, ms2samp(predelay))) : dimension;
+    predelayed = par(i, 2, de.fdelay(MAXPDD, ms2samp(predelay))) : dimension;
 
     // Fed a mono sum, and its one modulated copy goes to L in anti-phase to R.
     // That puts the whole wet signal in the side channel: it widens without
@@ -661,10 +666,7 @@ with {
     // pulls down the finished tail rather than starving the tanks — a tank fed
     // a ducked signal would still be ringing with what it was given seconds
     // ago, which is not what ducking is for.
-    wet = incutd <: (par(i, 2, de.fdelay(MAXPDD, ms2samp(predelay)))
-                     : dimension : wetbody),
-                    keymono
-        : duckapply;
+    wet = incutd <: (predelayed : wetbody), keymono : duckapply;
 
     keymono(a, b) = (a + b) * 0.5;
 
@@ -900,8 +902,8 @@ hfLimRangeAt0  =    0;  hfLimRangeAt100  =    18; // dB - ceiling on total reduc
 
 lerp(a, b, t) = a + (b - a) * t;
 
-hflim_amount = in_group(hslider("[2]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02]", 0, 0, 100, 1)) / 100;
-hflim_meter  = in_group(vbargraph("[3]HFlim Reduction[unit:dB][symbol:deess_meter]", 0, 18));
+hflim_amount = in_group(hslider("[0]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02]", 0, 0, 100, 1)) / 100;
+hflim_meter  = in_group(vbargraph("[1]HFlim Reduction[unit:dB][symbol:deess_meter]", 0, 18));
 
 hflim_split  = lerp(hfLimSplitAt0,  hfLimSplitAt100,  hflim_amount);
 hflim_thresh = lerp(hfLimThreshAt0, hfLimThreshAt100, hflim_amount);
@@ -962,87 +964,6 @@ with {
 
     outL = l : shelf;
     outR = r : shelf;
-};
-
-
-//======================== compressor =========================================
-// One knob, on the wet path ahead of the de-esser, so the reverb is fed
-// material that has already been evened out. Compressing a reverb's INPUT is
-// not the same as compressing its output: the tanks integrate whatever they
-// are given over seconds, so levelling the source makes the tail sit still,
-// whereas levelling the tail pumps the whole room.
-//
-// The dry path never sees it — it hangs off the plugin input, upstream of all
-// of this — so this is a send compressor, not a mix compressor.
-//
-// One control drives threshold, ratio, attack and release together from the
-// endpoint pairs below, exactly as the de-esser's macro does. Ratio starts at
-// exactly 1.0, which is what makes 0% a bypass: at ratio 1 the gain computer's
-// (1 - 1/ratio) term is zero, so no reduction is computed and no makeup is
-// applied either. Verified by subtracting the stage's output from its input —
-// the residual is exactly zero at 0%.
-//
-// That is a statement about this stage, not about the plugin output. Attaching
-// the meter reorders the surrounding arithmetic by an ULP or so, and the loop
-// tank amplifies that: the finished output differs from a build with the stage
-// spliced out by about 1.5e-5, first appearing at 9.04 ms, which is the loop's
-// earliest output tap at 8.9 ms. Inaudible, but it is not bit-identical and
-// should not be claimed as such.
-compThreshAt0 = -12;    compThreshAt100 = -30;    // dB
-compRatioAt0  = 1.0;    compRatioAt100  = 6.0;
-compAttAt0    = 0.030;  compAttAt100    = 0.005;  // s
-compRelAt0    = 0.300;  compRelAt100    = 0.080;  // s
-
-// AUTO-MAKEUP. The textbook static formula, makeup = -threshold * (1 - 1/ratio),
-// assumes the signal sits at full scale and is badly wrong anywhere else: with
-// the threshold at -30 and a 6:1 ratio it asks for 28 dB, while material at a
-// normal -20 dBFS is only losing about 12. Applied here it would make the knob
-// a volume control with a compressor attached.
-//
-// So the makeup is the reduction's own slow average, added back. Whatever the
-// compressor takes away on average it puts straight back, which compensates at
-// whatever level the material actually arrives rather than at one assumed
-// level, and leaves only the fast deviation from that average — which is the
-// part that does the actual compressing.
-//
-// Measured, driving a noise bed with a 0.7 Hz swell and sweeping the knob end
-// to end: wet output level holds within 1.0 dB at -10 dBFS in and within
-// 1.0 dB at -1 dBFS in, and does not move at all at -30 dBFS in, where the
-// signal never reaches the threshold. Not exact — the makeup tracks the mean
-// reduction while the level being held is an RMS, and compression pulls peaks
-// down harder than it pulls RMS — but within a dB across the whole travel at
-// any level, which is what the knob needs to be usable.
-//
-// Over the same sweep the input's 8.4 dB envelope swing arrives at the tanks as
-// 2.7 dB, so it is genuinely compressing and not merely trading gain for gain.
-COMP_MAKEUP_TAU = 1.0;   // s
-
-comp_amount = in_group(hslider("[0] Comp [unit:%] [style:knob] [symbol:comp_amount]",
-                               0, 0, 100, 1)) / 100;
-comp_meter  = in_group(vbargraph("[1] Comp GR [unit:dB] [symbol:comp_meter]", 0, 24));
-
-comp_thresh = lerp(compThreshAt0, compThreshAt100, comp_amount);
-comp_ratio  = lerp(compRatioAt0,  compRatioAt100,  comp_amount);
-comp_att    = lerp(compAttAt0,    compAttAt100,    comp_amount);
-comp_rel    = lerp(compRelAt0,    compRelAt100,    comp_amount);
-
-// Detection is linked on the mono sum, the same reason as the other two
-// dynamics stages: two independent detectors would move the channels by
-// different amounts and swing the image with the programme.
-compressor(l, r) = attach(outL, redDb : comp_meter), outR
-with {
-    mono  = (l + r) * 0.5;
-    envDb = an.amp_follower_ar(comp_att, comp_rel, mono)
-          : max(ba.db2linear(-120)) : ba.linear2db;
-
-    redDb = max(0, envDb - comp_thresh) * (1 - 1 / comp_ratio);
-    avgDb = redDb : si.smooth(ba.tau2pole(COMP_MAKEUP_TAU));
-
-    // Only the deviation from the average reaches the gain. On a steady signal
-    // redDb and avgDb converge and the gain returns to unity.
-    gain  = ba.db2linear(avgDb - redDb);
-    outL  = l * gain;
-    outR  = r * gain;
 };
 
 
