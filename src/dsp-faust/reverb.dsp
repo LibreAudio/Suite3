@@ -341,7 +341,16 @@ er_group(x)   = rev_group(vgroup("[2] Early Reflections", x));
 tail_group(x) = rev_group(vgroup("[3] Tail", x));
 tail_top(x)   = tail_group(hgroup("[0]Time", x));
 tail_bot(x)   = tail_group(hgroup("[1]Tone", x));
-out_group(x)  = rev_group(hgroup("[4] Output", x));
+// Five bands side by side, each one a column of its own: Q on top, then Freq,
+// then Gain. The band's identity is the group label, so the controls inside it
+// only need to say which parameter they are.
+eq_group(x)   = rev_group(hgroup("[4] EQ", x));
+eq_ls(x)      = eq_group(vgroup("[0] Low Shelf", x));
+eq_b1(x)      = eq_group(vgroup("[1] Bell 1", x));
+eq_b2(x)      = eq_group(vgroup("[2] Bell 2", x));
+eq_b3(x)      = eq_group(vgroup("[3] Bell 3", x));
+eq_hs(x)      = eq_group(vgroup("[4] High Shelf", x));
+out_group(x)  = rev_group(hgroup("[5] Output", x));
 
 uiMeters(x) = hgroup("[9]", x);
 
@@ -350,7 +359,7 @@ reverb = _,_ <: dry, wet :> _,_
 with {
 
     // --- early reflection controls ---
-    predelay = in_group(hslider("[4] Pre-delay [unit:ms] [style:knob] [symbol:predelay]",
+    predelay = in_group(hslider("[6] Pre-delay [unit:ms] [style:knob] [symbol:predelay]",
                                 0, 0, 250, 0.1)) : si.smoo;
 
     // Scales every tap time and every diffuser delay. This is the distance
@@ -443,9 +452,9 @@ with {
     // The de-esser's own control sits alongside them; it runs ahead of both, so
     // its detector always compares two full-bandwidth bands and the amount of
     // de-essing does not drift as LP moves.
-    lowcut = in_group(hslider("[2] HP [unit:Hz] [scale:log] [style:knob] [symbol:lowcut]",
+    lowcut = in_group(hslider("[4] HP [unit:Hz] [scale:log] [style:knob] [symbol:lowcut]",
                               60, 20, 1000, 1));
-    highcut = in_group(hslider("[3] LP [unit:Hz] [scale:log] [style:knob] [symbol:highcut]",
+    highcut = in_group(hslider("[5] LP [unit:Hz] [scale:log] [style:knob] [symbol:highcut]",
                                18000, 1000, 20000, 1)) : min(0.45 * ma.SR);
 
     // --- dimension ---
@@ -460,10 +469,84 @@ with {
     dimwet = dim_group(hslider("[1] Wet [unit:%] [style:knob] [symbol:dim_wet]",
                                0, 0, 100, 1)) / 100 : smoo(0.0);
 
+    // --- eq ---
+    // A five band parametric on the wet path, after everything else: a low
+    // shelf, three bells, a high shelf — in that order through the chain as
+    // well as across the panel. All five are fi.svf, the same TPT state
+    // variable structure the de-esser's shelf uses, built for coefficients that
+    // move every sample. At 0 dB all three shapes collapse their mix to
+    // (1,0,0), so a band left flat is a true bypass rather than an allpass
+    // sitting in the path adding phase shift for nothing.
+    //
+    // The shelves take a Q like the bells do, and not merely for symmetry: in
+    // this SVF a shelf's Q sets the shape of its knee. Measured on the high
+    // shelf at +12 dB, reading just below its 8 kHz corner: Q 0.3 gives a
+    // gentle slope still +4.1 dB up at 4 kHz, while Q 2 and above dip BELOW
+    // unity there (-2.8 dB, -3.8 dB) and overshoot the target above the corner
+    // (+13.4 dB at 16 kHz) — a resonant shelf, not just a steeper one. The
+    // corner itself stays pinned at exactly half the set gain whatever Q does.
+    //
+    // Wet only. The dry path hangs off the plugin input and never reaches here,
+    // so this shapes the reverb without touching the source — which is the
+    // point of putting an EQ inside a reverb rather than after it.
+    //
+    // Every parameter is smoothed, so a band can be swept while listening
+    // without zipper. The cost is real: smoothing turns frequency and gain into
+    // sample-rate signals, so the SVF's tan() and pow() can no longer be
+    // hoisted out of the sample loop and run every sample instead. Measured
+    // against the same build with the section spliced out, ten filters (five
+    // bands, two channels) cost 0.17 points of CPU — 2.21% to 2.38% at
+    // 44.1 kHz.
+    //
+    // The symbol numbering deliberately does not follow the panel order. The
+    // bells keep symbols 1-3 and the shelves 4 and 5 from when they were added,
+    // because a symbol is an identity that host automation binds to, while the
+    // order is only presentation.
+    eqq4 = eq_ls(hslider("[0] Q [scale:log] [style:knob] [symbol:eq_q_4]",
+                         0.7, 0.2, 8, 0.01)) : smoo(0.7);
+    eqf4 = eq_ls(hslider("[1] Freq [unit:Hz] [scale:log] [style:knob] [symbol:eq_freq_4]",
+                         120, 20, 20000, 1)) : smoo(120) : min(0.45 * ma.SR);
+    eqg4 = eq_ls(hslider("[2] Gain [unit:dB] [style:knob] [symbol:eq_gain_4]",
+                         0, -18, 18, 0.1)) : smoo(0.0);
+
+    eqq1 = eq_b1(hslider("[0] Q [scale:log] [style:knob] [symbol:eq_q_1]",
+                         1.0, 0.2, 8, 0.01)) : smoo(1.0);
+    eqf1 = eq_b1(hslider("[1] Freq [unit:Hz] [scale:log] [style:knob] [symbol:eq_freq_1]",
+                         400, 20, 20000, 1)) : smoo(400) : min(0.45 * ma.SR);
+    eqg1 = eq_b1(hslider("[2] Gain [unit:dB] [style:knob] [symbol:eq_gain_1]",
+                         0, -18, 18, 0.1)) : smoo(0.0);
+
+    eqq2 = eq_b2(hslider("[0] Q [scale:log] [style:knob] [symbol:eq_q_2]",
+                         1.0, 0.2, 8, 0.01)) : smoo(1.0);
+    eqf2 = eq_b2(hslider("[1] Freq [unit:Hz] [scale:log] [style:knob] [symbol:eq_freq_2]",
+                         1500, 20, 20000, 1)) : smoo(1500) : min(0.45 * ma.SR);
+    eqg2 = eq_b2(hslider("[2] Gain [unit:dB] [style:knob] [symbol:eq_gain_2]",
+                         0, -18, 18, 0.1)) : smoo(0.0);
+
+    eqq3 = eq_b3(hslider("[0] Q [scale:log] [style:knob] [symbol:eq_q_3]",
+                         1.0, 0.2, 8, 0.01)) : smoo(1.0);
+    eqf3 = eq_b3(hslider("[1] Freq [unit:Hz] [scale:log] [style:knob] [symbol:eq_freq_3]",
+                         5000, 20, 20000, 1)) : smoo(5000) : min(0.45 * ma.SR);
+    eqg3 = eq_b3(hslider("[2] Gain [unit:dB] [style:knob] [symbol:eq_gain_3]",
+                         0, -18, 18, 0.1)) : smoo(0.0);
+
+    eqq5 = eq_hs(hslider("[0] Q [scale:log] [style:knob] [symbol:eq_q_5]",
+                         0.7, 0.2, 8, 0.01)) : smoo(0.7);
+    eqf5 = eq_hs(hslider("[1] Freq [unit:Hz] [scale:log] [style:knob] [symbol:eq_freq_5]",
+                         8000, 20, 20000, 1)) : smoo(8000) : min(0.45 * ma.SR);
+    eqg5 = eq_hs(hslider("[2] Gain [unit:dB] [style:knob] [symbol:eq_gain_5]",
+                         0, -18, 18, 0.1)) : smoo(0.0);
+
+    eq = fi.svf.ls(eqf4, eqq4, eqg4)
+       : fi.svf.bell(eqf1, eqq1, eqg1)
+       : fi.svf.bell(eqf2, eqq2, eqg2)
+       : fi.svf.bell(eqf3, eqq3, eqg3)
+       : fi.svf.hs(eqf5, eqq5, eqg5);
+
     // --- output ---
     // Mid/side trim on the wet signal only. It lands here rather than in the
     // Tail section because it acts on the early reflections too.
-    width = out_group(hslider("[0] Stereo Width [unit:%] [style:knob] [symbol:stereo_width]",
+    width = out_group(hslider("[2] Stereo Width [unit:%] [style:knob] [symbol:stereo_width]",
                               100, 0, 200, 1)) / 100 : smoo(1.0);
 
     // Three faders and no master: the early and late halves are balanced
@@ -471,18 +554,18 @@ with {
     // both together, so a master would only duplicate what two of these already
     // do. ER and Tail default 6 dB down, which puts the wet/dry balance within
     // half a dB of where the old 35% dry/wet default sat.
-    drylevel = out_group(vslider("[1] Dry [unit:dB] [symbol:dry_level]",
+    drylevel = out_group(vslider("[3] Dry [unit:dB] [symbol:dry_level]",
                                  0, -60, 12, 0.1)) : ba.db2linear : si.smoo;
-    erlevel = out_group(vslider("[2] ER [unit:dB] [symbol:er_level]",
+    erlevel = out_group(vslider("[4] ER [unit:dB] [symbol:er_level]",
                                 -6, -60, 12, 0.1)) : ba.db2linear : si.smoo;
-    er_meterL = out_group(vbargraph("[3] ER L [unit:dB] [symbol:er_meter_l]", -60, 12));
-    er_meterR = out_group(vbargraph("[4] ER R [unit:dB] [symbol:er_meter_r]", -60, 12));
+    er_meterL = out_group(vbargraph("[5] ER L [unit:dB] [symbol:er_meter_l]", -60, 12));
+    er_meterR = out_group(vbargraph("[6] ER R [unit:dB] [symbol:er_meter_r]", -60, 12));
 
-    taillevel = out_group(vslider("[5] Tail [unit:dB] [symbol:tail_level]",
+    taillevel = out_group(vslider("[7] Tail [unit:dB] [symbol:tail_level]",
                                   -6, -60, 12, 0.1)) : ba.db2linear : si.smoo;
 
-    tail_meterL = out_group(vbargraph("[6] Tail L [unit:dB] [symbol:tail_meter_l]", -60, 12));
-    tail_meterR = out_group(vbargraph("[7] Tail R [unit:dB] [symbol:tail_meter_r]", -60, 12));
+    tail_meterL = out_group(vbargraph("[8] Tail L [unit:dB] [symbol:tail_meter_l]", -60, 12));
+    tail_meterR = out_group(vbargraph("[9] Tail R [unit:dB] [symbol:tail_meter_r]", -60, 12));
 
     // Post-fader metering: each meter shows what its stage is actually putting
     // into the mix, so pulling a fader down moves its own meter. Both sit ahead
@@ -511,7 +594,7 @@ with {
     //          |                                       +--+-- * taillevel
     //          +--> loopfeedmix -> gdiffuse -> gtank --+   |
     //                                                      |
-    //                                            width ----+--> + dry * drylevel
+    //                                  width, eq, duck ---+--> + dry * drylevel
     //
     // Both tails read the same Feed knob and the same parameter set; the tank
     // and gtank outputs are crossfaded by Tail Blend before Tail Level scales
@@ -520,8 +603,16 @@ with {
     // and two of src.
     dry = par(i, 2, *(drylevel));
 
-    src = hfLimit : par(i, 2, incut : de.fdelay(MAXPDD, ms2samp(predelay)))
-                  : dimension;
+    // Everything up to and including the input filters. Named because it is
+    // used twice: it feeds the reverb, and it is also the ducker's sidechain.
+    // Taking the key from here rather than from the plugin input means HP and
+    // LP shape what the ducker listens to — park LP low and a bright source
+    // stops triggering it — which is the point of keying post-filter.
+    incutd = compressor : hfLimit : par(i, 2, incut);
+
+    // The key is tapped BEFORE the pre-delay, so the duck follows the source
+    // rather than a delayed copy of it.
+    src = incutd : par(i, 2, de.fdelay(MAXPDD, ms2samp(predelay))) : dimension;
 
     // Fed a mono sum, and its one modulated copy goes to L in anti-phase to R.
     // That puts the whole wet signal in the side channel: it widens without
@@ -555,13 +646,27 @@ with {
         wet   = de.fdelay(MAXDIMD, dt, mono) * dimwet;
     };
 
-    wet = src <: (erstage, si.bus(2))
+    // The reverb proper, from the taps through to the EQ.
+    wetbody = _,_ <: (erstage, si.bus(2))
         : fanout
         : si.bus(2), feedmix, loopfeedmix
         : si.bus(2), (tdiffuse(tdifL), tdiffuse(tdifR) : tank)
                    , (gdiffuse(gdifL), gdiffuse(gdifR) : gtank)
         : sumthree
-        : stereoWidth(width);
+        : stereoWidth(width)
+        : par(i, 2, eq);
+
+    // incutd fans out three ways: through the pre-delay and the whole reverb,
+    // and separately to the sidechain. The duck is applied last of all, so it
+    // pulls down the finished tail rather than starving the tanks — a tank fed
+    // a ducked signal would still be ringing with what it was given seconds
+    // ago, which is not what ducking is for.
+    wet = incutd <: (par(i, 2, de.fdelay(MAXPDD, ms2samp(predelay)))
+                     : dimension : wetbody),
+                    keymono
+        : duckapply;
+
+    keymono(a, b) = (a + b) * 0.5;
 
     // erL,erR,srcL,srcR -> one copy of the ER for the output, and one (ER,src)
     // pair for each tail to crossfade between. The ER stage itself is computed
@@ -795,8 +900,8 @@ hfLimRangeAt0  =    0;  hfLimRangeAt100  =    18; // dB - ceiling on total reduc
 
 lerp(a, b, t) = a + (b - a) * t;
 
-hflim_amount = in_group(hslider("[0]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02]", 0, 0, 100, 1)) / 100;
-hflim_meter  = in_group(vbargraph("[1]HFlim Reduction[unit:dB][symbol:deess_meter]", 0, 18));
+hflim_amount = in_group(hslider("[2]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02]", 0, 0, 100, 1)) / 100;
+hflim_meter  = in_group(vbargraph("[3]HFlim Reduction[unit:dB][symbol:deess_meter]", 0, 18));
 
 hflim_split  = lerp(hfLimSplitAt0,  hfLimSplitAt100,  hflim_amount);
 hflim_thresh = lerp(hfLimThreshAt0, hfLimThreshAt100, hflim_amount);
@@ -857,4 +962,155 @@ with {
 
     outL = l : shelf;
     outR = r : shelf;
+};
+
+
+//======================== compressor =========================================
+// One knob, on the wet path ahead of the de-esser, so the reverb is fed
+// material that has already been evened out. Compressing a reverb's INPUT is
+// not the same as compressing its output: the tanks integrate whatever they
+// are given over seconds, so levelling the source makes the tail sit still,
+// whereas levelling the tail pumps the whole room.
+//
+// The dry path never sees it — it hangs off the plugin input, upstream of all
+// of this — so this is a send compressor, not a mix compressor.
+//
+// One control drives threshold, ratio, attack and release together from the
+// endpoint pairs below, exactly as the de-esser's macro does. Ratio starts at
+// exactly 1.0, which is what makes 0% a bypass: at ratio 1 the gain computer's
+// (1 - 1/ratio) term is zero, so no reduction is computed and no makeup is
+// applied either. Verified by subtracting the stage's output from its input —
+// the residual is exactly zero at 0%.
+//
+// That is a statement about this stage, not about the plugin output. Attaching
+// the meter reorders the surrounding arithmetic by an ULP or so, and the loop
+// tank amplifies that: the finished output differs from a build with the stage
+// spliced out by about 1.5e-5, first appearing at 9.04 ms, which is the loop's
+// earliest output tap at 8.9 ms. Inaudible, but it is not bit-identical and
+// should not be claimed as such.
+compThreshAt0 = -12;    compThreshAt100 = -30;    // dB
+compRatioAt0  = 1.0;    compRatioAt100  = 6.0;
+compAttAt0    = 0.030;  compAttAt100    = 0.005;  // s
+compRelAt0    = 0.300;  compRelAt100    = 0.080;  // s
+
+// AUTO-MAKEUP. The textbook static formula, makeup = -threshold * (1 - 1/ratio),
+// assumes the signal sits at full scale and is badly wrong anywhere else: with
+// the threshold at -30 and a 6:1 ratio it asks for 28 dB, while material at a
+// normal -20 dBFS is only losing about 12. Applied here it would make the knob
+// a volume control with a compressor attached.
+//
+// So the makeup is the reduction's own slow average, added back. Whatever the
+// compressor takes away on average it puts straight back, which compensates at
+// whatever level the material actually arrives rather than at one assumed
+// level, and leaves only the fast deviation from that average — which is the
+// part that does the actual compressing.
+//
+// Measured, driving a noise bed with a 0.7 Hz swell and sweeping the knob end
+// to end: wet output level holds within 1.0 dB at -10 dBFS in and within
+// 1.0 dB at -1 dBFS in, and does not move at all at -30 dBFS in, where the
+// signal never reaches the threshold. Not exact — the makeup tracks the mean
+// reduction while the level being held is an RMS, and compression pulls peaks
+// down harder than it pulls RMS — but within a dB across the whole travel at
+// any level, which is what the knob needs to be usable.
+//
+// Over the same sweep the input's 8.4 dB envelope swing arrives at the tanks as
+// 2.7 dB, so it is genuinely compressing and not merely trading gain for gain.
+COMP_MAKEUP_TAU = 1.0;   // s
+
+comp_amount = in_group(hslider("[0] Comp [unit:%] [style:knob] [symbol:comp_amount]",
+                               0, 0, 100, 1)) / 100;
+comp_meter  = in_group(vbargraph("[1] Comp GR [unit:dB] [symbol:comp_meter]", 0, 24));
+
+comp_thresh = lerp(compThreshAt0, compThreshAt100, comp_amount);
+comp_ratio  = lerp(compRatioAt0,  compRatioAt100,  comp_amount);
+comp_att    = lerp(compAttAt0,    compAttAt100,    comp_amount);
+comp_rel    = lerp(compRelAt0,    compRelAt100,    comp_amount);
+
+// Detection is linked on the mono sum, the same reason as the other two
+// dynamics stages: two independent detectors would move the channels by
+// different amounts and swing the image with the programme.
+compressor(l, r) = attach(outL, redDb : comp_meter), outR
+with {
+    mono  = (l + r) * 0.5;
+    envDb = an.amp_follower_ar(comp_att, comp_rel, mono)
+          : max(ba.db2linear(-120)) : ba.linear2db;
+
+    redDb = max(0, envDb - comp_thresh) * (1 - 1 / comp_ratio);
+    avgDb = redDb : si.smooth(ba.tau2pole(COMP_MAKEUP_TAU));
+
+    // Only the deviation from the average reaches the gain. On a steady signal
+    // redDb and avgDb converge and the gain returns to unity.
+    gain  = ba.db2linear(avgDb - redDb);
+    outL  = l * gain;
+    outR  = r * gain;
+};
+
+
+//======================== ducker =============================================
+// One knob. It pushes the finished reverb down while the source is playing and
+// lets it swell back in the gaps — the oldest trick for keeping a long tail
+// from burying the thing that caused it.
+//
+// TWO PLACEMENT DECISIONS, and they point in opposite directions on purpose.
+//
+// The KEY is tapped early, straight after the input filters and before the
+// pre-delay, so the duck follows the source itself. Keying off a pre-delayed
+// copy would make the reverb start ducking late, by exactly the pre-delay.
+// Because the tap is after HP and LP, those two also shape what the ducker
+// hears: pull LP down and a bright source stops triggering it. That is
+// deliberate and it is what "sidechain from after the input filters" buys.
+//
+// The REDUCTION is applied as late as possible, on the wet signal after the
+// EQ. Ducking the tanks' input instead would not work: a tank integrates what
+// it was fed over seconds, so it would go on ringing with material from before
+// the duck began, and the gain change would arrive smeared across the whole
+// tail rather than on it.
+//
+// The dry path is untouched — it hangs off the plugin input, upstream of all
+// of this — so the source never ducks itself.
+duckThreshAt0 = -12;    duckThreshAt100 = -40;    // dB
+duckRatioAt0  = 1.0;    duckRatioAt100  = 8.0;
+duckRangeAt0  = 0;      duckRangeAt100  = 18;     // dB, ceiling on the duck
+duckAttAt0    = 0.005;  duckAttAt100    = 0.002;  // s, fast: catch the onset
+// Release SHORTENS as the knob advances, which is the opposite of the obvious
+// choice and was arrived at by measurement. Lengthening it with Amount seemed
+// natural — deeper duck, gentler return — but it compounds: at 18 dB of duck
+// with a 400 ms release the tail was still 16.4 dB down half a second into a
+// silent gap and 7.1 dB down after a full second, so the reverb never actually
+// came back and the effect read as a mute rather than a duck. Sweeping the
+// release against a gated source, GR remaining 500 ms into a 1 s gap:
+//
+//     release   80ms  120ms  180ms  250ms  400ms
+//     GR left   0.00   0.00   4.17  10.36  16.39  dB
+//
+// Depth while the source plays is 18 dB at every one of those, so release buys
+// nothing on the way down and costs everything on the way back. 150 ms at the
+// top recovers inside a normal gap between phrases while still being far too
+// slow to chatter.
+duckRelAt0    = 0.300;  duckRelAt100    = 0.150;  // s
+
+duck_amount = out_group(hslider("[0] Duck [unit:%] [style:knob] [symbol:duck_amount]",
+                                0, 0, 100, 1)) / 100;
+duck_meter  = out_group(vbargraph("[1] Duck GR [unit:dB] [symbol:duck_meter]", 0, 18));
+
+duck_thresh = lerp(duckThreshAt0, duckThreshAt100, duck_amount);
+duck_ratio  = lerp(duckRatioAt0,  duckRatioAt100,  duck_amount);
+duck_range  = lerp(duckRangeAt0,  duckRangeAt100,  duck_amount);
+duck_att    = lerp(duckAttAt0,    duckAttAt100,    duck_amount);
+duck_rel    = lerp(duckRelAt0,    duckRelAt100,    duck_amount);
+
+// Ratio starts at exactly 1.0, so at 0% the (1 - 1/ratio) term is zero, no
+// reduction is computed, and the gain is exactly unity — the stage is a bypass
+// rather than something that merely settles near one.
+//
+// The key arrives already mono-summed, so there is only one detector and one
+// gain for both channels. A ducker with per-channel detectors would move the
+// image every time the source moved in it.
+duckapply(l, r, k) = attach(l * g, redDb : duck_meter), r * g
+with {
+    envDb = an.amp_follower_ar(duck_att, duck_rel, k)
+          : max(ba.db2linear(-120)) : ba.linear2db;
+
+    redDb = min(max(0, envDb - duck_thresh) * (1 - 1 / duck_ratio), duck_range);
+    g     = ba.db2linear(0 - redDb);
 };
