@@ -4,7 +4,6 @@ declare license "GPL-3.0-or-later";
 declare name "Reverb";
 declare unique_id "LArv";
 
-// declare drywet "true";
 
 import("stdfaust.lib");
 
@@ -269,6 +268,21 @@ NGTAP = 7;
 // Blend crossfade between the two tanks without the level moving.
 GTAPNORM = 1.0 / sqrt(NGTAP) * 0.69;
 
+//======================== dimension ==========================================
+// The Dimension D lifted from chorus.dsp — the Roland SDD-320. Delay, rate and
+// depth are fixed to the hardware because the SDD-320 has no knobs for them,
+// only the four buttons, which step depth. Measured on a 1 kHz tone the four
+// give a peak pitch deviation of 1.1 / 2.2 / 3.3 / 4.4 cents — far shallower
+// than a Juno chorus, which is why it has no wobble of its own to fight the
+// reverb's own modulation. Re-measured in this build by zero-crossing analysis
+// of the modulated copy against a 1 kHz tone: 1.09 / 2.18 / 3.27 / 4.36 cents,
+// at a side level constant to within 0.11 dB across the four. The buttons step
+// width, not loudness.
+DIM_DELAY      = 0.005;    // s, fixed delay centre (1024-stage BBD, ~100 kHz clock)
+DIM_RATE       = 0.5;      // Hz, fixed LFO, same for all four buttons
+DIM_DEPTH_BASE = 0.0002;   // 0.2 ms peak deviation on button 1
+DIM_DEPTH_STEP = 0.0002;   // +0.2 ms per button, up to 0.8 ms on button 4
+
 //======================== sizing =============================================
 // Faust needs literal max delay lengths, so they are budgeted for the worst
 // case: longest tap * largest Size at 192 kHz. All taps read the same source
@@ -292,6 +306,7 @@ MAXTDIFD  = int(10 * MAXSR / 1000.0) + 2;
 MAXGDELD  = int(90 * MAXSIZE * MAXSR / 1000.0) + 2;
 MAXGAPD   = int((50 * MAXSIZE + MAXMODMS + 4) * MAXSR / 1000.0) + 2;
 MAXSHPD   = int(500 * MAXSR / 1000.0) + 2;
+MAXDIMD   = int(0.010 * MAXSR) + 2;      // 5 ms centre + 0.8 ms of sweep, with room
 
 // 3*ln(10): converts a T60 in seconds into a per-pass loop gain.
 LN1000 = 6.9077553;
@@ -307,23 +322,35 @@ smoo(dflt, x) = (x - dflt) : si.smoo : +(dflt);
 
 //======================== the reverb =========================================
 
-uiBottom(x) = hgroup("[8]Stage Bottom", x);
-uiBottomRight(x) = uiBottom(hgroup("[1]Stage Bottom Right", x));
+// Four sections, left to right in signal order: what goes in, the early
+// reflections, the late tails, and the mix that comes out. Defined at file
+// scope rather than inside `reverb` so the de-esser, which lives further down,
+// can put its own control in the Input strip with the two cuts it belongs next
+// to.
+rev_group(x)  = hgroup("REVERB", x);
+in_group(x)   = rev_group(hgroup("[0] Input", x));
+dim_group(x)  = rev_group(vgroup("[1] Dimension", x));
+er_group(x)   = rev_group(vgroup("[2] Early Reflections", x));
+// The Tail section carries twelve controls, so it is a vgroup of two hgroups
+// rather than one long row. The split is by kind, not simply down the middle:
+// the top row is routing and time — what the tanks listen to, which tank, how
+// long, how big, and how the onset is shaped — and the bottom row is tone and
+// texture. That keeps Bass Multiply, Bass Freq and HF Damping together, since
+// all three do the same job of making the decay frequency-dependent, and it
+// keeps Shape and Spread next to the Decay and Size they work against.
+tail_group(x) = rev_group(vgroup("[3] Tail", x));
+tail_top(x)   = tail_group(hgroup("[0]Time", x));
+tail_bot(x)   = tail_group(hgroup("[1]Tone", x));
+out_group(x)  = rev_group(hgroup("[4] Output", x));
 
-uiDeEss(x)  = uiBottom(hgroup("[5]De-Esser", x));
 uiMeters(x) = hgroup("[9]", x);
-
 
 
 reverb = _,_ <: dry, wet :> _,_
 with {
-    rev_group(x)  = vgroup("REVERB", x);
-    er_group(x)   = rev_group(hgroup("[0] Early Reflections", x));
-    tail_group(x) = rev_group(hgroup("[1] Tail", x));
-    out_group(x)  = rev_group(hgroup("[2] Output", x));
 
     // --- early reflection controls ---
-    predelay = er_group(hslider("[0] Pre-delay [unit:ms] [style:knob] [symbol:predelay]",
+    predelay = in_group(hslider("[4] Pre-delay [unit:ms] [style:knob] [symbol:predelay]",
                                 0, 0, 250, 0.1)) : si.smoo;
 
     // Scales every tap time and every diffuser delay. This is the distance
@@ -346,9 +373,6 @@ with {
     spread = er_group(hslider("[4] ER Spread [unit:%] [style:knob] [symbol:er_spread]",
                               70, 0, 100, 1)) / 100 : smoo(0.70);
 
-    erlevel = er_group(hslider("[5] ER Level [unit:dB] [style:knob] [symbol:er_level]",
-                               0, -60, 12, 0.1)) : ba.db2linear : si.smoo;
-
     // --- tail controls ---
     // What the tank listens to. At 0 the tail is driven by the (pre-delayed,
     // tone-shaped) input directly and is independent of the ER stage — 480L-ish
@@ -357,41 +381,41 @@ with {
     // and the two sections read as one continuous event, which is the more
     // M7-like behaviour. The coupling is the point of the control, but it does
     // mean that at high Feed the ER knobs colour the tail as well.
-    tailfeed = tail_group(hslider("[0] Tail Feed [unit:%] [style:knob] [symbol:tail_feed]",
+    tailfeed = tail_top(hslider("[0] Tail Feed [unit:%] [style:knob] [symbol:tail_feed]",
                                   50, 0, 100, 1)) / 100 : smoo(0.5);
 
     // Which of the two tanks you are hearing. 0% is the FDN alone, 100% the
     // loop alone, and everything between is an equal-power crossfade — the two
     // tails are decorrelated and trimmed to the same output level, so this
-    // changes character without changing loudness. It replaces what used to be
-    // a Level knob per tail; ER Level now carries the early/late balance on its
-    // own, with the tails as the reference at unity.
-    tblend = tail_group(hslider("[1] Tail Blend [unit:%] [style:knob] [symbol:tail_blend]",
-                                100, 0, 100, 1)) / 100 : smoo(0.0);
+    // changes character without changing loudness. It picks which tank you hear;
+    // how loud the pair sits against the early reflections is Tail Level's job,
+    // over in the output section.
+    tblend = tail_top(hslider("[1] Tail Blend [unit:%] [style:knob] [symbol:tail_blend]",
+                                100, 0, 100, 1)) / 100 : smoo(1.0);
 
-    decay = tail_group(hslider("[2] Decay [unit:s] [scale:log] [style:knob] [symbol:decay]",
+    decay = tail_top(hslider("[2] Decay [unit:s] [scale:log] [style:knob] [symbol:decay]",
                                2.2, 0.2, 20, 0.01)) : smoo(2.2);
 
-    tsize = tail_group(hslider("[3] Size [style:knob] [symbol:tail_size]",
+    tsize = tail_top(hslider("[3] Size [style:knob] [symbol:tail_size]",
                                1.0, 0.5, MAXSIZE, 0.001)) : smoo(1.0);
 
     // Decay time below Bass Freq, as a multiple of Decay. Above 1 the low end
     // rings on after the mids have gone, which is most of what "large hall"
     // means to a listener — it is the 480L's Bass Multiply, and one of the two
     // or three controls that actually earn the word musical.
-    bassmult = tail_group(hslider("[4] Bass Multiply [style:knob] [symbol:bass_mult]",
+    bassmult = tail_bot(hslider("[0] Bass Multiply [style:knob] [symbol:bass_mult]",
                                   1.4, 0.25, 2.5, 0.01)) : smoo(1.4);
-    bassfreq = tail_group(hslider("[5] Bass Freq [unit:Hz] [scale:log] [style:knob] [symbol:bass_freq]",
+    bassfreq = tail_bot(hslider("[1] Bass Freq [unit:Hz] [scale:log] [style:knob] [symbol:bass_freq]",
                                   350, 100, 1000, 1)) : smoo(350);
 
     // Air absorption: the loop loses treble on every pass, so HF decay is
     // always shorter than mid decay, never longer.
-    hfdamp = tail_group(hslider("[6] HF Damping [unit:Hz] [scale:log] [style:knob] [symbol:hf_damp]",
+    hfdamp = tail_bot(hslider("[2] HF Damping [unit:Hz] [scale:log] [style:knob] [symbol:hf_damp]",
                                 5500, 1000, 20000, 1)) : smoo(5500) : min(0.45 * ma.SR);
 
-    modrate = tail_group(hslider("[7] Mod Rate [style:knob] [symbol:mod_rate]",
+    modrate = tail_bot(hslider("[3] Mod Rate [style:knob] [symbol:mod_rate]",
                                  1.0, 0.1, 3, 0.01)) : smoo(1.0);
-    moddepth = tail_group(hslider("[8] Mod Depth [unit:%] [style:knob] [symbol:mod_depth]",
+    moddepth = tail_bot(hslider("[4] Mod Depth [unit:%] [style:knob] [symbol:mod_depth]",
                                   35, 0, 100, 1)) / 100 * MAXMODMS : smoo(0.35 * MAXMODMS);
 
     // How smeared each tank is. One knob, but it does rather more to the loop
@@ -401,76 +425,171 @@ with {
     // and improves only slightly above; the loop keeps improving, and needs
     // 0.75 before its echo density reaches the fast regime. So the shared
     // default sits at the loop's requirement, which costs the FDN nothing.
-    density = tail_group(hslider("[9] Density [style:knob] [symbol:density]",
+    density = tail_bot(hslider("[5] Density [style:knob] [symbol:density]",
                                  0.75, 0, 1, 0.001)) : smoo(0.75) : *(GMAX);
 
     // Spread is the time scale and Shape the contour; Shape does nothing at all
     // with Spread at 0, which is exactly the relationship the pair has on a
     // 480L, and is why 0 is the default — it leaves the tank's own onset alone.
-    tshape = tail_group(hslider("[10] Shape [style:knob] [symbol:tail_shape]",
+    tshape = tail_top(hslider("[4] Shape [style:knob] [symbol:tail_shape]",
                                 0.5, 0, 1, 0.001)) : smoo(0.5) : SHAPEP;
-    tspread = tail_group(hslider("[11] Spread [unit:ms] [style:knob] [symbol:tail_spread]",
+    tspread = tail_top(hslider("[5] Spread [unit:ms] [style:knob] [symbol:tail_spread]",
                                  0, 0, 500, 1)) : si.smoo;
 
-    // --- output ---
-    // The cuts sit on the wet path only, ahead of everything, so they shape
-    // what both the taps and the tanks are fed rather than only what comes out.
-    lowcut = out_group(hslider("[0] Low Cut [unit:Hz] [scale:log] [style:knob] [symbol:lowcut]",
-                               60, 20, 1000, 1));
-    highcut = out_group(hslider("[1] High Cut [unit:Hz] [scale:log] [style:knob] [symbol:highcut]",
-                                18000, 1000, 20000, 1)) : min(0.45 * ma.SR);
+    // --- input ---
+    // Both cuts sit on the wet path only, so they shape what the taps and the
+    // tanks are fed rather than only what comes out — which is why they belong
+    // at the input end of the strip even though the dry signal never sees them.
+    // The de-esser's own control sits alongside them; it runs ahead of both, so
+    // its detector always compares two full-bandwidth bands and the amount of
+    // de-essing does not drift as LP moves.
+    lowcut = in_group(hslider("[2] HP [unit:Hz] [scale:log] [style:knob] [symbol:lowcut]",
+                              60, 20, 1000, 1));
+    highcut = in_group(hslider("[3] LP [unit:Hz] [scale:log] [style:knob] [symbol:highcut]",
+                               18000, 1000, 20000, 1)) : min(0.45 * ma.SR);
 
-    // Mid/side trim on the wet signal only.
-    width = out_group(hslider("[2] Stereo Width [unit:%] [style:knob] [symbol:stereo_width]",
+    // --- dimension ---
+    // The SDD-320's four-button switch, as a four-position dial. It steps the
+    // sweep depth only, so the buttons differ in width rather than in level.
+    dimsel = dim_group(hslider("[0] Dimension [style:knob] [symbol:dim]",
+                               1, 1, 4, 1)) - 1 : int;
+
+    // How much anti-phase wet is added. Nothing is taken away from the signal
+    // passing through, so this only ever adds; at 0 the stage is a bypass and
+    // that is where it starts.
+    dimwet = dim_group(hslider("[1] Wet [unit:%] [style:knob] [symbol:dim_wet]",
+                               0, 0, 100, 1)) / 100 : smoo(0.0);
+
+    // --- output ---
+    // Mid/side trim on the wet signal only. It lands here rather than in the
+    // Tail section because it acts on the early reflections too.
+    width = out_group(hslider("[0] Stereo Width [unit:%] [style:knob] [symbol:stereo_width]",
                               100, 0, 200, 1)) / 100 : smoo(1.0);
 
-    level = out_group(hslider("[3] Reverb Level [unit:dB] [symbol:level]",
-                              0, -60, 10, 0.1)) : ba.db2linear : si.smoo;
+    // Three faders and no master: the early and late halves are balanced
+    // against the source independently rather than through one blend that moves
+    // both together, so a master would only duplicate what two of these already
+    // do. ER and Tail default 6 dB down, which puts the wet/dry balance within
+    // half a dB of where the old 35% dry/wet default sat.
+    drylevel = out_group(vslider("[1] Dry [unit:dB] [symbol:dry_level]",
+                                 0, -60, 12, 0.1)) : ba.db2linear : si.smoo;
+    erlevel = out_group(vslider("[2] ER [unit:dB] [symbol:er_level]",
+                                -6, -60, 12, 0.1)) : ba.db2linear : si.smoo;
+    er_meterL = out_group(vbargraph("[3] ER L [unit:dB] [symbol:er_meter_l]", -60, 12));
+    er_meterR = out_group(vbargraph("[4] ER R [unit:dB] [symbol:er_meter_r]", -60, 12));
 
-    drywet = out_group(hslider("[4] dry/wet [unit:%] [symbol:drywet]",
-                               35, 0, 100, 1)) / 100 : smoo(0.35);
+    taillevel = out_group(vslider("[5] Tail [unit:dB] [symbol:tail_level]",
+                                  -6, -60, 12, 0.1)) : ba.db2linear : si.smoo;
+
+    tail_meterL = out_group(vbargraph("[6] Tail L [unit:dB] [symbol:tail_meter_l]", -60, 12));
+    tail_meterR = out_group(vbargraph("[7] Tail R [unit:dB] [symbol:tail_meter_r]", -60, 12));
+
+    // Post-fader metering: each meter shows what its stage is actually putting
+    // into the mix, so pulling a fader down moves its own meter. Both sit ahead
+    // of Stereo Width, which is a trim on the summed wet signal rather than
+    // part of either stage. Floored at the bottom of the fader range so meter
+    // and fader read the same scale. The release is slow enough to be legible
+    // on a reverb tail rather than following every grain of it.
+    meterdb = an.amp_follower_ar(0.003, 0.3) : max(ba.db2linear(-60)) : ba.linear2db;
 
     // --- signal path ---
-    // src is shared: all three stages hang off the same pre-delayed, cut input,
-    // so Pre-delay and the two cuts move the whole reverb at once.
+    // The de-esser comes first, ahead of the cuts and the pre-delay, so its
+    // detector always compares two full-bandwidth bands. Behind the cuts it
+    // would be measuring a high band that High Cut had already thinned, and the
+    // amount of de-essing would drift as that knob moved.
     //
-    //   src --+--> erstage --+--> ER out ---------------------------+ * erlevel
-    //         |      |       |                                      |
-    //         |      |       +--> feedmix ----> tdiffuse --> tank ---+ * kf
-    //         |      |       |                                      |
-    //         |      |       +--> loopfeedmix -> gdiffuse -> gtank --+ * kg
-    //         +------+-------+                                      |
-    //                                                    width, level, dry/wet
+    // src is then shared: all three stages hang off the same de-essed, cut,
+    // pre-delayed signal, so Pre-delay and the two cuts move the whole reverb.
     //
-    // Both tails read the same Feed knob and the same parameter set; kf and kg
-    // are the two halves of the Tail Blend crossfade. The bus arithmetic below
-    // carries ten signals at its widest: three copies of the ER output (one for
-    // the output sum, one per tank feed) and two of src.
-    dry = par(i, 2, *(1 - drywet));
+    //   in --> hfLimit --> cuts --> pre-delay --> dimension = src
+    //                                  |
+    //          +-----------------------+------------------+
+    //          |                       |                  |
+    //       erstage --------------> ER out * erlevel      |
+    //          |                                          |
+    //          +--> feedmix ----> tdiffuse --> tank  --+   |
+    //          |                                       +--+-- * taillevel
+    //          +--> loopfeedmix -> gdiffuse -> gtank --+   |
+    //                                                      |
+    //                                            width ----+--> + dry * drylevel
+    //
+    // Both tails read the same Feed knob and the same parameter set; the tank
+    // and gtank outputs are crossfaded by Tail Blend before Tail Level scales
+    // the pair. The bus arithmetic below carries ten signals at its widest:
+    // three copies of the ER output (one for the output sum, one per tank feed)
+    // and two of src.
+    dry = par(i, 2, *(drylevel));
 
-    src = par(i, 2, incut : de.fdelay(MAXPDD, ms2samp(predelay)));
+    src = hfLimit : par(i, 2, incut : de.fdelay(MAXPDD, ms2samp(predelay)))
+                  : dimension;
 
-    wet = src : hfLimit <: (erstage, si.bus(2))
+    // Fed a mono sum, and its one modulated copy goes to L in anti-phase to R.
+    // That puts the whole wet signal in the side channel: it widens without
+    // putting anything in the centre. Measured at this stage's own output the
+    // mono sum is unchanged to four decimal places at every Wet setting and
+    // every dial position — the added signal is pure side.
+    //
+    // That cancellation is a property of this stage, NOT of the plugin output.
+    // Everything downstream — the 2x2 tap matrix, both tanks — mixes L and R
+    // asymmetrically, so side energy arriving here comes back partly as mid:
+    // measured with the dry muted, the output's mono sum rises about 3 dB
+    // between Wet 0 and Wet 100. The dry path is untouched either way, since it
+    // hangs off the plugin input and never reaches this stage.
+    //
+    // Sitting here rather than at the output is deliberate: both tanks and the
+    // tap matrix are fed the widened signal, so the reverb inherits the width
+    // instead of having it painted on afterwards.
+    //
+    // The signal passing through is untouched — the Wet control adds the side
+    // content on top rather than crossfading to it, so at 0 the stage is
+    // bit-identical to not being there.
+    dimension(l, r) = l + wet, r - wet
+    with {
+        mono  = (l + r) * 0.5;
+        // Smoothed because the dial steps depth discontinuously, and a step in
+        // delay time is a click. The dial itself stays an integer.
+        depth = (DIM_DEPTH_BASE + dimsel * DIM_DEPTH_STEP) : smoo(DIM_DEPTH_BASE);
+        // os.osci rather than chorus.dsp's os.osc: same waveform, interpolated,
+        // which is what everything else in this file uses to drive a delay.
+        dt    = max(1.0, (DIM_DELAY + os.osci(DIM_RATE) * depth) * ma.SR);
+        wet   = de.fdelay(MAXDIMD, dt, mono) * dimwet;
+    };
+
+    wet = src <: (erstage, si.bus(2))
         : fanout
         : si.bus(2), feedmix, loopfeedmix
         : si.bus(2), (tdiffuse(tdifL), tdiffuse(tdifR) : tank)
                    , (gdiffuse(gdifL), gdiffuse(gdifR) : gtank)
         : sumthree
-        : stereoWidth(width)
-        : par(i, 2, *(level * drywet));
+        : stereoWidth(width);
 
     // erL,erR,srcL,srcR -> one copy of the ER for the output, and one (ER,src)
     // pair for each tail to crossfade between. The ER stage itself is computed
     // once, upstream of here.
     fanout(e1, e2, s1, s2) = e1, e2, e1, e2, s1, s2, e1, e2, s1, s2;
 
-    // Equal-power, because the two tails are mutually decorrelated: summing
-    // them at sqrt weights holds the total energy flat across the knob.
-    sumthree(e1, e2, t1, t2, g1, g2) = e1*erlevel + t1*kf + g1*kg,
-                                       e2*erlevel + t2*kf + g2*kg
+    // Tail Blend is equal-power, because the two tails are mutually
+    // decorrelated: summing them at sqrt weights holds the total energy flat
+    // across the knob. Tail Level then scales the blended pair as one, so
+    // moving Blend never changes how loud the late half sits.
+    //
+    // The two stages are named before they are summed so the meters can read
+    // each one on its own; `attach` forces the meter to be computed without it
+    // reaching the audio.
+    sumthree(e1, e2, t1, t2, g1, g2) = outL, outR
     with {
         kf = sqrt(max(0, 1 - tblend));
         kg = sqrt(tblend);
+
+        erL = e1 * erlevel;
+        erR = e2 * erlevel;
+        tlL = (t1*kf + g1*kg) * taillevel;
+        tlR = (t2*kf + g2*kg) * taillevel;
+
+        outL = attach(attach(erL + tlL, erL : meterdb : er_meterL),
+                      tlL : meterdb : tail_meterL);
+        outR = attach(attach(erR + tlR, erR : meterdb : er_meterR),
+                      tlR : meterdb : tail_meterR);
     };
 
     incut = fi.highpass(2, lowcut) : fi.lowpass(2, highcut);
@@ -652,88 +771,44 @@ with {
 };
 
 
-
-// hfLimit
-
-hflim_amount = uiBottomRight(hslider("[21]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02]", 0, 0, 100, 1)) / 100;
-hflim_meter  = uiMeters(hbargraph("[1]HFlim Reduction[unit:dB][symbol:deess_meter]", 0, 30));
-
-
-// --- High Frequency Limiter ---
-// Ported from vocalDoubler.dsp. Feeds the wet path only — it sits inside the
-// dry/wet mixer's wet branch, so the dry half always passes through
-// untouched and this can never dull the original signal.
+//======================== de-esser ===========================================
+// A high frequency limiter, ported from vocalDoubler.dsp. It sits at the head
+// of the wet path — before the cuts and the pre-delay — so the dry half always
+// passes through untouched and this can never dull the original signal, while
+// its detector still sees the source at full bandwidth.
 //
-// Level-independent: splits the input into a low ("body") band and a
-// high band, then compares their envelopes as a ratio (dB difference)
-// instead of the high band's absolute level. A quiet "s" in a quiet
-// passage still spikes that ratio, so detection doesn't depend on overall
-// loudness the way a plain high-band compressor does.
-
-// One macro control drives all four parameters. To retune the feel, edit
-// the endpoint pairs below: the first value is what the parameter is at
-// Intensity 0%, the second at 100%, interpolated linearly in between.
-// Nothing else needs touching.
-hfLimSplitAt0  = 5000;  hfLimSplitAt100  = 4500;  // Hz   - crossover; lower reaches further down into the "sh" range
-hfLimThreshAt0 =   -2;  hfLimThreshAt100 =   -14; // dB   - how far the high band must stick out before it counts
-hfLimRatioAt0  =    2;  hfLimRatioAt100  =     8; //      - how hard the excess is squeezed
-hfLimRangeAt0  =    0;  hfLimRangeAt100  =    18; // dB   - ceiling on total reduction; 0 at the bottom makes 0% a true bypass
+// Detection is level-independent, and relative rather than absolute: the input
+// is split into a low ("body") band and a high band, and their envelopes are
+// compared as a ratio — a dB difference — instead of the high band being
+// measured against a fixed level. A quiet "s" in a quiet passage spikes that
+// ratio just as hard as a loud one, so detection does not follow overall
+// loudness the way a plain high-band compressor would.
+//
+// One macro control drives all four parameters. To retune the feel, edit the
+// endpoint pairs below: the first value is what the parameter is at De-Ess 0%,
+// the second at 100%, interpolated linearly in between. Nothing else needs
+// touching. Range being 0 dB at the bottom is what makes 0% a true bypass.
+hfLimSplitAt0  = 5000;  hfLimSplitAt100  = 4500;  // Hz - crossover; lower reaches further down into the "sh" range
+hfLimThreshAt0 =   -2;  hfLimThreshAt100 =   -14; // dB - how far the high band must stick out before it counts
+hfLimRatioAt0  =    2;  hfLimRatioAt100  =     8; //    - how hard the excess is squeezed
+hfLimRangeAt0  =    0;  hfLimRangeAt100  =    18; // dB - ceiling on total reduction
 
 lerp(a, b, t) = a + (b - a) * t;
 
-// Defaults to 0, i.e. a true bypass, because a chorus is not a vocal-only
-// box — every existing patch keeps sounding exactly as it did until this is
-// turned up. (vocalDoubler ships it at 50.)
-
+hflim_amount = in_group(hslider("[0]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02]", 0, 0, 100, 1)) / 100;
+hflim_meter  = in_group(vbargraph("[1]HFlim Reduction[unit:dB][symbol:deess_meter]", 0, 18));
 
 hflim_split  = lerp(hfLimSplitAt0,  hfLimSplitAt100,  hflim_amount);
 hflim_thresh = lerp(hfLimThreshAt0, hfLimThreshAt100, hflim_amount);
 hflim_ratio  = lerp(hfLimRatioAt0,  hfLimRatioAt100,  hflim_amount);
 hflim_range  = lerp(hfLimRangeAt0,  hfLimRangeAt100,  hflim_amount);
 
-//hflim_split = uiDeEss(hslider("[01]Crossover Frequency[style:knob][unit:Hz][scale:log][symbol:crossover_frequency][label:Crossover][accentcolor:02]", 5000,3000,8000,1));
-
-// Relative (100%) vs. absolute (0%) detection, continuously blendable.
-// Relative: the high band is measured against the body band, so the threshold
-//   is a spectral-tilt difference and detection is level-independent — a quiet
-//   "s" in a quiet passage trips it just as readily as a loud one.
-// Absolute: the high band is measured against 0 dBFS, so the threshold is a
-//   plain level — a level-dependent high-band compressor, which follows the
-//   singer's dynamics instead of ignoring them.
-// In between, the reference and the threshold are mixed by the same amount, so
-// the knob sweeps without a jump at either end.
-hflim_mode = 1; //uiDeEss(hslider("[02]Mode[style:knob][unit:%][symbol:mode][label:Abs/Rel][accentcolor:05]", 100, 0, 100, 1)) / 100;
-
-// Two thresholds, because the two modes measure different things and a single
-// number cannot mean both. Each keeps its own value and its own useful range;
-// the Mode knob lerps between them, so turning Mode never leaves the threshold
-// in the wrong units and turning it back restores exactly what was dialled in.
-hflim_threshAbs = uiDeEss(hslider("[03]Threshold Absolute[unit:dB][style:knob][symbol:threshold_abs][label:Thresh Abs][accentcolor:01]",-30,-60,0,1));
-hflim_threshRel = uiDeEss(hslider("[04]Threshold Relative[unit:dB][style:knob][symbol:threshold][label:Thresh Rel][accentcolor:01]",-10,-30,0,1));
-//hflim_thresh    = lerp(hflim_threshAbs, hflim_threshRel, hflim_mode);
-
-//hflim_ratio = uiDeEss(hslider("[05]Ratio[symbol:ratio][style:knob][label:Ratio][accentcolor:03]", 1, 1, 20, 1));
-//hflim_range = uiDeEss(hslider("[06]Range[unit:dB][style:knob][symbol:range][label:Range][accentcolor:04]",6, 0, 20,1));
-
-// Solo the band the de-esser acts on, with the reduction applied, so the
-// crossover and threshold can be set by ear: sweep Crossover until the "s"
-// dominates what you hear and the vowels drop away, then set Threshold /
-// Ratio until only the "s" ducks. Expect a large level drop when engaging --
-// it is a monitoring switch, not a mix control. Smoothed to cross-fade rather
-// than hard-switch, so toggling it while playing does not click.
-hflim_listen = uiDeEss(checkbox("[07]Listen[symbol:listen][label:Listen]
-      [tooltip: Monitors the high band alone, with the de-essing applied, for setting Crossover and Threshold by ear. Turn off before printing]")) : si.smoo;
-
-// Stereo, unlike the mono original. Detection is *linked*: one gain, derived
-// from the mono sum, drives both channels. Two independent detectors would
-// duck the channels by different amounts on the same sibilant and swing the
-// stereo image with every "s" — the one thing a widener must not do.
+// Stereo, unlike the mono original, and the detection is *linked*: one gain,
+// derived from the mono sum, drives both channels. Two independent detectors
+// would duck the channels by different amounts on the same sibilant and swing
+// the stereo image with every "s".
 hfLimit(l, r) = attach(outL, reductionDb : hflim_meter), outR
 with {
-    // Detection runs on the mono sum only: the gain is linked, and since the
-    // reduction is applied by a shelf rather than rebuilt from the bands, the
-    // per-channel split is not needed at all.
-    //
     // A real highpass, not `mono - lowpass`. Subtracting a Butterworth lowpass
     // does not give a Butterworth highpass: B(s)-1 has a single zero at DC, so
     // the complement rolls off at 6 dB/oct no matter what order the lowpass is,
@@ -743,54 +818,43 @@ with {
     // resonant bump, so a plain 2.5 kHz tone pulled 1.9 dB of reduction. The
     // true 4th-order highpass is -33 dB at 2 kHz and -57 dB at 1 kHz.
     //
-    // The two bands no longer need to be complementary: nothing reconstructs
-    // the signal from them any more, they only feed the envelope followers.
+    // The two bands need not be complementary: nothing reconstructs the signal
+    // from them, they only feed the envelope followers.
     mono = (l + r) * 0.5;
     low  = fi.lowpass(4, hflim_split, mono);
     high = fi.highpass(4, hflim_split, mono);
 
     // Floored at -120 dB: on digital silence the follower reaches exactly 0,
-    // and ba.linear2db(0) is -inf — which turns into NaN both in the relative
-    // subtraction (-inf - -inf) and when the mode blend scales it by 0.
+    // and ba.linear2db(0) is -inf, which would turn the subtraction below into
+    // NaN (-inf - -inf).
     env(x) = an.amp_follower_ar(0.001, 0.03, x) : max(ba.db2linear(-120)) : ba.linear2db;
 
     hiDb  = env(high);
     refDb = env(low);
 
-    // dB the high band sticks out above its reference; only the excess over
-    // threshold is limited. The reference is the body band scaled by the mode
-    // blend: at 100% it is the full body level (relative — spectral tilt, level
-    // independent), at 0% it is 0 dBFS (absolute — plain high-band level).
-    // hflim_thresh is lerped by the same knob, so both sides of this comparison
-    // cross-fade together.
-    diff   = hiDb - refDb * hflim_mode;
-    excess = max(0, diff - hflim_thresh);
-
+    // dB the high band sticks out above the body band; only the excess over
+    // threshold is limited.
+    excess      = max(0, hiDb - refDb - hflim_thresh);
     reductionDb = min(excess * (1 - 1 / hflim_ratio), hflim_range);
-    gr = ba.db2linear(0 - reductionDb);
 
     // The reduction is applied as a real high shelf on the full-band signal,
-    // not by re-summing a split. Rebuilding from a 4th-order split (low +
-    // high*gr) is a shelf too, but an accidental one: the lowpass and its
-    // complement differ in phase, so away from unity gain they no longer sum
-    // flat and the response ripples around the corner.
+    // not by re-summing a split. Rebuilding from a 4th-order split as
+    // low + high*gain is a shelf too, but an accidental one: the lowpass and
+    // its complement differ in phase, so away from unity gain they no longer
+    // sum flat and the response ripples around the corner.
     //
     // A TPT state variable filter: the structure is designed for exactly this,
     // coefficients that move every sample. At 0 dB the shelf mix collapses to
     // (1,0,0), so an idle de-esser passes the signal through untouched -- no
-    // phase shift to comb against a dry path. The cost is one pow and one sqrt
-    // per sample; tan(fc) depends only on hflim_split, so Faust hoists it out
-    // of the sample loop.
+    // phase shift to comb against the dry path. The cost is one pow and one
+    // sqrt per sample; tan(fc) depends only on hflim_split, so Faust hoists it
+    // out of the sample loop.
     //
     // Second order, so gentler than a 3rd-order shelf: at a 5 kHz corner and
     // -12 dB it is -6.0 dB at the corner and still -1.6 dB down at 3 kHz.
     // Raise Q to confine the cut closer to the corner.
-    //shelf = fi.highshelf(3, 0 - reductionDb, hflim_split);
-    shelf = fi.svf.hs(hflim_split, 0.7, 0 - reductionDb );
+    shelf = fi.svf.hs(hflim_split, 0.7, 0 - reductionDb);
 
-    // Listen solos the detector's high band with the reduction applied. It is
-    // mono because detection is mono-linked -- this is literally the signal the
-    // detector measures, which is what makes it useful for setting Crossover.
-    outL = lerp(l : shelf, high * gr, hflim_listen);
-    outR = lerp(r : shelf, high * gr, hflim_listen);
+    outL = l : shelf;
+    outR = r : shelf;
 };
