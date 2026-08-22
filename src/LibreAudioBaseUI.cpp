@@ -153,6 +153,18 @@ void LibreAudioBaseUI::parameterChanged(const uint32_t index, const float value)
 
 void LibreAudioBaseUI::stateChanged(const char* const key, const char* const value)
 {
+    if (std::strcmp(key, kStateKeys[kStateMode]) == 0)
+    {
+        DISTRHO_SAFE_ASSERT_RETURN(value[0] != '\0',);
+
+        fLastEasyExpertPage = std::strcmp(value, "expert") == 0 ? kPageExpert : kPageEasy;
+
+        if (fPage == kPageEasy || fPage == kPageExpert)
+            fPage = fLastEasyExpertPage;
+
+        return;
+    }
+
     if (std::strcmp(key, kStateKeys[kStateCurrentSnapshot]) == 0)
     {
         DISTRHO_SAFE_ASSERT_RETURN(value[0] != '\0',);
@@ -449,6 +461,7 @@ void LibreAudioBaseUI::pageButtonClicked(const Page page)
     case kPageEasy:
     case kPageExpert:
         fLastEasyExpertPage = page;
+        setState(kStateKeys[kStateMode], page == kPageExpert ? "expert" : "easy");
         break;
     default:
         break;

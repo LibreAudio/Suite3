@@ -14,6 +14,7 @@ START_NAMESPACE_DISTRHO
 
 enum States {
 #ifndef _DARKGLASS_DEVICE_PABLITO
+    kStateMode,
     kStateCurrentSnapshot,
     kStateSnapshotValuesA,
     kStateSnapshotValuesB,
@@ -30,6 +31,7 @@ enum States {
 #define LIBREAUDIO_STATE_KEY_SNAPSHOT_VALUES_PREFIX "snapshot_values_"
 
 inline constexpr const char* kStateKeys[kStateCount] = {
+    "mode",
     "snapshot",
     LIBREAUDIO_STATE_KEY_SNAPSHOT_VALUES_PREFIX "a",
     LIBREAUDIO_STATE_KEY_SNAPSHOT_VALUES_PREFIX "b",
