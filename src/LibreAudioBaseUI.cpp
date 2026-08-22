@@ -332,37 +332,140 @@ void LibreAudioBaseUI::parameterControlModified(const uint32_t index, const floa
     setParameterValue(index, value);
 }
 
-void LibreAudioBaseUI::pageButtonClicked(const PageButton button)
+void LibreAudioBaseUI::buttonClicked(const uint32_t id)
 {
-    if (fPage == button)
+    switch (static_cast<WidgetIds>(id))
     {
-        if (button == kPageButtonSettings)
+    case kWidgetAbout:
+        pageButtonClicked(kPageAbout);
+        break;
+    case kWidgetEasy:
+        pageButtonClicked(kPageEasy);
+        break;
+    case kWidgetExpert:
+        pageButtonClicked(kPageExpert);
+        break;
+    case kWidgetMenu:
+        pageButtonClicked(kPageSettings);
+        break;
+    case kWidgetPower:
+        parameterControlPressed(kCommonParameterBypass);
+        parameterControlModified(kCommonParameterBypass,
+                                 d_isZero(fParameterValues[kCommonParameterBypass]) ? 1.f : 0.f);
+        parameterControlReleased(kCommonParameterBypass);
+        break;
+    case kWidgetRedo:
+        fSnapshots.redo();
+        break;
+    case kWidgetSnapshotCopy:
+    case kWidgetSnapshotSlotA:
+    case kWidgetSnapshotSlotB:
+    case kWidgetSnapshotSlotC:
+    case kWidgetSnapshotSlotD:
+        snapshotButtonClicked(id);
+        break;
+    case kWidgetUndo:
+        fSnapshots.undo();
+        break;
+    }
+}
+
+bool LibreAudioBaseUI::isButtonEnabled(const uint32_t id) const noexcept
+{
+    switch (static_cast<WidgetIds>(id))
+    {
+    case kWidgetAbout:
+        return true;
+    case kWidgetEasy:
+    case kWidgetExpert:
+        return fPage == kPageEasy || fPage == kPageExpert;
+    case kWidgetMenu:
+        return true;
+    case kWidgetPower:
+        return true;
+    case kWidgetRedo:
+        return fSnapshots.canRedo();
+    case kWidgetSnapshotCopy:
+    case kWidgetSnapshotSlotA:
+    case kWidgetSnapshotSlotB:
+    case kWidgetSnapshotSlotC:
+    case kWidgetSnapshotSlotD:
+        return fPage == kPageEasy || fPage == kPageExpert;
+    case kWidgetUndo:
+        return fSnapshots.canUndo();
+    }
+
+    // fallback
+    return false;
+}
+
+bool LibreAudioBaseUI::isButtonChecked(const uint32_t id) const noexcept
+{
+    switch (static_cast<WidgetIds>(id))
+    {
+    case kWidgetAbout:
+        return fPage == kPageAbout;
+    case kWidgetEasy:
+        return fPage == kPageEasy;
+    case kWidgetExpert:
+        return fPage == kPageExpert;
+    case kWidgetMenu:
+        return fPage == kPageSettings;
+    case kWidgetPower:
+        return d_isNotZero(fParameterValues[kCommonParameterBypass]);
+    case kWidgetRedo:
+        return false;
+    case kWidgetSnapshotCopy:
+        return fCopyingSnapshot;
+    case kWidgetSnapshotSlotA:
+        return fSnapshots.getCurrent() == 0;
+    case kWidgetSnapshotSlotB:
+        return fSnapshots.getCurrent() == 1;
+    case kWidgetSnapshotSlotC:
+        return fSnapshots.getCurrent() == 2;
+    case kWidgetSnapshotSlotD:
+        return fSnapshots.getCurrent() == 3;
+    case kWidgetUndo:
+        return false;
+    }
+
+    // fallback
+    return false;
+}
+
+void LibreAudioBaseUI::pageButtonClicked(const Page page)
+{
+    if (fPage == page)
+    {
+        if (page == kPageSettings)
             fPage = fLastEasyExpertPage;
         return;
     }
 
-    fPage = button;
+    fPage = page;
 
-    switch (button)
+    switch (page)
     {
-    case kPageButtonEasy:
-    case kPageButtonExpert:
-        fLastEasyExpertPage = button;
+    case kPageEasy:
+    case kPageExpert:
+        fLastEasyExpertPage = page;
         break;
     default:
         break;
     }
 }
 
-void LibreAudioBaseUI::snapshotButtonClicked(const SnapshotButton button)
+void LibreAudioBaseUI::snapshotButtonClicked(const uint32_t button)
 {
-    if (button == kSnapshotButtonCopy)
+    if (button == kWidgetSnapshotCopy)
     {
         fCopyingSnapshot = !fCopyingSnapshot;
         return;
     }
 
-    const uint8_t snapshot = button - kSnapshotButtonA;
+    DISTRHO_SAFE_ASSERT_RETURN(button >= kWidgetSnapshotSlotA && button <= kWidgetSnapshotSlotD,);
+
+    const uint8_t snapshot = button - kWidgetSnapshotSlotA;
 
     // nothing to do if current snapshot clicked and there is no previous
     if (fSnapshots.getCurrent() == snapshot && fSnapshots.getPrevious() == snapshot)

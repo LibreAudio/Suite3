@@ -8,6 +8,8 @@
 #include "FaustParameters.hpp"
 #include "LibreAudioSnapshots.hpp"
 
+#include "ui/widgets-todo/base.hpp"
+
 // --------------------------------------------------------------------------------------------------------------------
 
 START_NAMESPACE_DISTRHO
@@ -35,26 +37,18 @@ protected:
     // ----------------------------------------------------------------------------------------------------------------
     // UI Widget Interface
 
-    [[nodiscard]] PageButton getCurrentPage() const noexcept final { return fPage; }
 
     [[nodiscard]] uint32_t getParameterCount() const noexcept final { return kParameterCount; }
     [[nodiscard]] const char* getParameterSymbol(uint32_t index) const noexcept final;
     [[nodiscard]] float getParameterValue(uint32_t index) const noexcept final { return fParameterValues[index]; }
 
-    [[nodiscard]] bool canUndo() const noexcept final { return fSnapshots.canUndo(); }
-    [[nodiscard]] bool canRedo() const noexcept final { return fSnapshots.canRedo(); }
-    [[nodiscard]] bool isCopyingSnapshot() const noexcept final { return fCopyingSnapshot; }
-    [[nodiscard]] uint8_t getCurrentSnapshot() const noexcept final { return fSnapshots.getCurrent(); }
-
-    void undo() final { fSnapshots.undo(); }
-    void redo() final { fSnapshots.redo(); }
-
     void parameterControlPressed(uint32_t index) final;
     void parameterControlReleased(uint32_t index) final;
     void parameterControlModified(uint32_t index, float value) final;
 
-    void pageButtonClicked(PageButton button) final;
-    void snapshotButtonClicked(SnapshotButton button) final;
+    void buttonClicked(uint32_t id) final;
+    [[nodiscard]] bool isButtonEnabled(uint32_t id) const noexcept final;
+    [[nodiscard]] bool isButtonChecked(uint32_t id) const noexcept final;
 
     // ----------------------------------------------------------------------------------------------------------------
     // Widget Callbacks
@@ -70,11 +64,14 @@ private:
     float* const fParameterValues;
     float* const fParameterValuesWhenActivated;
 
-    PageButton fPage = kPageButtonEasy;
-    PageButton fLastEasyExpertPage = kPageButtonEasy;
+    Page fPage = kPageEasy;
+    Page fLastEasyExpertPage = kPageEasy;
 
     LibreAudioSnapshots fSnapshots;
     bool fCopyingSnapshot = false;
+
+    void pageButtonClicked(Page page);
+    void snapshotButtonClicked(uint32_t button);
 
     // ----------------------------------------------------------------------------------------------------------------
     // DSP/Plugin Callbacks

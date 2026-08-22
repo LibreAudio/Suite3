@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "base.hpp"
 #include "knob-group.hpp"
 #include "pill-toggle.hpp"
 
@@ -121,7 +122,7 @@ class LibreAudioStageWidget final : public LibreAudioWidget,
     std::unique_ptr<LibreAudioWidget> fExpert;
     // = { new LibreAudioExpertStageWidget(this) };
 
-    LibreAudioUIWidgetInterface::PageButton fLastButton = LibreAudioUIWidgetInterface::kPageButtonEasy;
+    Page fLastPage = kPageEasy;
 
 public:
     LibreAudioStageWidget(LibreAudioWidget* const parent)
@@ -136,25 +137,25 @@ public:
 private:
     void idleCallback() final
     {
-        const LibreAudioUIWidgetInterface::PageButton button = fInterface->getCurrentPage();
-        if (fLastButton == button)
+        const Page page = getCurrentPage(fInterface);
+        if (fLastPage == page)
             return;
-        fLastButton = button;
+        fLastPage = page;
 
         fEasy->hide();
         fExpert->hide();
 
-        switch (button)
+        switch (page)
         {
-        case LibreAudioUIWidgetInterface::kPageButtonAbout:
+        case kPageAbout:
             break;
-        case LibreAudioUIWidgetInterface::kPageButtonEasy:
+        case kPageEasy:
             fEasy->show();
             break;
-        case LibreAudioUIWidgetInterface::kPageButtonExpert:
+        case kPageExpert:
             fExpert->show();
             break;
-        case LibreAudioUIWidgetInterface::kPageButtonSettings:
+        case kPageSettings:
             break;
         }
     }

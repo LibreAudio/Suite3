@@ -220,7 +220,7 @@ struct LibreAudioReference {
                 static constexpr const float letterSpacing = Common::letterSpacing;
                 static constexpr const uint borderRadius = 6;
                 static constexpr const uint height = 26;
-                static constexpr const uint margin = 9;
+                static constexpr const uint margin = 3;
             };
         };
     };
