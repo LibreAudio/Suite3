@@ -43,7 +43,7 @@ elseif("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(ARM|armv[3-9][a-z]*)$")
 endif()
 
 # Clang specific flags
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # silence warnings caused by -ffinite-math-only
   set(COMMON_FLAGS "${COMMON_FLAGS} -Wno-nan-infinity-disabled")
 
