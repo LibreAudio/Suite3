@@ -83,12 +83,35 @@ protected:
     LibreAudioUIWidgetInterface* const fInterface;
     float fScaleFactor;
 
-    friend class LibreAudioBaseWidget<NanoSubWidget>;
-    // friend class LibreAudioBaseWidget<NanoTopLevelWidget>;
+    void updateScaleFactor(const float scaleFactor)
+    {
+        fScaleFactor = scaleFactor;
+
+        const std::list<SubWidget*> children = BaseWidget::getChildren();
+
+        for (SubWidget* const child : children)
+            static_cast<LibreAudioBaseWidget<NanoSubWidget>*>(child)->updateScaleFactor(scaleFactor);
+    }
+
+    virtual void updateSize()
+    {
+        const std::list<SubWidget*> children = BaseWidget::getChildren();
+
+        for (SubWidget* const child : children)
+            static_cast<LibreAudioBaseWidget<NanoSubWidget>*>(child)->updateSize();
+    }
 
 private:
     // FIXME remove this
     std::vector<IdleCallback*> fCallbacks;
+
+    friend class LibreAudioBaseWidget<NanoSubWidget>;
+    friend class LibreAudioBaseWidget<NanoTopLevelWidget>;
+
+    void onResize(const typename BaseWidget::ResizeEvent& ev) final
+    {
+        BaseWidget::onResize(ev);
+    }
 };
 
 // --------------------------------------------------------------------------------------------------------------------

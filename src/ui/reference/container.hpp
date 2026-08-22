@@ -30,9 +30,10 @@ public:
         : BaseWidget(windowToMapTo, iface) {}
 
 protected:
-    void onResize(const ResizeEvent& ev) override
+    void updateSize() override
+    // void onResize(const ResizeEvent& ev) override
     {
-        BaseWidget::onResize(ev);
+        // BaseWidget::onResize(ev);
 
         const float fScaleFactor = this->fScaleFactor;
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
@@ -52,7 +53,13 @@ protected:
                           padding,
                           border + margin);
         }
+
+        BaseWidget::updateSize();
     }
+
+    // void updateSize() final
+    // {
+    // }
 };
 
 // --------------------------------------------------------------------------------------------------------------------

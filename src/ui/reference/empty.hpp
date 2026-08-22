@@ -18,23 +18,25 @@ public:
     explicit LibreAudioReferenceEmptyWidget(LibreAudioWidget* const parent)
         : LibreAudioWidget(parent)
     {
-        _initSize();
+        updateSize();
     }
 
     explicit LibreAudioReferenceEmptyWidget(LibreAudioTopLevelWidget* const parent)
         : LibreAudioWidget(parent)
     {
-        _initSize();
+        updateSize();
     }
 
 private:
-    void _initSize()
+    void updateSize() final
     {
         if constexpr (R::width != 0)
             setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
 
         if constexpr (R::height != 0)
             setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
+
+        LibreAudioWidget::updateSize();
     }
 };
 

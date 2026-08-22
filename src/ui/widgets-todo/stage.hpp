@@ -15,6 +15,7 @@ START_NAMESPACE_DISTRHO
 class LibreAudioEasyStageWidget final : public LibreAudioReferenceContainerWidget<LibreAudioReference::Stage, kVertical>
 {
     using R = LibreAudioReference::Stage;
+    using BaseWidget = LibreAudioReferenceContainerWidget<R, kVertical>;
 
     std::unique_ptr<LibreAudioWidget> fSpacer1 = addSpacer();
     std::unique_ptr<LibreAudioEasyKnobsGroupWidget> fEasyKnobs = addWidget<LibreAudioEasyKnobsGroupWidget>();
@@ -22,7 +23,7 @@ class LibreAudioEasyStageWidget final : public LibreAudioReferenceContainerWidge
 
 public:
     explicit LibreAudioEasyStageWidget(LibreAudioWidget* const parent)
-        : LibreAudioReferenceContainerWidget(parent)
+        : BaseWidget(parent)
     {
     }
 
@@ -65,6 +66,7 @@ private:
 class LibreAudioExpertStageWidget final : public LibreAudioReferenceContainerWidget<LibreAudioReference::Stage, kVertical>
 {
     using R = LibreAudioReference::Stage;
+    using BaseWidget = LibreAudioReferenceContainerWidget<R, kVertical>;
 
     std::unique_ptr<LibreAudioPillAreaWidget> fTopArea = addWidget<LibreAudioPillAreaWidget>();
     std::unique_ptr<LibreAudioWidget> fSpacer = addSpacer();
@@ -72,7 +74,7 @@ class LibreAudioExpertStageWidget final : public LibreAudioReferenceContainerWid
 
 public:
     explicit LibreAudioExpertStageWidget(LibreAudioWidget* const parent)
-        : LibreAudioReferenceContainerWidget(parent)
+        : BaseWidget(parent)
     {
         fTopArea->setHeight(30 * fScaleFactor);
     }
@@ -117,6 +119,7 @@ class LibreAudioStageWidget final : public LibreAudioWidget,
                                     private IdleCallback
 {
     using R = LibreAudioReference::Stage;
+    using BaseWidget = LibreAudioWidget;
 
     std::unique_ptr<LibreAudioWidget> fEasy { new LibreAudioEasyStageWidget(this) };
     std::unique_ptr<LibreAudioWidget> fExpert;
@@ -126,7 +129,7 @@ class LibreAudioStageWidget final : public LibreAudioWidget,
 
 public:
     LibreAudioStageWidget(LibreAudioWidget* const parent)
-        : LibreAudioWidget(parent)
+        : BaseWidget(parent)
     {
         fExpert.reset(new LibreAudioExpertStageWidget(this));
         fExpert->hide();
@@ -166,18 +169,26 @@ private:
 
     void onPositionChanged(const PositionChangedEvent& ev) override
     {
-        LibreAudioWidget::onPositionChanged(ev);
+        BaseWidget::onPositionChanged(ev);
 
         fEasy->setAbsolutePos(ev.pos);
         fExpert->setAbsolutePos(ev.pos);
     }
 
-    void onResize(const ResizeEvent& ev) override
-    {
-        LibreAudioWidget::onResize(ev);
+    // void onResize(const ResizeEvent& ev) override
+    // {
+    //     LibreAudioWidget::onResize(ev);
+    //
+    //     fEasy->setSize(ev.size);
+    //     fExpert->setSize(ev.size);
+    // }
 
-        fEasy->setSize(ev.size);
-        fExpert->setSize(ev.size);
+    void updateSize() override
+    {
+        fEasy->setSize(getSize());
+        fExpert->setSize(getSize());
+
+        BaseWidget::updateSize();
     }
 };
 

@@ -27,6 +27,7 @@ class LibreAudioKnobGroupWidget : public LibreAudioReferenceContainerWidget<Libr
                                   private IdleCallback
 {
     using R = LibreAudioReference::Widgets::KnobGroup;
+    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
 
     static constexpr const uint kMaxNumParameters = 5;
 
@@ -47,7 +48,7 @@ public:
                                        const std::vector<FaustParameter>& parameters,
                                        const uint32_t idOffset = 0,
                                        const uint32_t parameterOffset = 0)
-        : LibreAudioReferenceContainerWidget(parent),
+        : BaseWidget(parent),
           fParameters(parameters),
           fParametersOffset(idOffset)
     {
@@ -115,18 +116,7 @@ public:
         if (update())
             addIdleCallback(this);
 
-        const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
-        const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
-        uint knobHeight;
-
-        if constexpr (R::height != 0)
-            knobHeight = R::height * fScaleFactor;
-        else if (! fKnobs.empty())
-            knobHeight = fKnobs.front()->getHeight();
-        else
-            knobHeight = d_roundToUnsignedInt(fScaleFactor);
-
-        LibreAudioWidget::setHeight((border + margin) * 2 + knobHeight);
+        updateSize();
     }
 
     [[nodiscard]] uint32_t getLastKnobId() const
@@ -308,15 +298,16 @@ private:
 
         if (fHasCachedValues)
         {
-            ResizeEvent ev;
-            ev.size = getSize();
-            onResize(ev);
+            // ResizeEvent ev;
+            // ev.size = getSize();
+            // onResize(ev);
         }
         else
         {
             fHasCachedValues = true;
         }
 
+        updateSize();
         return true;
     }
 
@@ -382,6 +373,23 @@ private:
         // strokeWidth(border);
         // stroke();
     }
+
+    void updateSize() final
+    {
+        const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
+        const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
+        uint knobHeight;
+
+        if constexpr (R::height != 0)
+            knobHeight = R::height * fScaleFactor;
+        else if (! fKnobs.empty())
+            knobHeight = fKnobs.front()->getHeight();
+        else
+            knobHeight = d_roundToUnsignedInt(fScaleFactor);
+
+        BaseWidget::setHeight((border + margin) * 2 + knobHeight);
+        BaseWidget::updateSize();
+    }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -389,10 +397,11 @@ private:
 class LibreAudioEasyKnobsGroupWidget final : public LibreAudioReferenceContainerWidget<LibreAudioReference::Widgets::KnobGroup>
 {
     using R = LibreAudioReference::Widgets::KnobGroup;
+    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
 
 public:
     explicit LibreAudioEasyKnobsGroupWidget(LibreAudioWidget* const parent)
-        : LibreAudioReferenceContainerWidget<R>(parent)
+        : BaseWidget(parent)
     {
         addSpacer();
 
@@ -411,6 +420,17 @@ public:
 
         addSpacer();
 
+        updateSize();
+    }
+
+    void addWidget() = delete;
+
+private:
+    std::vector<std::unique_ptr<LibreAudioKnobWidget>> fKnobs;
+    std::vector<std::unique_ptr<LibreAudioWidget>> fSpacers;
+
+    void updateSize() final
+    {
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
         uint knobHeight;
@@ -422,14 +442,9 @@ public:
         else
             knobHeight = d_roundToUnsignedInt(fScaleFactor);
 
-        LibreAudioWidget::setHeight((border + margin) * 2 + knobHeight);
+        BaseWidget::setHeight((border + margin) * 2 + knobHeight);
+        BaseWidget::updateSize();
     }
-
-    void addWidget() = delete;
-
-private:
-    std::vector<std::unique_ptr<LibreAudioKnobWidget>> fKnobs;
-    std::vector<std::unique_ptr<LibreAudioWidget>> fSpacers;
 
     void addSpacer()
     {
@@ -461,6 +476,18 @@ public:
         fKnobsRight.reset(new LibreAudioKnobGroupWidget<>(this, parameters, kParametersMainStart, fKnobsLeft->getLastKnobId() + 1 - kParametersMainStart));
         widgets.push_back({ fKnobsRight.get(), Expanding });
 
+        updateSize();
+    }
+
+    void addWidget() = delete;
+
+private:
+    std::unique_ptr<LibreAudioKnobGroupWidget<>> fKnobsLeft;
+    std::unique_ptr<LibreAudioWidget> fLogo;
+    std::unique_ptr<LibreAudioKnobGroupWidget<>> fKnobsRight;
+
+    void updateSize() final
+    {
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
         uint knobHeight;
@@ -471,14 +498,8 @@ public:
             knobHeight = d_max(fKnobsLeft->getHeight(), fKnobsRight->getHeight());
 
         BaseWidget::setHeight((border + margin) * 2 + knobHeight);
+        BaseWidget::updateSize();
     }
-
-    void addWidget() = delete;
-
-private:
-    std::unique_ptr<LibreAudioKnobGroupWidget<>> fKnobsLeft;
-    std::unique_ptr<LibreAudioWidget> fLogo;
-    std::unique_ptr<LibreAudioKnobGroupWidget<>> fKnobsRight;
 };
 
 // --------------------------------------------------------------------------------------------------------------------

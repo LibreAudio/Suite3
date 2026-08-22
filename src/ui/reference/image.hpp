@@ -17,20 +17,23 @@ public:
     explicit LibreAudioImageWidget(LibreAudioWidget* const parent)
         : LibreAudioWidget(parent)
     {
-        updateImageSize();
-        setSize(fImageWidth, fImageHeight);
+        updateSize();
     }
 
-protected:
+private:
+    const NanoImage fImage { createImageFromMemory(imageData, imageDataSize, IMAGE_GENERATE_MIPMAPS) };
+    float fImageWidth;
+    float fImageHeight;
+
     void onNanoDisplay() final
     {
-        const uint width = getWidth();
-        const uint height = getHeight();
+        const float w = getWidth();
+        const float h = getHeight();
 
         beginPath();
-        rect(0, 0, width, height);
-        fillPaint(imagePattern((width - fImageWidth) * 0.5,
-                               (height - fImageHeight) * 0.5,
+        rect(0, 0, w, h);
+        fillPaint(imagePattern((w - fImageWidth) * 0.5,
+                               (h - fImageHeight) * 0.5,
                                fImageWidth,
                                fImageHeight,
                                0.f,
@@ -39,15 +42,22 @@ protected:
         fill();
     }
 
-private:
-    const NanoImage fImage { createImageFromMemory(imageData, imageDataSize, IMAGE_GENERATE_MIPMAPS) };
-    double fImageWidth;
-    double fImageHeight;
-
-    void updateImageSize()
+    void updateSize() final
     {
         fImageWidth = fImage.getWidth() * fScaleFactor / imageScale;
         fImageHeight = fImage.getHeight() * fScaleFactor / imageScale;
+
+        const uint width = getWidth();
+        const uint height = getHeight();
+
+        if (width == height)
+            setSize(fImageWidth, fImageHeight);
+        else if (width > height)
+            setHeight(fImageHeight);
+        else
+            setWidth(fImageWidth);
+
+        LibreAudioWidget::updateSize();
     }
 };
 

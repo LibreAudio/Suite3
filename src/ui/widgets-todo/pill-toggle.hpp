@@ -65,6 +65,7 @@ class LibreAudioPillToggleWidget : public LibreAudioReferenceContainerWidget<Lib
                                    private IdleCallback
 {
     using R = LibreAudioReference::Widgets::PillToggle;
+    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
 
     std::vector<std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>> fCells;
 
@@ -72,13 +73,12 @@ public:
     explicit LibreAudioPillToggleWidget(LibreAudioWidget* const parent,
                                         const FaustParameter& parameter,
                                         const uint32_t id)
-        : LibreAudioReferenceContainerWidget<R>(parent)
+        : BaseWidget(parent)
     {
         addIdleCallback(this);
         setId(id);
         setName(parameter.label);
 
-        uint cellWidth = 0;
         fCells.reserve(parameter.scalePointCount);
 
         for (uint i = 0; i < parameter.scalePointCount; ++i)
@@ -86,40 +86,14 @@ public:
             std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget> widget {
                 new LibreAudioBackgroundPillToggleCellWidget(this, this, parameter.scalePoints[i])
             };
-            cellWidth = std::max(cellWidth, widget->getWidth());
             widgets.push_back({ widget.get(), Fixed });
             fCells.emplace_back(std::move(widget));
         }
 
-        // make all cells have the same width
-        for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
-            cell->setWidth(cellWidth);
-
         if (parameter.scalePointCount != 0)
             fCells.front()->setChecked(true, false);
 
-        const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
-        const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
-        const uint padding = d_roundToUnsignedInt(R::padding * fScaleFactor);
-
-        uint width = (border + margin) * 2;
-        if (const uint numWidgets = widgets.size())
-        {
-            width += padding * (numWidgets - 1);
-
-            for (const SubWidgetWithSizeHint& widgetWithSizeHint : widgets)
-                width += widgetWithSizeHint.widget->getWidth();
-        }
-
-        uint pillHeight;
-        if constexpr (R::height != 0)
-            pillHeight = R::height * fScaleFactor;
-        else if (! fCells.empty())
-            pillHeight = d_roundToUnsignedInt(fCells.front()->getHeight());
-        else
-            pillHeight = d_roundToUnsignedInt(fScaleFactor);
-
-        LibreAudioWidget::setSize(width, (border + margin) * 2 + pillHeight);
+        updateSize();
     }
 
 private:
@@ -152,13 +126,51 @@ private:
         for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
             cell->setChecked(cell->getValue() == value, false);
     }
+
+    void updateSize() final
+    {
+        const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
+        const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
+        const uint padding = d_roundToUnsignedInt(R::padding * fScaleFactor);
+
+        uint width = (border + margin) * 2;
+        if (const uint numWidgets = widgets.size())
+        {
+            width += padding * (numWidgets - 1);
+
+            for (const SubWidgetWithSizeHint& widgetWithSizeHint : widgets)
+                width += widgetWithSizeHint.widget->getWidth();
+        }
+
+        uint pillHeight;
+        if constexpr (R::height != 0)
+            pillHeight = R::height * fScaleFactor;
+        else if (! fCells.empty())
+            pillHeight = d_roundToUnsignedInt(fCells.front()->getHeight());
+        else
+            pillHeight = d_roundToUnsignedInt(fScaleFactor);
+
+        LibreAudioWidget::setSize(width, (border + margin) * 2 + pillHeight);
+
+        BaseWidget::updateSize();
+
+        // make all cells have the same width
+        uint cellWidth = 0;
+
+        for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
+            cellWidth = std::max(cellWidth, cell->getWidth());
+
+        for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
+            cell->setWidth(cellWidth + margin * 2);
+    }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
 class LibreAudioPillAreaWidget : public LibreAudioReferenceContainerWidget<LibreAudioReference::Widgets::PillArea>
 {
-    using R = LibreAudioReference::Widgets::PillToggle;
+    using R = LibreAudioReference::Widgets::PillArea;
+    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
 
     static constexpr const uint kMaxNumToggles = 2;
 
@@ -167,7 +179,7 @@ class LibreAudioPillAreaWidget : public LibreAudioReferenceContainerWidget<Libre
 
 public:
     explicit LibreAudioPillAreaWidget(LibreAudioWidget* const parent)
-        : LibreAudioReferenceContainerWidget(parent)
+        : BaseWidget(parent)
     {
         const std::vector<FaustParameter>& parameters = getFaustParameters();
 
@@ -210,6 +222,21 @@ public:
         if (numPills == 1)
             addSpacer();
 
+        updateSize();
+    }
+
+private:
+    void addSpacer()
+    {
+        std::unique_ptr<LibreAudioWidget> spacer { new LibreAudioEmptyWidget(this) };
+        widgets.push_back({ spacer.get(), Expanding });
+        fSpacers.emplace_back(std::move(spacer));
+    }
+
+    void addWidget() = delete;
+
+    void updateSize() final
+    {
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
         uint pillHeight;
@@ -222,17 +249,9 @@ public:
             pillHeight = d_roundToUnsignedInt(fScaleFactor);
 
         LibreAudioWidget::setHeight((border + margin) * 2 + pillHeight);
-    }
 
-private:
-    void addSpacer()
-    {
-        std::unique_ptr<LibreAudioWidget> spacer { new LibreAudioEmptyWidget(this) };
-        widgets.push_back({ spacer.get(), Expanding });
-        fSpacers.emplace_back(std::move(spacer));
+        BaseWidget::updateSize();
     }
-
-    void addWidget() = delete;
 };
 
 // --------------------------------------------------------------------------------------------------------------------

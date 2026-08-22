@@ -77,13 +77,14 @@ public:
 class LibreAudioRootWidget : public LibreAudioReferenceContainerTopLevelWidget<LibreAudioReference::Window, kVertical>
 {
     using R = LibreAudioReference::Window;
+    using BaseWidget = LibreAudioReferenceContainerTopLevelWidget<R, kVertical>;
 
     std::unique_ptr<LibreAudioTopBar> fTopBar;
     std::unique_ptr<LibreAudioMainArea> fMainArea;
 
 public:
     LibreAudioRootWidget(Window& window, LibreAudioUIWidgetInterface* const iface)
-        : LibreAudioReferenceContainerTopLevelWidget(window, iface)
+        : BaseWidget(window, iface)
     {
         createFontFromMemory("regular",
                              FONTS_INTER_18PT_REGULAR_TTF_DATA,
@@ -97,10 +98,10 @@ public:
         fTopBar = addWidget<LibreAudioTopBar>();
         fMainArea = addWidget<LibreAudioMainArea, Expanding>();
 
-        // fake a resize after creating all widgets, to move everything into place
-        ResizeEvent ev;
-        ev.size = getSize();
-        LibreAudioRootWidget::onResize(ev);
+        // // fake a resize after creating all widgets, to move everything into place
+        // ResizeEvent ev;
+        // ev.size = getSize();
+        // onResize(ev);
     }
 
     Point<int> getStageAreaAbsolutePos() const noexcept
@@ -112,6 +113,22 @@ public:
     {
         return fMainArea->getStageAreaSize();
     }
+
+    void updateScaleFactorAndSize(const float scaleFactor)
+    {
+        updateScaleFactor(scaleFactor);
+        updateSize();
+    }
+
+// private:
+//     void onResize(const ResizeEvent& ev) final
+//     {
+//         fScaleFactor = static_cast<double>(ev.size.getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT;
+//         BaseWidget::onResize(ev);
+//
+//         updateScaleFactor(fScaleFactor);
+//         updateSize();
+//     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -120,7 +137,7 @@ class LibreAudioUI : public LibreAudioBaseUI
 {
     using R = LibreAudioReference::Window;
 
-    double fScaleFactor = getScaleFactor();
+    double fScaleFactor;
     std::unique_ptr<LibreAudioShaderBaseWidget> fShaderBackground;
     std::unique_ptr<LibreAudioShaderBaseWidget> fShaderAnalyser;
     std::unique_ptr<LibreAudioShaderBaseWidget> fShaderLine;
@@ -143,7 +160,7 @@ public:
         else
             fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_LIBREAUDIO_LINE_FRAG_DATA, SHADERS_LIBREAUDIO_LINE_FRAG_LEN>(this, this));
 
-        updateShaderPosition();
+        updateSize();
     }
 
     ~LibreAudioUI() override
@@ -175,25 +192,23 @@ protected:
     void onResize(const ResizeEvent& ev) override
     {
         LibreAudioBaseUI::onResize(ev);
-        updateShaderPosition();
+        updateSize();
     }
 
     void uiIdle() final
     {
         // FIXME
-        updateShaderPosition();
-    }
-
-    void uiScaleFactorChanged(const double scaleFactor) final
-    {
-        fScaleFactor = scaleFactor;
-        // fShaderTest->setBorderRadius(LibreAudioReference::Stage::borderRadius * fScaleFactor);
-        // TODO
+        // updateSize();
     }
 
 private:
-    void updateShaderPosition()
+    void updateSize()
     {
+        fScaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
+                                static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
+
+        fRoot->updateScaleFactorAndSize(fScaleFactor);
+
         if (LibreAudioShaderBaseWidget* const sw = fShaderBackground.get())
         {
             sw->setAbsolutePos(fRoot->getStageAreaAbsolutePos());

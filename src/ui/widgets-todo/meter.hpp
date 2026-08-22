@@ -22,6 +22,7 @@ template<LibreAudioMeterWidgetType type>
 class LibreAudioMeterWidget final : public LibreAudioKnobWidget
 {
     using R = LibreAudioReference::Meter;
+    using BaseWidget = LibreAudioKnobWidget;
 
     static constexpr const uint kParameterL = type == Input
         ? kParametersInputStart + common_input::kFaustParameterInput_peak_l
@@ -43,13 +44,9 @@ class LibreAudioMeterWidget final : public LibreAudioKnobWidget
 
 public:
     LibreAudioMeterWidget(LibreAudioWidget* const parent)
-        : LibreAudioKnobWidget(parent, getFaustParameter(), kParameterMeter)
+        : BaseWidget(parent, getFaustParameter(), kParameterMeter)
     {
-        if constexpr (R::width != 0)
-            LibreAudioWidget::setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
-
-        if constexpr (R::height != 0)
-            LibreAudioWidget::setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
+        updateSize();
     }
 
 private:
@@ -221,7 +218,17 @@ private:
 
         // ------------------------------------------------------------------------------------------------------------
         // draw labels
+    }
 
+    void updateSize() final
+    {
+        if constexpr (R::width != 0)
+            BaseWidget::setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
+
+        if constexpr (R::height != 0)
+            BaseWidget::setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
+
+        BaseWidget::updateSize();
     }
 };
 

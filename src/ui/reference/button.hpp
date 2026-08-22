@@ -18,11 +18,7 @@ public:
     explicit LibreAudioReferenceButtonWidget(LibreAudioWidget* const parent)
         : LibreAudioButtonWidget(parent)
     {
-        if constexpr (R::width != 0)
-            LibreAudioWidget::setWidth(d_roundToUnsignedInt(R::width * this->fScaleFactor));
-
-        if constexpr (R::height != 0)
-            LibreAudioWidget::setHeight(d_roundToUnsignedInt(R::height * this->fScaleFactor));
+        updateSize();
     }
 
     [[nodiscard]] Corner getCorner() const noexcept final
@@ -98,6 +94,17 @@ protected:
                 fill();
             }
         }
+    }
+
+    void updateSize() override
+    {
+        if constexpr (R::width != 0)
+            LibreAudioWidget::setWidth(d_roundToUnsignedInt(R::width * this->fScaleFactor));
+
+        if constexpr (R::height != 0)
+            LibreAudioWidget::setHeight(d_roundToUnsignedInt(R::height * this->fScaleFactor));
+
+        LibreAudioButtonWidget::updateSize();
     }
 };
 

@@ -17,16 +17,14 @@ template<LibreAudioButtonWidget::Corner corner, const uchar* imageData, uint ima
 class LibreAudioImageButtonWidget : public LibreAudioReferenceButtonWidget<R, corner>
 {
     using BaseWidget = LibreAudioReferenceButtonWidget<R, corner>;
+
     static constexpr const int imageScale = 2;
 
 public:
     explicit LibreAudioImageButtonWidget(LibreAudioWidget* const parent)
         : BaseWidget(parent)
     {
-        const uint margin = (R::border + R::margin) * this->fScaleFactor;
-
-        updateImageSize();
-        LibreAudioWidget::setSize(fImageWidth + margin * 2, fImageHeight + margin * 2);
+        updateSize();
     }
 
 private:
@@ -40,10 +38,10 @@ private:
     
         const float w = BaseWidget::getWidth();
         const float h = BaseWidget::getHeight();
-    
+
         BaseWidget::save();
         BaseWidget::globalTint(this->getForegroundColor());
-    
+
         BaseWidget::beginPath();
         BaseWidget::rect((w - fImageWidth) * 0.5,  (h - fImageHeight) * 0.5, fImageWidth, fImageHeight);
         BaseWidget::fillPaint(BaseWidget::imagePattern((w - fImageWidth) * 0.5,
@@ -58,10 +56,29 @@ private:
         BaseWidget::restore();
     }
 
-    void updateImageSize()
+    void updateSize() final
     {
         fImageWidth = fImage.getWidth() * this->fScaleFactor / imageScale;
         fImageHeight = fImage.getHeight() * this->fScaleFactor / imageScale;
+
+        const uint margin = d_roundToUnsignedInt((R::border + R::margin) * this->fScaleFactor);
+        // const uint width = d_roundToUnsignedInt(fImageWidth) + margin * 2;
+        // const uint width = d_roundToUnsignedInt(fImageHeight) + margin * 2;
+
+        const uint width = BaseWidget::getWidth();
+        const uint height = BaseWidget::getHeight();
+
+        if (width == height)
+            BaseWidget::setSize(d_roundToUnsignedInt(fImageWidth) + margin * 2,
+                                      d_roundToUnsignedInt(fImageHeight) + margin * 2);
+        else if (width > height)
+            BaseWidget::setHeight(d_roundToUnsignedInt(fImageHeight) + margin * 2);
+        else
+            BaseWidget::setWidth(d_roundToUnsignedInt(fImageWidth) + margin * 2);
+
+        // BaseWidget::setSize(fImageWidth + margin * 2, fImageHeight + margin * 2);
+
+        BaseWidget::updateSize();
     }
 };
 
@@ -71,17 +88,16 @@ template<LibreAudioButtonWidget::Corner corner, const uchar* image1Data, uint im
 class LibreAudioDualImageButtonWidget : public LibreAudioReferenceButtonWidget<R, corner>
 {
     using BaseWidget = LibreAudioReferenceButtonWidget<R, corner>;
+
     static constexpr const int imageScale = 2;
 
 public:
     explicit LibreAudioDualImageButtonWidget(LibreAudioWidget* const parent)
         : LibreAudioReferenceButtonWidget<R, corner>(parent)
     {
-        const uint margin = (R::border + R::margin) * this->fScaleFactor;
-
-        updateImageSize();
         BaseWidget::setCheckable(true);
-        BaseWidget::setSize(fImageWidth + margin * 2, fImageHeight + margin * 2);
+
+        updateSize();
     }
 
 private:
@@ -114,10 +130,27 @@ private:
         BaseWidget::restore();
     }
 
-    void updateImageSize()
+    void updateSize() final
     {
         fImageWidth = fImage1.getWidth() * this->fScaleFactor / imageScale;
         fImageHeight = fImage1.getHeight() * this->fScaleFactor / imageScale;
+
+        const uint margin = (R::border + R::margin) * this->fScaleFactor;
+
+        const uint width = BaseWidget::getWidth();
+        const uint height = BaseWidget::getHeight();
+
+        if (width == height)
+            BaseWidget::setSize(d_roundToUnsignedInt(fImageWidth) + margin * 2,
+                                      d_roundToUnsignedInt(fImageHeight) + margin * 2);
+        else if (width > height)
+            BaseWidget::setHeight(d_roundToUnsignedInt(fImageHeight) + margin * 2);
+        else
+            BaseWidget::setWidth(d_roundToUnsignedInt(fImageWidth) + margin * 2);
+
+        // BaseWidget::setSize(fImageWidth + margin * 2, fImageHeight + margin * 2);
+
+        BaseWidget::updateSize();
     }
 };
 
@@ -133,14 +166,7 @@ public:
         : BaseWidget(parent),
           fText(text)
     {
-        const uint margin = d_roundToUnsignedInt(R::margin * this->fScaleFactor) * 2;
-
-        Rectangle<float> bounds;
-        BaseWidget::fontSize(R::fontSize * this->fScaleFactor);
-        BaseWidget::textAlign(0);
-        BaseWidget::textLetterSpacing(R::letterSpacing * this->fScaleFactor);
-        BaseWidget::textBounds(0, 0, fText, nullptr, bounds);
-        BaseWidget::setWidth(bounds.getWidth() + margin);
+        updateSize();
     }
 
 private:
@@ -158,6 +184,20 @@ private:
         BaseWidget::textAlign(BaseWidget::ALIGN_CENTER | BaseWidget::ALIGN_MIDDLE);
         BaseWidget::textLetterSpacing(R::letterSpacing * this->fScaleFactor);
         BaseWidget::text(w * 0.5f, h * 0.5f, fText);
+    }
+
+    void updateSize() final
+    {
+        const uint margin = d_roundToUnsignedInt(R::margin * this->fScaleFactor) * 2;
+
+        Rectangle<float> bounds;
+        BaseWidget::fontSize(R::fontSize * this->fScaleFactor);
+        BaseWidget::textAlign(0);
+        BaseWidget::textLetterSpacing(R::letterSpacing * this->fScaleFactor);
+        BaseWidget::textBounds(0, 0, fText, nullptr, bounds);
+        BaseWidget::setWidth(bounds.getWidth() + margin);
+
+        BaseWidget::updateSize();
     }
 };
 
