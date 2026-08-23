@@ -11,12 +11,15 @@ START_NAMESPACE_DISTRHO
 // --------------------------------------------------------------------------------------------------------------------
 
 template<const float rgba[4]>
-class LibreAudioColorWidget final : public LibreAudioWidget
+class LibreAudioColorWidget : public LibreAudioWidget
 {
-    static constexpr const Color fColor = { rgba[0], rgba[1], rgba[2], rgba[3] };
+    static constexpr const Color kColor = { rgba[0], rgba[1], rgba[2], rgba[3] };
 
 public:
     explicit LibreAudioColorWidget(LibreAudioWidget* const parent)
+        : LibreAudioWidget(parent) {}
+
+    explicit LibreAudioColorWidget(LibreAudioTopLevelWidget* const parent)
         : LibreAudioWidget(parent) {}
 
 protected:
@@ -24,7 +27,7 @@ protected:
     {
         beginPath();
         rect(0, 0, getWidth(), getHeight());
-        fillColor(fColor);
+        fillColor(kColor);
         fill();
     }
 };

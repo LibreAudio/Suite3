@@ -8,6 +8,8 @@
 #include "FaustParameters.hpp"
 #include "LibreAudioSnapshots.hpp"
 
+#include "ui/reference.hpp"
+#include "ui/widgets/root.hpp"
 #include "ui/widgets-todo/base.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -19,6 +21,8 @@ START_NAMESPACE_DISTRHO
 class LibreAudioBaseUI : public UI,
                          private LibreAudioSnapshots::Callback
 {
+    using R = LibreAudioReference::Window;
+
 public:
     LibreAudioBaseUI();
     ~LibreAudioBaseUI() override;
@@ -33,27 +37,21 @@ public:
 
     static bool isParameterOutputOrTrigger(uint32_t index);
 
+    // ----------------------------------------------------------------------------------------------------------------
+    // protected data
+
 protected:
-    // ----------------------------------------------------------------------------------------------------------------
-    // UI Widget Interface
+    float fScaleFactor = 1.f;
+    std::unique_ptr<LibreAudioRootWidgetInterface> fRoot;
 
+    template <class TopBar, class MainArea>
+    void createRootWidget()
+    {
+        fRoot.reset(new LibreAudioRootWidget<TopBar, MainArea>(getWindow(), this));
+        updateSize();
+    }
 
-    [[nodiscard]] uint32_t getParameterCount() const noexcept final { return kParameterCount; }
-    [[nodiscard]] const char* getParameterSymbol(uint32_t index) const noexcept final;
-    [[nodiscard]] float getParameterValue(uint32_t index) const noexcept final { return fParameterValues[index]; }
-
-    void parameterControlPressed(uint32_t index) final;
-    void parameterControlReleased(uint32_t index) final;
-    void parameterControlModified(uint32_t index, float value) final;
-
-    void buttonClicked(uint32_t id) final;
-    [[nodiscard]] bool isButtonEnabled(uint32_t id) const noexcept final;
-    [[nodiscard]] bool isButtonChecked(uint32_t id) const noexcept final;
-
-    // ----------------------------------------------------------------------------------------------------------------
-    // Widget Callbacks
-
-    void uiIdle() override;
+    virtual void updateSize();
 
 private:
     // ----------------------------------------------------------------------------------------------------------------
@@ -83,6 +81,29 @@ private:
     void parameterChanged(uint32_t index, float value) final;
 
     void stateChanged(const char* key, const char* value) final;
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Widget Callbacks
+
+    void onNanoDisplay() final;
+    void onResize(const ResizeEvent& ev) final;
+
+    void uiIdle() final;
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // UI Widget Interface
+
+    [[nodiscard]] uint32_t getParameterCount() const noexcept final { return kParameterCount; }
+    [[nodiscard]] const char* getParameterSymbol(uint32_t index) const noexcept final;
+    [[nodiscard]] float getParameterValue(uint32_t index) const noexcept final { return fParameterValues[index]; }
+
+    void parameterControlPressed(uint32_t index) final;
+    void parameterControlReleased(uint32_t index) final;
+    void parameterControlModified(uint32_t index, float value) final;
+
+    void buttonClicked(uint32_t id) final;
+    [[nodiscard]] bool isButtonEnabled(uint32_t id) const noexcept final;
+    [[nodiscard]] bool isButtonChecked(uint32_t id) const noexcept final;
 
     // ----------------------------------------------------------------------------------------------------------------
     // Other Callbacks

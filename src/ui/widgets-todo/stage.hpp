@@ -137,6 +137,11 @@ public:
         addIdleCallback(this);
     }
 
+    [[nodiscard]] float getBorderRadius() const noexcept
+    {
+        return R::borderRadius * fScaleFactor;
+    }
+
 private:
     void idleCallback() final
     {

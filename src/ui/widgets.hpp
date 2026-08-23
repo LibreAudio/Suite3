@@ -7,17 +7,12 @@
 #include "reference/image.hpp"
 #include "base/interface.hpp"
 #include "reference/button-group.hpp"
+#include "widgets/root.hpp"
 #include "widgets-todo/base.hpp"
 #include "widgets-todo/button.hpp"
-// #include "widgets/knob.hpp"
-// #include "widgets/knob-group.hpp"
-// #include "widgets/line.hpp"
-// #include "widgets/meter.hpp"
-// #include "widgets/pill-toggle.hpp"
-// #include "widgets/shader.hpp"
-// #include "widgets/stage.hpp"
-// #include "widgets/top-bar-name.hpp"
-// #include "LibreAudioParameters.hpp"
+#include "widgets-todo/meter.hpp"
+#include "widgets-todo/stage.hpp"
+#include "widgets-todo/top-bar-name.hpp"
 
 #include "las-resources.h"
 
@@ -99,6 +94,56 @@ public:
         : LibreAudioButtonGroupWidget(parent)
     {
         done();
+    }
+};
+
+// --------------------------------------------------------------------------------------------------------------------
+
+class LibreAudioTopBar : public LibreAudioReferenceContainerWidget<LibreAudioReference::TopBar>
+{
+    std::unique_ptr<LibreAudioTopBarLogoWidget> fLogo = addWidget<LibreAudioTopBarLogoWidget>();
+    std::unique_ptr<LibreAudioTopBarNameWidget> fPluginName = addWidget<LibreAudioTopBarNameWidget>();
+    std::unique_ptr<LibreAudioWidget> fSpacer = addSpacer();
+    std::unique_ptr<LibreAudioButtonGroupWidget> fUndoRedoGroup = addWidget<LibreAudioTopBarUndoRedoGroupWidget>();
+    std::unique_ptr<LibreAudioButtonGroupWidget> fSnapshotsGroup = addWidget<LibreAudioTopBarSnapshotsGroupWidget>();
+    std::unique_ptr<LibreAudioButtonGroupWidget> fEasyExpertGroup = addWidget<LibreAudioTopBarEasyExpertGroupWidget>();
+    std::unique_ptr<LibreAudioButtonGroupWidget> fMenuPowerGroup = addWidget<LibreAudioTopBarMenuPowerGroupWidget>();
+
+public:
+    LibreAudioTopBar(LibreAudioTopLevelWidget* const parent)
+        : LibreAudioReferenceContainerWidget(parent)
+    {
+    }
+};
+
+// --------------------------------------------------------------------------------------------------------------------
+
+class LibreAudioMainArea : public LibreAudioReferenceContainerWidget<LibreAudioReference::MainArea>,
+                           public LibreAudioMainAreaWidgetInterface
+{
+    std::unique_ptr<LibreAudioWidget> fMetersIn = addWidget<LibreAudioMeterWidget<Input>>();
+    std::unique_ptr<LibreAudioStageWidget> fStage = addWidget<LibreAudioStageWidget, Expanding>();
+    std::unique_ptr<LibreAudioWidget> fMetersOut = addWidget<LibreAudioMeterWidget<Output>>();
+
+public:
+    LibreAudioMainArea(LibreAudioTopLevelWidget* const parent)
+        : LibreAudioReferenceContainerWidget(parent)
+    {
+    }
+
+    [[nodiscard]] Point<int> getMainAreaAbsolutePos() const noexcept final
+    {
+        return fStage->getAbsolutePos();
+    }
+
+    [[nodiscard]] Size<uint> getMainAreaSize() const noexcept final
+    {
+        return fStage->getSize();
+    }
+
+    [[nodiscard]] float getMainAreaBorderRadius() const noexcept final
+    {
+        return fStage->getBorderRadius();
     }
 };
 

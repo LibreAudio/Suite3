@@ -5,6 +5,8 @@
 #include "LibreAudioBaseUI.hpp"
 
 #include "ui/reference.hpp"
+#include "ui/reference/color.hpp"
+#include "ui/widgets.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -14,45 +16,31 @@ START_NAMESPACE_DISTRHO
 
 class LibreAudioUI : public LibreAudioBaseUI
 {
-    using R = LibreAudioReference::Window;
+    struct TopBar : LibreAudioReference::TopBar {
+        static constexpr const Color backgroundColor = LibreAudioReference::Colors::ink3;
+    };
+    using TopBarWidget = LibreAudioReferenceWidget<TopBar>;
 
-    float fScaleFactor;
+    static constexpr const float kColor[] = { 0.3f, 0.1f, 0.05f, 1.f };
+    class MainAreaWidget : public LibreAudioColorWidget<kColor>,
+                           public LibreAudioMainAreaWidgetInterface
+    {
+    public:
+        explicit MainAreaWidget(LibreAudioTopLevelWidget* const parent)
+            : LibreAudioColorWidget(parent) {}
+        [[nodiscard]] Point<int> getMainAreaAbsolutePos() const noexcept final { return {}; }
+        [[nodiscard]] Size<uint> getMainAreaSize() const noexcept final { return {}; }
+        [[nodiscard]] float getMainAreaBorderRadius() const noexcept final { return {}; }
+    };
 
 public:
     LibreAudioUI()
         : LibreAudioBaseUI()
     {
-        updateSize();
+        createRootWidget<LibreAudioTopBar, MainAreaWidget>();
     }
 
 private:
-    // ----------------------------------------------------------------------------------------------------------------
-    // Widget Callbacks
-
-    void onNanoDisplay() override
-    {
-        const float w = getWidth();
-        const float h = getHeight();
-
-        beginPath();
-        rect(0, 0, w, h);
-        fillPaint(linearGradient(0, 0, 0, h, R::backgroundGradientStart, R::backgroundGradientStop));
-        fill();
-
-        if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
-        {
-            strokeColor(R::borderColor);
-            strokeWidth(R::border * 2 * fScaleFactor);
-            stroke();
-        }
-    }
-
-    void updateSize()
-    {
-        fScaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
-                                static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
-    }
-
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LibreAudioUI)
 };
 

@@ -133,6 +133,84 @@ const char* LibreAudioBaseUI::getParameterSymbol(const uint32_t index) const noe
 }
 
 // --------------------------------------------------------------------------------------------------------------------
+// protected data
+
+void LibreAudioBaseUI::updateSize()
+{
+    fScaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
+                            static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
+
+    DISTRHO_SAFE_ASSERT_RETURN(fRoot != nullptr,);
+
+    fRoot->updateScaleFactorAndSize(fScaleFactor);
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// private data
+
+void LibreAudioBaseUI::pageButtonClicked(const Page page)
+{
+    if (fPage == page)
+    {
+        if (page == kPageSettings)
+            fPage = fLastEasyExpertPage;
+        return;
+    }
+
+    fPage = page;
+
+    switch (page)
+    {
+    case kPageEasy:
+    case kPageExpert:
+        fLastEasyExpertPage = page;
+        setState(kStateKeys[kStateMode], page == kPageExpert ? "expert" : "easy");
+        break;
+    default:
+        break;
+    }
+}
+
+void LibreAudioBaseUI::snapshotButtonClicked(const uint32_t button)
+{
+    if (button == kWidgetSnapshotCopy)
+    {
+        fCopyingSnapshot = !fCopyingSnapshot;
+        return;
+    }
+
+    DISTRHO_SAFE_ASSERT_RETURN(button >= kWidgetSnapshotSlotA && button <= kWidgetSnapshotSlotD,);
+
+    const uint8_t snapshot = button - kWidgetSnapshotSlotA;
+
+    // nothing to do if current snapshot clicked and there is no previous
+    if (fSnapshots.getCurrent() == snapshot && fSnapshots.getPrevious() == snapshot)
+        return;
+
+    // special case for copy & pasting snapshot
+    if (fCopyingSnapshot)
+    {
+        fCopyingSnapshot = false;
+        fSnapshots.copyTo(snapshot);
+        return;
+    }
+
+    // clicked new snapshot, load it
+    if (fSnapshots.getCurrent() != snapshot)
+        fSnapshots.load(snapshot);
+
+    // clicked current snapshot, load previous one
+    else
+        fSnapshots.load(fSnapshots.getPrevious());
+
+    // fUndoRedo.clear();
+
+    // set state of active/current snapshot (index)
+    const char snapshotStr[] = { static_cast<char>('A' + snapshot), '\0' };
+    setState(kStateKeys[kStateCurrentSnapshot], snapshotStr);
+}
+
+// --------------------------------------------------------------------------------------------------------------------
 // DSP/Plugin Callbacks
 
 void LibreAudioBaseUI::parameterChanged(const uint32_t index, const float value)
@@ -306,6 +384,41 @@ void LibreAudioBaseUI::stateChanged(const char* const key, const char* const val
 // --------------------------------------------------------------------------------------------------------------------
 // Widget Callbacks
 
+void LibreAudioBaseUI::onNanoDisplay()
+{
+    const float w = getWidth();
+    const float h = getHeight();
+
+    beginPath();
+    rect(0, 0, w, h);
+    fillPaint(linearGradient(0, 0, 0, h, R::backgroundGradientStart, R::backgroundGradientStop));
+    fill();
+
+    if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
+    {
+        strokeColor(R::borderColor);
+        strokeWidth(R::border * 2 * fScaleFactor);
+        stroke();
+    }
+}
+
+void LibreAudioBaseUI::onResize(const ResizeEvent& ev)
+{
+    UI::onResize(ev);
+    updateSize();
+}
+
+void LibreAudioBaseUI::uiIdle()
+{
+    fSnapshots.idle();
+
+    // TESTING
+    // updateSize();
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// UI Widget Interface
+
 void LibreAudioBaseUI::parameterControlPressed(const uint32_t index)
 {
     switch (index)
@@ -443,73 +556,6 @@ bool LibreAudioBaseUI::isButtonChecked(const uint32_t id) const noexcept
 
     // fallback
     return false;
-}
-
-void LibreAudioBaseUI::pageButtonClicked(const Page page)
-{
-    if (fPage == page)
-    {
-        if (page == kPageSettings)
-            fPage = fLastEasyExpertPage;
-        return;
-    }
-
-    fPage = page;
-
-    switch (page)
-    {
-    case kPageEasy:
-    case kPageExpert:
-        fLastEasyExpertPage = page;
-        setState(kStateKeys[kStateMode], page == kPageExpert ? "expert" : "easy");
-        break;
-    default:
-        break;
-    }
-}
-
-void LibreAudioBaseUI::snapshotButtonClicked(const uint32_t button)
-{
-    if (button == kWidgetSnapshotCopy)
-    {
-        fCopyingSnapshot = !fCopyingSnapshot;
-        return;
-    }
-
-    DISTRHO_SAFE_ASSERT_RETURN(button >= kWidgetSnapshotSlotA && button <= kWidgetSnapshotSlotD,);
-
-    const uint8_t snapshot = button - kWidgetSnapshotSlotA;
-
-    // nothing to do if current snapshot clicked and there is no previous
-    if (fSnapshots.getCurrent() == snapshot && fSnapshots.getPrevious() == snapshot)
-        return;
-
-    // special case for copy & pasting snapshot
-    if (fCopyingSnapshot)
-    {
-        fCopyingSnapshot = false;
-        fSnapshots.copyTo(snapshot);
-        return;
-    }
-
-    // clicked new snapshot, load it
-    if (fSnapshots.getCurrent() != snapshot)
-        fSnapshots.load(snapshot);
-
-    // clicked current snapshot, load previous one
-    else
-        fSnapshots.load(fSnapshots.getPrevious());
-
-    // fUndoRedo.clear();
-
-    // set state of active/current snapshot (index)
-    const char snapshotStr[] = { static_cast<char>('A' + snapshot), '\0' };
-    setState(kStateKeys[kStateCurrentSnapshot], snapshotStr);
-}
-
-void LibreAudioBaseUI::uiIdle()
-{
-    fSnapshots.idle();
 }
 
 // --------------------------------------------------------------------------------------------------------------------
