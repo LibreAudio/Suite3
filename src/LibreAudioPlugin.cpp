@@ -190,6 +190,9 @@ void LibreAudioPlugin::initState(const uint32_t index, State& state)
 
     switch (static_cast<States>(index))
     {
+    case kStateMode:
+        state.label = "Mode";
+        break;
     case kStateCurrentSnapshot:
         state.label = "Snapshot";
         break;

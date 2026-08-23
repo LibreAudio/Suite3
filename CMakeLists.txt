@@ -60,7 +60,7 @@ endif()
 # Clang specific flags
 if (CMAKE_CXX_COMPILER_ID MATCHES "^(AppleClang|Clang)$")
   # silence warnings caused by -ffinite-math-only
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 18.0)
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0)
     add_compile_options(-Wno-nan-infinity-disabled)
   endif()
 endif()
