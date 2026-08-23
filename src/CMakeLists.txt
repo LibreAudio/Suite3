@@ -164,10 +164,26 @@ function(las_add_plugin LABEL)
   set(TARGET "la-${LABEL}")
 
   set(EXTRA_ARGS)
+  if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+  else()
+    list(APPEND EXTRA_ARGS RUNTIME_TESTING)
+  endif()
+
   set(EXTRA_DSP_LIBS)
-  set(EXTRA_UI_LIBS)
   if("${LABEL}" STREQUAL "leveler")
     list(APPEND EXTRA_DSP_LIBS las-rnnoise)
+  endif()
+
+  set(EXTRA_UI_LIBS)
+
+  set(DSP_FILE custom/${LABEL}-dsp.cpp)
+  if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${DSP_FILE}")
+    set(DSP_FILE LibreAudioPlugin.cpp)
+  endif()
+
+  set(UI_FILE custom/${LABEL}-ui.cpp)
+  if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${UI_FILE}")
+    set(UI_FILE LibreAudioUI.cpp)
   endif()
 
   if (TRUE)
@@ -183,7 +199,7 @@ function(las_add_plugin LABEL)
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-parameters.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}/config.h
       FILES_DSP
-        LibreAudioPlugin.cpp
+        ${DSP_FILE}
         ${CMAKE_CURRENT_BINARY_DIR}/common_input-dsp.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/common_input-dsp.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/common_output-dsp.cpp
@@ -191,13 +207,11 @@ function(las_add_plugin LABEL)
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.hpp
       FILES_UI
-        LibreAudioUI.cpp
+        ${UI_FILE}
         LibreAudioBaseUI.cpp
         LibreAudioSnapshots.cpp
         LibreAudioUndoRedo.cpp
-        ${UI_FILE}
         ${CMAKE_CURRENT_BINARY_DIR}/las-resources.h
-      RUNTIME_TESTING
       ${EXTRA_ARGS}
     )
 
@@ -218,7 +232,7 @@ function(las_add_plugin LABEL)
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-parameters.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}/config.h
       FILES_DSP
-        LibreAudioPlugin.cpp
+        ${DSP_FILE}
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.hpp
       ${EXTRA_ARGS}
