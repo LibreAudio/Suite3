@@ -20,6 +20,8 @@ class LibreAudioKnobWidget : public LibreAudioWidget,
                              protected IdleCallback,
                              private KnobEventHandler::Callback
 {
+    static constexpr const float kMouseDeceleration = 500.f;
+
 public:
     explicit LibreAudioKnobWidget(LibreAudioWidget* const parent, const FaustParameter& parameter, const uint32_t id)
         : LibreAudioWidget(parent),
@@ -30,7 +32,7 @@ public:
         setName(parameter.label);
         setCallback(this);
         setDefault(parameter.init);
-        setMouseDeceleration(500.f);
+        setMouseDeceleration(kMouseDeceleration);
         setOrientation(Vertical);
         setRange(parameter.min, parameter.max);
         setStep(parameter.step);

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "base.hpp"
+#include "../base/base.hpp"
 
 START_NAMESPACE_DISTRHO
 

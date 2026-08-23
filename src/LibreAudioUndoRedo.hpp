@@ -30,15 +30,15 @@ struct LibreAudioUndoRedo {
         uint32_t position = UINT32_MAX;
     };
 
-    LibreAudioUndoRedo(Callback* const callback);
+    explicit LibreAudioUndoRedo(Callback* callback);
 
-    bool canUndo() const noexcept;
-    bool canRedo() const noexcept;
-    bool isEmpty() const noexcept;
+    [[nodiscard]] bool canUndo() const noexcept;
+    [[nodiscard]] bool canRedo() const noexcept;
+    [[nodiscard]] bool isEmpty() const noexcept;
 
     void clear();
 
-    inline const Actions& getActions() const noexcept
+    [[nodiscard]] const Actions& getActions() const noexcept
     {
         return fActions;
     }

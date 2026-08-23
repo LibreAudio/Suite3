@@ -113,7 +113,6 @@ private:
             text(w * 0.5f, h, textBuffer);
         }
 
-#if 1
         const float size = w;
 
         constexpr float MIN_A = -150.0f;
@@ -198,7 +197,6 @@ private:
         stroke();
 
         restore();
-#endif
     }
 
     void idleCallback() final
@@ -298,7 +296,7 @@ private:
         strokeWidth(w);
         lineCap(BUTT);
 
-        if (paint)
+        if (paint != nullptr)
             strokePaint(*paint);
         else
             strokeColor(solid);

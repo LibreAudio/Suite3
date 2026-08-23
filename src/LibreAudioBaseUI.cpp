@@ -95,14 +95,14 @@ static std::vector<const char*> createParameterSymbols()
         }
     }
 
-    for (uint32_t i = 0; i < common_input::kFaustParameterCount; ++i)
-        symbols.push_back(kFaustParametersIn[i].symbol);
+    for (const FaustParameter& parameter : kFaustParametersIn)
+        symbols.push_back(parameter.symbol);
 
-    for (uint32_t i = kCommonIOParameters; i < common_output::kFaustParameterCount; ++i)
-        symbols.push_back(kFaustParametersOut[i].symbol);
+    for (const FaustParameter& parameter : kFaustParametersOut)
+        symbols.push_back(parameter.symbol);
 
-    for (uint32_t i = 0, size = kFaustParameters.size(); i < size; ++i)
-        symbols.push_back(kFaustParameters[i].symbol);
+    for (const FaustParameter& parameter : kFaustParameters)
+        symbols.push_back(parameter.symbol);
 
     return symbols;
 }

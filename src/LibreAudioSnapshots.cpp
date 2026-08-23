@@ -15,7 +15,6 @@ LibreAudioSnapshots::LibreAudioSnapshots(const uint32_t snapshotCount,
     : fCallback(callback),
       fParameterCount(parameterCount),
       fSnapshotCount(snapshotCount),
-      fCurrent(0),
       fParameterValues(new float*[snapshotCount]),
       fUndoRedos(new LibreAudioUndoRedo*[snapshotCount]),
       fUpdated(new bool[snapshotCount])

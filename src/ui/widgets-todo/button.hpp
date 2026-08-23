@@ -62,6 +62,7 @@ private:
         fImageHeight = fImage.getHeight() * this->fScaleFactor / imageScale;
 
         const uint margin = d_roundToUnsignedInt((R::border + R::margin) * this->fScaleFactor);
+        const uint marginx2 = margin * 2;
         // const uint width = d_roundToUnsignedInt(fImageWidth) + margin * 2;
         // const uint width = d_roundToUnsignedInt(fImageHeight) + margin * 2;
 
@@ -69,14 +70,14 @@ private:
         const uint height = BaseWidget::getHeight();
 
         if (width == height)
-            BaseWidget::setSize(d_roundToUnsignedInt(fImageWidth) + margin * 2,
-                                      d_roundToUnsignedInt(fImageHeight) + margin * 2);
+            BaseWidget::setSize(d_roundToUnsignedInt(fImageWidth) + marginx2,
+                                d_roundToUnsignedInt(fImageHeight) + marginx2);
         else if (width > height)
-            BaseWidget::setHeight(d_roundToUnsignedInt(fImageHeight) + margin * 2);
+            BaseWidget::setHeight(d_roundToUnsignedInt(fImageHeight) + marginx2);
         else
-            BaseWidget::setWidth(d_roundToUnsignedInt(fImageWidth) + margin * 2);
+            BaseWidget::setWidth(d_roundToUnsignedInt(fImageWidth) + marginx2);
 
-        // BaseWidget::setSize(fImageWidth + margin * 2, fImageHeight + margin * 2);
+        // BaseWidget::setSize(fImageWidth + marginx2, fImageHeight + marginx2);
 
         BaseWidget::updateSize();
     }
@@ -136,19 +137,20 @@ private:
         fImageHeight = fImage1.getHeight() * this->fScaleFactor / imageScale;
 
         const uint margin = (R::border + R::margin) * this->fScaleFactor;
+        const uint marginx2 = margin * 2;
 
         const uint width = BaseWidget::getWidth();
         const uint height = BaseWidget::getHeight();
 
         if (width == height)
-            BaseWidget::setSize(d_roundToUnsignedInt(fImageWidth) + margin * 2,
-                                      d_roundToUnsignedInt(fImageHeight) + margin * 2);
+            BaseWidget::setSize(d_roundToUnsignedInt(fImageWidth) + marginx2,
+                                      d_roundToUnsignedInt(fImageHeight) + marginx2);
         else if (width > height)
-            BaseWidget::setHeight(d_roundToUnsignedInt(fImageHeight) + margin * 2);
+            BaseWidget::setHeight(d_roundToUnsignedInt(fImageHeight) + marginx2);
         else
-            BaseWidget::setWidth(d_roundToUnsignedInt(fImageWidth) + margin * 2);
+            BaseWidget::setWidth(d_roundToUnsignedInt(fImageWidth) + marginx2);
 
-        // BaseWidget::setSize(fImageWidth + margin * 2, fImageHeight + margin * 2);
+        // BaseWidget::setSize(fImageWidth + marginx2, fImageHeight + marginx2);
 
         BaseWidget::updateSize();
     }

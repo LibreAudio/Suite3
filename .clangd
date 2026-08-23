@@ -7,9 +7,13 @@ Diagnostics:
     Remove: [
       modernize-avoid-c-arrays,
       modernize-use-auto,
+      modernize-use-equals-delete,
       modernize-use-trailing-return-type,
       readability-braces-around-statements,
-      readability-identifier-length
+      readability-identifier-length,
+      readability-isolate-declaration,
+      readability-named-parameter,
+      readability-uppercase-literal-suffix
     ]
     CheckOptions:
       readability-identifier-naming.VariableCase: PascalCase

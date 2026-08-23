@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "base.hpp"
+#include "../base/base.hpp"
 
 START_NAMESPACE_DISTRHO
 
@@ -32,8 +32,8 @@ private:
 
         beginPath();
         rect(0, 0, w, h);
-        fillPaint(imagePattern((w - fImageWidth) * 0.5,
-                               (h - fImageHeight) * 0.5,
+        fillPaint(imagePattern((w - fImageWidth) * 0.5f,
+                               (h - fImageHeight) * 0.5f,
                                fImageWidth,
                                fImageHeight,
                                0.f,

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "DistrhoPluginInfo.h"
+
 #include "../reference.hpp"
 #include "../reference/container.hpp"
 #include "../reference/image.hpp"
@@ -321,6 +323,7 @@ private:
             const float lw = 2;
             const float sx = knobS->getAbsoluteX() /*- knobS->getWidth()*/;
             const float ex = knobE->getAbsoluteX() /*+ knobE->getWidth()*/;
+            const float mx = sx + (ex - sx) * 0.5f;
             const float y = 20;
 
             beginPath();
@@ -328,13 +331,13 @@ private:
             textAlign(ALIGN_CENTER | ALIGN_MIDDLE);
 
             fillColor(Color(LibreAudioReference::Colors::ink.invert(), 0.5f));
-            text(sx + (ex - sx) * 0.5f, 1 * fScaleFactor, bracket.label);
+            text(mx, 1 * fScaleFactor, bracket.label);
 
             fillColor(LibreAudioReference::Colors::ink3);
-            text(sx + (ex - sx) * 0.5f, 0, bracket.label);
+            text(mx, 0, bracket.label);
 
             Rectangle<float> bounds;
-            textBounds(sx + (ex - sx) * 0.5f, 0, bracket.label, nullptr, bounds);
+            textBounds(mx, 0, bracket.label, nullptr, bounds);
 
             strokeColor(LibreAudioReference::Colors::ink3);
             strokeWidth(lw);

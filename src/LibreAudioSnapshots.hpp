@@ -24,20 +24,20 @@ struct LibreAudioSnapshots : private LibreAudioUndoRedo::Callback {
                         uint32_t parameterCount,
                         const float* parameterValues,
                         Callback* callback);
-    ~LibreAudioSnapshots();
+    ~LibreAudioSnapshots() override;
 
-    bool canUndo() const noexcept;
-    bool canRedo() const noexcept;
+    [[nodiscard]] bool canUndo() const noexcept;
+    [[nodiscard]] bool canRedo() const noexcept;
 
     void undo();
     void redo();
 
-    inline uint32_t getCurrent() const noexcept
+    [[nodiscard]] uint32_t getCurrent() const noexcept
     {
         return fCurrent;
     }
 
-    inline uint32_t getPrevious() const noexcept
+    [[nodiscard]] uint32_t getPrevious() const noexcept
     {
         return fPrevious;
     }

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "button.hpp"
+#include "../base/button.hpp"
 #include "container.hpp"
 
 START_NAMESPACE_DISTRHO

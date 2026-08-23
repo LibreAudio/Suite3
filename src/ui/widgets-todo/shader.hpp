@@ -6,7 +6,7 @@
 
 #include "../base/interface.hpp"
 
-#include "OpenGL-include.hpp"
+#include "Application.hpp"
 #include "SubWidget.hpp"
 #include "TopLevelWidget.hpp"
 
@@ -17,6 +17,8 @@
 
 #include <cstring>
 #include <vector>
+
+#include "OpenGL-include.hpp"
 
 #ifdef DISTRHO_OS_WINDOWS
 #include "extra/Windows-include.h"
@@ -270,17 +272,10 @@ private:
             float peakDb = kLevelSilenceDb;
 
             if (fPeakParameterL >= 0)
-            {
-                const float v = fInterface->getParameterValue(fPeakParameterL);
-                if (v > peakDb)
-                    peakDb = v;
-            }
+                peakDb = std::max(peakDb, fInterface->getParameterValue(fPeakParameterL));
+
             if (fPeakParameterR >= 0)
-            {
-                const float v = fInterface->getParameterValue(fPeakParameterR);
-                if (v > peakDb)
-                    peakDb = v;
-            }
+                peakDb = std::max(peakDb, fInterface->getParameterValue(fPeakParameterR));
 
             fLevelSlow.setTargetValue(peakDb);
             fLevelFast.setTargetValue(peakDb);

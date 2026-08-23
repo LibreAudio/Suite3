@@ -45,8 +45,7 @@ void LibreAudioUndoRedo::push(const uint32_t index, const float initValue, const
     if (fActions.data.empty())
     {
         const Parameter param = { index, initValue };
-        const std::vector<Parameter> action = { param };
-        fActions.data.emplace_back(std::move(action));
+        fActions.data.push_back({ param });
     }
     else
     {
@@ -62,14 +61,12 @@ void LibreAudioUndoRedo::push(const uint32_t index, const float initValue, const
 
         if (! backHasIndex)
         {
-            const Parameter param = { index, initValue };
-            fActions.data.back().emplace_back(std::move(param));
+            fActions.data.back().push_back({ index, initValue });
         }
     }
 
     const Parameter param = { index, newValue };
-    const std::vector<Parameter> action = { param };
-    fActions.data.emplace_back(std::move(action));
+    fActions.data.push_back({ param });
     fActions.position = fActions.data.size() - 1;
 }
 

@@ -13,7 +13,7 @@ START_NAMESPACE_DISTRHO
 
 // --------------------------------------------------------------------------------------------------------------------
 
-enum LibreAudioMeterWidgetType {
+enum LibreAudioMeterWidgetType : bool {
     Input,
     Output
 };
@@ -63,7 +63,7 @@ private:
     float fValueL = min;
     float fValueR = min;
 
-    constexpr inline float db2height(const float db, const float height) const noexcept
+    [[nodiscard]] static constexpr float db2height(const float db, const float height) noexcept
     {
         if (db >= linearPointDB)
         {

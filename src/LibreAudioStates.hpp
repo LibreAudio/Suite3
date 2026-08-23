@@ -12,7 +12,7 @@ START_NAMESPACE_DISTRHO
 
 // --------------------------------------------------------------------------------------------------------------------
 
-enum States {
+enum States : uint8_t {
 #ifndef _DARKGLASS_DEVICE_PABLITO
     kStateMode,
     kStateCurrentSnapshot,

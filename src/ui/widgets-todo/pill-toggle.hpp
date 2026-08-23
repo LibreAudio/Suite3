@@ -5,7 +5,7 @@
 #pragma once
 
 #include "button.hpp"
-#include "../base/container.hpp"
+#include "../reference/container.hpp"
 #include "../base/interface.hpp"
 
 #include "LibreAudioParameters.hpp"
@@ -187,9 +187,8 @@ public:
         fSpacers.reserve(kMaxNumToggles + 1);
 
         uint8_t numPills = 0;
-        for (uint32_t i = 0, count = parameters.size(); i < count; ++i)
+        for (const FaustParameter& parameter : parameters)
         {
-            const FaustParameter& parameter = parameters[i];
             if (! parameter.isEnumerator || parameter.isOutput) {
                 d_stdout("pill area skipped parameter %s", parameter.label);
                 continue;

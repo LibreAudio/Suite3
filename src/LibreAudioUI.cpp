@@ -21,7 +21,6 @@
 // #include <string>
 // #include <vector>
 
-#include "ui/reference.hpp"
 #include "ui/widgets.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -61,12 +60,12 @@ public:
     {
     }
 
-    Point<int> getStageAreaAbsolutePos() const noexcept
+    [[nodiscard]] Point<int> getStageAreaAbsolutePos() const noexcept
     {
         return fStage->getAbsolutePos();
     }
 
-    Size<uint> getStageAreaSize() const noexcept
+    [[nodiscard]] Size<uint> getStageAreaSize() const noexcept
     {
         return fStage->getSize();
     }
@@ -104,12 +103,12 @@ public:
         // onResize(ev);
     }
 
-    Point<int> getStageAreaAbsolutePos() const noexcept
+    [[nodiscard]] Point<int> getStageAreaAbsolutePos() const noexcept
     {
         return fMainArea->getStageAreaAbsolutePos();
     }
 
-    Size<uint> getStageAreaSize() const noexcept
+    [[nodiscard]] Size<uint> getStageAreaSize() const noexcept
     {
         return fMainArea->getStageAreaSize();
     }
@@ -161,10 +160,6 @@ public:
             fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_LIBREAUDIO_LINE_FRAG_DATA, SHADERS_LIBREAUDIO_LINE_FRAG_LEN>(this, this));
 
         updateSize();
-    }
-
-    ~LibreAudioUI() override
-    {
     }
 
 protected:

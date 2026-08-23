@@ -18,7 +18,7 @@ class LibreAudioUIWidgetInterface;
 // --------------------------------------------------------------------------------------------------------------------
 // widget container, with an horizontal or vertical layout for child widgets
 
-enum LibreAudioOrientation {
+enum LibreAudioOrientation : bool {
     kHorizontal,
     kVertical,
 };

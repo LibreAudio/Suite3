@@ -7,6 +7,7 @@
 #include "reference/image.hpp"
 #include "base/interface.hpp"
 #include "reference/button-group.hpp"
+#include "widgets-todo/base.hpp"
 #include "widgets-todo/button.hpp"
 // #include "widgets/knob.hpp"
 // #include "widgets/knob-group.hpp"
@@ -16,8 +17,7 @@
 // #include "widgets/shader.hpp"
 // #include "widgets/stage.hpp"
 // #include "widgets/top-bar-name.hpp"
-
-#include "LibreAudioParameters.hpp"
+// #include "LibreAudioParameters.hpp"
 
 #include "las-resources.h"
 
