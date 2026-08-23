@@ -53,6 +53,7 @@ const std::vector<FaustParameter>& getFaustParameters()
             .min = {{w.min}},
             .max = {{w.max}},
             .step = {{w.step}},
+            .accentcolor = {{ w.meta.accentcolor if w.meta.accentcolor is defined else 0 }},
             .scalePoints = {{ 'kFaustScalePoints_' + w.varname if w.entries else 'nullptr' }},
             .scalePointCount = {{ w.entries | length }},
             {% if w.meta.requires is defined %}

@@ -26,6 +26,31 @@ public:
         fKnobStyle.bipolar = d_isZero(parameter.init) && parameter.min < 0 && parameter.max > 0;
         fKnobStyle.invert = d_isEqual(parameter.init, parameter.max);
 
+        switch (parameter.accentcolor)
+        {
+        default:
+        case 1:
+            fKnobStyle.colorAccent = {0xc3, 0xd9, 0xff};
+            break;
+        case 2:
+            fKnobStyle.colorAccent = {0xbe, 0xf1, 0xff};
+            break;
+        case 3:
+            fKnobStyle.colorAccent = {0xda, 0xc1, 0xf3};
+            break;
+        case 4:
+            fKnobStyle.colorAccent = {0xd2, 0xfd, 0xd3};
+            break;
+        case 5:
+            fKnobStyle.colorAccent = {0xff, 0xbf, 0xcb};
+            break;
+        case 6:
+            fKnobStyle.colorAccent = {0xff, 0xdf, 0xad};
+            break;
+        }
+
+        fKnobStyle.colorDisabled = {0x5d, 0x5d, 0x66};
+
         updateSize();
     }
 

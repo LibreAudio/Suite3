@@ -34,6 +34,7 @@ struct FaustParameter
     float min;
     float max;
     float step;
+    uint accentcolor;
     const FaustParameterEnumerationValue* scalePoints;
     uint scalePointCount;
     FaustParameterRequirement requirement;
