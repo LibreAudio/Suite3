@@ -51,7 +51,7 @@ public:
 
         fKnobStyle.colorDisabled = {0x5d, 0x5d, 0x66};
 
-        updateSize();
+        updateSize(false);
     }
 
 private:
@@ -228,7 +228,7 @@ private:
         fLastStateChangedTime = getTime();
     }
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         if constexpr (R::width != 0)
             BaseWidget::setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
@@ -236,20 +236,20 @@ private:
         if constexpr (R::height != 0)
             BaseWidget::setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
 
-        if (*fParameter.unit == '\0')
-            return;
+        if (*fParameter.unit != '\0')
+        {
+            Rectangle<float> bounds;
+            fontFace("mono");
+            fontSize(R::Unit::fontSize * this->fScaleFactor);
+            textAlign(0);
+            // textLetterSpacing(R::Unit::letterSpacing * this->fScaleFactor);
+            textBounds(0, 0, fParameter.unit, nullptr, bounds);
 
-        Rectangle<float> bounds;
-        fontFace("mono");
-        fontSize(R::Unit::fontSize * this->fScaleFactor);
-        textAlign(0);
-        // textLetterSpacing(R::Unit::letterSpacing * this->fScaleFactor);
-        textBounds(0, 0, fParameter.unit, nullptr, bounds);
+            fUnitTextSpacing = std::abs(bounds.getX() * 2);
+            fUnitTextWidth = bounds.getWidth();
+        }
 
-        fUnitTextSpacing = std::abs(bounds.getX() * 2);
-        fUnitTextWidth = bounds.getWidth();
-
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 
     double fLastParameterChangedByHostTime = 0.0;

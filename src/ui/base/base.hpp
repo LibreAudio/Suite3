@@ -93,12 +93,15 @@ protected:
             static_cast<LibreAudioBaseWidget<NanoSubWidget>*>(child)->updateScaleFactor(scaleFactor);
     }
 
-    virtual void updateSize()
+    virtual void updateSize(const bool updateChildren = true)
     {
+        if (! updateChildren)
+            return;
+
         const std::list<SubWidget*> children = BaseWidget::getChildren();
 
         for (SubWidget* const child : children)
-            static_cast<LibreAudioBaseWidget<NanoSubWidget>*>(child)->updateSize();
+            static_cast<LibreAudioBaseWidget<NanoSubWidget>*>(child)->updateSize(true);
     }
 
 private:

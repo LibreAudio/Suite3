@@ -24,7 +24,7 @@ public:
     explicit LibreAudioImageButtonWidget(LibreAudioWidget* const parent)
         : BaseWidget(parent)
     {
-        updateSize();
+        updateSize(false);
     }
 
 private:
@@ -56,7 +56,7 @@ private:
         BaseWidget::restore();
     }
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         fImageWidth = fImage.getWidth() * this->fScaleFactor / imageScale;
         fImageHeight = fImage.getHeight() * this->fScaleFactor / imageScale;
@@ -79,7 +79,7 @@ private:
 
         // BaseWidget::setSize(fImageWidth + marginx2, fImageHeight + marginx2);
 
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 };
 
@@ -98,7 +98,7 @@ public:
     {
         BaseWidget::setCheckable(true);
 
-        updateSize();
+        updateSize(false);
     }
 
 private:
@@ -131,7 +131,7 @@ private:
         BaseWidget::restore();
     }
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         fImageWidth = fImage1.getWidth() * this->fScaleFactor / imageScale;
         fImageHeight = fImage1.getHeight() * this->fScaleFactor / imageScale;
@@ -152,7 +152,7 @@ private:
 
         // BaseWidget::setSize(fImageWidth + marginx2, fImageHeight + marginx2);
 
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 };
 
@@ -168,7 +168,7 @@ public:
         : BaseWidget(parent),
           fText(text)
     {
-        updateSize();
+        updateSize(false);
     }
 
 private:
@@ -188,7 +188,7 @@ private:
         BaseWidget::text(w * 0.5f, h * 0.5f, fText);
     }
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         const uint margin = d_roundToUnsignedInt(R::margin * this->fScaleFactor) * 2;
 
@@ -199,7 +199,7 @@ private:
         BaseWidget::textBounds(0, 0, fText, nullptr, bounds);
         BaseWidget::setWidth(bounds.getWidth() + margin);
 
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 };
 

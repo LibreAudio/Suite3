@@ -30,7 +30,7 @@ public:
         : BaseWidget(windowToMapTo, iface) {}
 
 protected:
-    void updateSize() override
+    void updateSize(const bool updateChildren) override
     // void onResize(const ResizeEvent& ev) override
     {
         // BaseWidget::onResize(ev);
@@ -54,7 +54,7 @@ protected:
                           border + margin);
         }
 
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 
     // void updateSize() final

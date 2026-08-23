@@ -183,12 +183,12 @@ private:
     //     fExpert->setSize(ev.size);
     // }
 
-    void updateSize() override
+    void updateSize(const bool updateChildren) override
     {
         fEasy->setSize(getSize());
         fExpert->setSize(getSize());
 
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 };
 

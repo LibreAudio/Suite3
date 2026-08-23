@@ -116,7 +116,7 @@ public:
     void updateScaleFactorAndSize(const float scaleFactor)
     {
         updateScaleFactor(scaleFactor);
-        updateSize();
+        updateSize(true);
     }
 
 // private:

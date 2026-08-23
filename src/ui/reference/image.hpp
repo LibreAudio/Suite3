@@ -17,7 +17,7 @@ public:
     explicit LibreAudioImageWidget(LibreAudioWidget* const parent)
         : LibreAudioWidget(parent)
     {
-        updateSize();
+        updateSize(false);
     }
 
 private:
@@ -42,7 +42,7 @@ private:
         fill();
     }
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         fImageWidth = fImage.getWidth() * fScaleFactor / imageScale;
         fImageHeight = fImage.getHeight() * fScaleFactor / imageScale;
@@ -57,7 +57,7 @@ private:
         else
             setWidth(fImageWidth);
 
-        LibreAudioWidget::updateSize();
+        LibreAudioWidget::updateSize(updateChildren);
     }
 };
 

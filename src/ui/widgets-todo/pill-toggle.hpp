@@ -93,7 +93,7 @@ public:
         if (parameter.scalePointCount != 0)
             fCells.front()->setChecked(true, false);
 
-        updateSize();
+        updateSize(true);
     }
 
 private:
@@ -127,7 +127,7 @@ private:
             cell->setChecked(cell->getValue() == value, false);
     }
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
@@ -152,7 +152,7 @@ private:
 
         LibreAudioWidget::setSize(width, (border + margin) * 2 + pillHeight);
 
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
 
         // make all cells have the same width
         uint cellWidth = 0;
@@ -221,7 +221,7 @@ public:
         if (numPills == 1)
             addSpacer();
 
-        updateSize();
+        updateSize(true);
     }
 
 private:
@@ -234,14 +234,14 @@ private:
 
     void addWidget() = delete;
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
         uint pillHeight;
 
         if constexpr (R::height != 0)
-            pillHeight = R::height * fScaleFactor;
+            pillHeight = d_roundToUnsignedInt(R::height * fScaleFactor);
         else if (! fToggles.empty())
             pillHeight = fToggles.front()->getHeight();
         else
@@ -249,7 +249,7 @@ private:
 
         LibreAudioWidget::setHeight((border + margin) * 2 + pillHeight);
 
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 };
 

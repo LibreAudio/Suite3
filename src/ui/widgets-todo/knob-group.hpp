@@ -118,7 +118,7 @@ public:
         if (update())
             addIdleCallback(this);
 
-        updateSize();
+        updateSize(true);
     }
 
     [[nodiscard]] uint32_t getLastKnobId() const
@@ -309,7 +309,7 @@ private:
             fHasCachedValues = true;
         }
 
-        updateSize();
+        updateSize(true);
         return true;
     }
 
@@ -377,7 +377,7 @@ private:
         // stroke();
     }
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
@@ -391,7 +391,7 @@ private:
             knobHeight = d_roundToUnsignedInt(fScaleFactor);
 
         BaseWidget::setHeight((border + margin) * 2 + knobHeight);
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 };
 
@@ -423,7 +423,7 @@ public:
 
         addSpacer();
 
-        updateSize();
+        updateSize(true);
     }
 
     void addWidget() = delete;
@@ -432,7 +432,7 @@ private:
     std::vector<std::unique_ptr<LibreAudioKnobWidget>> fKnobs;
     std::vector<std::unique_ptr<LibreAudioWidget>> fSpacers;
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
@@ -446,7 +446,7 @@ private:
             knobHeight = d_roundToUnsignedInt(fScaleFactor);
 
         BaseWidget::setHeight((border + margin) * 2 + knobHeight);
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 
     void addSpacer()
@@ -479,7 +479,7 @@ public:
         fKnobsRight.reset(new LibreAudioKnobGroupWidget<>(this, parameters, kParametersMainStart, fKnobsLeft->getLastKnobId() + 1 - kParametersMainStart));
         widgets.push_back({ fKnobsRight.get(), Expanding });
 
-        updateSize();
+        updateSize(true);
     }
 
     void addWidget() = delete;
@@ -489,19 +489,19 @@ private:
     std::unique_ptr<LibreAudioWidget> fLogo;
     std::unique_ptr<LibreAudioKnobGroupWidget<>> fKnobsRight;
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
         uint knobHeight;
 
         if constexpr (R::height != 0)
-            knobHeight = R::height * fScaleFactor;
+            knobHeight = d_roundToUnsignedInt(R::height * fScaleFactor);
         else
             knobHeight = d_max(fKnobsLeft->getHeight(), fKnobsRight->getHeight());
 
         BaseWidget::setHeight((border + margin) * 2 + knobHeight);
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 };
 

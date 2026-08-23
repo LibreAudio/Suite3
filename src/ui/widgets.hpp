@@ -30,58 +30,33 @@ using LibreAudioButtonGroupWidget = LibreAudioReferenceButtonGroupWidget<LibreAu
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioTopBarUndoRedoGroupWidget : public LibreAudioButtonGroupWidget,
-                                            private ButtonEventHandler::Callback,
-                                            private IdleCallback
+class LibreAudioTopBarUndoRedoGroupWidget : public LibreAudioButtonGroupWidget
 {
-    std::unique_ptr<LibreAudioButtonWidget> fUndo = addButton<LibreAudioImageButtonWidget<LibreAudioButtonWidget::kCornerLeft, IMAGES_UNDO_PNG_DATA, IMAGES_UNDO_PNG_LEN>>(kWidgetUndo);
-    std::unique_ptr<LibreAudioButtonWidget> fRedo = addButton<LibreAudioImageButtonWidget<LibreAudioButtonWidget::kCornerRight, IMAGES_REDO_PNG_DATA, IMAGES_REDO_PNG_LEN>>(kWidgetRedo);
+    std::shared_ptr<LibreAudioButtonWidget> fUndo = addButton<LibreAudioImageButtonWidget<LibreAudioButtonWidget::kCornerLeft, IMAGES_UNDO_PNG_DATA, IMAGES_UNDO_PNG_LEN>>(kWidgetUndo);
+    std::shared_ptr<LibreAudioButtonWidget> fRedo = addButton<LibreAudioImageButtonWidget<LibreAudioButtonWidget::kCornerRight, IMAGES_REDO_PNG_DATA, IMAGES_REDO_PNG_LEN>>(kWidgetRedo);
 
 public:
     explicit LibreAudioTopBarUndoRedoGroupWidget(LibreAudioWidget* const parent)
         : LibreAudioButtonGroupWidget(parent)
     {
-        done(this);
-
-        update();
-        addIdleCallback(this);
-    }
-
-private:
-    void buttonClicked(SubWidget* const widget, int) final
-    {
-        fInterface->buttonClicked(widget->getId());
-        update();
-    }
-
-    void idleCallback() final
-    {
-        update();
-    }
-
-    void update()
-    {
-        fUndo->setEnabled(fInterface->isButtonEnabled(kWidgetUndo));
-        fRedo->setEnabled(fInterface->isButtonEnabled(kWidgetRedo));
+        done();
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioTopBarSnapshotsGroupWidget : public LibreAudioButtonGroupWidget,
-                                             private ButtonEventHandler::Callback,
-                                             private IdleCallback
+class LibreAudioTopBarSnapshotsGroupWidget : public LibreAudioButtonGroupWidget
 {
     static constexpr const char kTextA[] = "A";
     static constexpr const char kTextB[] = "B";
     static constexpr const char kTextC[] = "C";
     static constexpr const char kTextD[] = "D";
-    std::unique_ptr<LibreAudioButtonWidget> fCopy = addButton<LibreAudioDualImageButtonWidget<
+    std::shared_ptr<LibreAudioButtonWidget> fCopy = addButton<LibreAudioDualImageButtonWidget<
         LibreAudioButtonWidget::kCornerLeft, IMAGES_X_PNG_DATA, IMAGES_X_PNG_LEN, IMAGES_COPY_PNG_DATA, IMAGES_COPY_PNG_LEN>>(kWidgetSnapshotCopy);
-    std::unique_ptr<LibreAudioButtonWidget> fA = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerNone, kTextA>>(kWidgetSnapshotSlotA);
-    std::unique_ptr<LibreAudioButtonWidget> fB = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerNone, kTextB>>(kWidgetSnapshotSlotB);
-    std::unique_ptr<LibreAudioButtonWidget> fC = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerNone, kTextC>>(kWidgetSnapshotSlotC);
-    std::unique_ptr<LibreAudioButtonWidget> fD = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerRight, kTextD>>(kWidgetSnapshotSlotD);
+    std::shared_ptr<LibreAudioButtonWidget> fA = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerNone, kTextA>>(kWidgetSnapshotSlotA);
+    std::shared_ptr<LibreAudioButtonWidget> fB = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerNone, kTextB>>(kWidgetSnapshotSlotB);
+    std::shared_ptr<LibreAudioButtonWidget> fC = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerNone, kTextC>>(kWidgetSnapshotSlotC);
+    std::shared_ptr<LibreAudioButtonWidget> fD = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerRight, kTextD>>(kWidgetSnapshotSlotD);
 
 public:
     explicit LibreAudioTopBarSnapshotsGroupWidget(LibreAudioWidget* const parent)
@@ -91,120 +66,39 @@ public:
         fB->setWidth(fCopy->getWidth());
         fC->setWidth(fCopy->getWidth());
         fD->setWidth(fCopy->getWidth());
-        done(this);
-
-        fCopy->setCheckable(true);
-        fA->setCheckable(true);
-        fB->setCheckable(true);
-        fC->setCheckable(true);
-        fD->setCheckable(true);
-
-        update();
-        addIdleCallback(this);
-    }
-
-private:
-    void buttonClicked(SubWidget* const widget, int) final
-    {
-        fInterface->buttonClicked(widget->getId());
-        update();
-    }
-
-    void idleCallback() final
-    {
-        update();
-    }
-
-    void update()
-    {
-        fCopy->setChecked(fInterface->isButtonChecked(kWidgetSnapshotCopy), false);
-        fA->setChecked(fInterface->isButtonChecked(kWidgetSnapshotSlotA), false);
-        fB->setChecked(fInterface->isButtonChecked(kWidgetSnapshotSlotB), false);
-        fC->setChecked(fInterface->isButtonChecked(kWidgetSnapshotSlotC), false);
-        fD->setChecked(fInterface->isButtonChecked(kWidgetSnapshotSlotD), false);
+        done();
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioTopBarEasyExpertGroupWidget : public LibreAudioButtonGroupWidget,
-                                              private ButtonEventHandler::Callback,
-                                              private IdleCallback
+class LibreAudioTopBarEasyExpertGroupWidget : public LibreAudioButtonGroupWidget
 {
     static constexpr const char kTextEasy[] = "Easy";
     static constexpr const char kTextExpert[] = "Expert";
-    std::unique_ptr<LibreAudioButtonWidget> fEasy = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerLeft, kTextEasy>>(kWidgetEasy);
-    std::unique_ptr<LibreAudioButtonWidget> fExpert = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerRight, kTextExpert>>(kWidgetExpert);
+    std::shared_ptr<LibreAudioButtonWidget> fEasy = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerLeft, kTextEasy>>(kWidgetEasy);
+    std::shared_ptr<LibreAudioButtonWidget> fExpert = addButton<LibreAudioStaticTextButtonWidget<LibreAudioButtonWidget::kCornerRight, kTextExpert>>(kWidgetExpert);
 
 public:
     explicit LibreAudioTopBarEasyExpertGroupWidget(LibreAudioWidget* const parent)
         : LibreAudioButtonGroupWidget(parent)
     {
-        done(this);
-
-        fEasy->setCheckable(true);
-        fExpert->setCheckable(true);
-
-        update();
-        addIdleCallback(this);
-    }
-
-private:
-    void buttonClicked(SubWidget* const widget, int) final
-    {
-        fInterface->buttonClicked(widget->getId());
-        update();
-    }
-
-    void idleCallback() final
-    {
-        update();
-    }
-
-    void update()
-    {
-        fEasy->setChecked(fInterface->isButtonChecked(kWidgetEasy), false);
-        fExpert->setChecked(fInterface->isButtonChecked(kWidgetExpert), false);
+        done();
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioTopBarMenuPowerGroupWidget : public LibreAudioButtonGroupWidget,
-                                             private ButtonEventHandler::Callback,
-                                             private IdleCallback
+class LibreAudioTopBarMenuPowerGroupWidget : public LibreAudioButtonGroupWidget
 {
-    std::unique_ptr<LibreAudioButtonWidget> fMenu = addButton<LibreAudioImageButtonWidget<LibreAudioButtonWidget::kCornerLeft, IMAGES_MENU_PNG_DATA, IMAGES_MENU_PNG_LEN>>(kWidgetMenu);
-    std::unique_ptr<LibreAudioButtonWidget> fPower = addButton<LibreAudioBypassButtonWidget<LibreAudioButtonWidget::kCornerRight>>(kWidgetPower);
+    std::shared_ptr<LibreAudioButtonWidget> fMenu = addButton<LibreAudioImageButtonWidget<LibreAudioButtonWidget::kCornerLeft, IMAGES_MENU_PNG_DATA, IMAGES_MENU_PNG_LEN>>(kWidgetMenu);
+    std::shared_ptr<LibreAudioButtonWidget> fPower = addButton<LibreAudioBypassButtonWidget<LibreAudioButtonWidget::kCornerRight>>(kWidgetPower);
 
 public:
     explicit LibreAudioTopBarMenuPowerGroupWidget(LibreAudioWidget* const parent)
         : LibreAudioButtonGroupWidget(parent)
     {
-        done(this);
-
-        fMenu->setCheckable(true);
-        fPower->setCheckable(true);
-
-        addIdleCallback(this);
-    }
-
-private:
-    void buttonClicked(SubWidget* const widget, int) final
-    {
-        fInterface->buttonClicked(widget->getId());
-        update();
-    }
-
-    void idleCallback() final
-    {
-        update();
-    }
-
-    void update()
-    {
-        fMenu->setChecked(fInterface->isButtonChecked(kWidgetMenu), false);
-        fPower->setChecked(fInterface->isButtonChecked(kWidgetPower), false);
+        done();
     }
 };
 

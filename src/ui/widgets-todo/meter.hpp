@@ -46,7 +46,7 @@ public:
     LibreAudioMeterWidget(LibreAudioWidget* const parent)
         : BaseWidget(parent, getFaustParameter(), kParameterMeter)
     {
-        updateSize();
+        updateSize(false);
     }
 
 private:
@@ -220,7 +220,7 @@ private:
         // draw labels
     }
 
-    void updateSize() final
+    void updateSize(const bool updateChildren) final
     {
         if constexpr (R::width != 0)
             BaseWidget::setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
@@ -228,7 +228,7 @@ private:
         if constexpr (R::height != 0)
             BaseWidget::setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
 
-        BaseWidget::updateSize();
+        BaseWidget::updateSize(updateChildren);
     }
 };
 
