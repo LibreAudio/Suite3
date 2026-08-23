@@ -10,6 +10,7 @@
 #include "common_output-parameters.hpp"
 
 #include "nlohmann/json.hpp"
+#include "ui/base/base.hpp"
 
 #if defined(__GNUC__) && !defined(__clang__)
 #define constexprstr constexpr
@@ -129,20 +130,14 @@ const char* LibreAudioBaseUI::getParameterSymbol(const uint32_t index) const noe
         index >= kParametersOutputStart ? kFaustParametersOut[index - kParametersOutputStart + kCommonIOParameters].symbol :
         index >= kParametersInputStart ? kFaustParametersIn[index - kParametersInputStart].symbol :
         nullptr;
-
 }
 
 // --------------------------------------------------------------------------------------------------------------------
 // protected data
 
-void LibreAudioBaseUI::updateSize()
+void LibreAudioBaseUI::uiIdle()
 {
-    fScaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
-                            static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
-
-    DISTRHO_SAFE_ASSERT_RETURN(fRoot != nullptr,);
-
-    fRoot->updateScaleFactorAndSize(fScaleFactor);
+    fSnapshots.idle();
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -381,6 +376,16 @@ void LibreAudioBaseUI::stateChanged(const char* const key, const char* const val
     }
 }
 
+void LibreAudioBaseUI::updateScaleFactorAndSize()
+{
+    fScaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
+                            static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
+
+    DISTRHO_SAFE_ASSERT_RETURN(fRootWidget != nullptr,);
+
+    fRootWidget->updateScaleFactorAndSize(fScaleFactor);
+}
+
 // --------------------------------------------------------------------------------------------------------------------
 // Widget Callbacks
 
@@ -400,20 +405,6 @@ void LibreAudioBaseUI::onNanoDisplay()
         strokeWidth(R::border * 2 * fScaleFactor);
         stroke();
     }
-}
-
-void LibreAudioBaseUI::onResize(const ResizeEvent& ev)
-{
-    UI::onResize(ev);
-    updateSize();
-}
-
-void LibreAudioBaseUI::uiIdle()
-{
-    fSnapshots.idle();
-
-    // TESTING
-    // updateSize();
 }
 
 // --------------------------------------------------------------------------------------------------------------------

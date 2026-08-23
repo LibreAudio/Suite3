@@ -22,16 +22,7 @@ class LibreAudioUI : public LibreAudioBaseUI
     using TopBarWidget = LibreAudioReferenceWidget<TopBar>;
 
     static constexpr const float kColor[] = { 0.3f, 0.1f, 0.05f, 1.f };
-    class MainAreaWidget : public LibreAudioColorWidget<kColor>,
-                           public LibreAudioMainAreaWidgetInterface
-    {
-    public:
-        explicit MainAreaWidget(LibreAudioTopLevelWidget* const parent)
-            : LibreAudioColorWidget(parent) {}
-        [[nodiscard]] Point<int> getMainAreaAbsolutePos() const noexcept final { return {}; }
-        [[nodiscard]] Size<uint> getMainAreaSize() const noexcept final { return {}; }
-        [[nodiscard]] float getMainAreaBorderRadius() const noexcept final { return {}; }
-    };
+    using MainAreaWidget = LibreAudioColorWidget<kColor>;
 
 public:
     LibreAudioUI()

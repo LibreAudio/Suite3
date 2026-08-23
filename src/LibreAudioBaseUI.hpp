@@ -41,17 +41,23 @@ public:
     // protected data
 
 protected:
-    float fScaleFactor = 1.f;
-    std::unique_ptr<LibreAudioRootWidgetInterface> fRoot;
+    std::shared_ptr<LibreAudioRootBaseWidget> fRootWidget;
+
+    template <class RootWidget>
+    void createRootWidget()
+    {
+        fRootWidget.reset(new RootWidget(getWindow(), this));
+        updateScaleFactorAndSize();
+    }
 
     template <class TopBar, class MainArea>
     void createRootWidget()
     {
-        fRoot.reset(new LibreAudioRootWidget<TopBar, MainArea>(getWindow(), this));
-        updateSize();
+        fRootWidget.reset(new LibreAudioRootWidget<TopBar, MainArea>(getWindow(), this));
+        updateScaleFactorAndSize();
     }
 
-    virtual void updateSize();
+    void uiIdle() override;
 
 private:
     // ----------------------------------------------------------------------------------------------------------------
@@ -68,8 +74,11 @@ private:
     LibreAudioSnapshots fSnapshots;
     bool fCopyingSnapshot = false;
 
+    float fScaleFactor = 1.f;
+
     void pageButtonClicked(Page page);
     void snapshotButtonClicked(uint32_t button);
+    void updateScaleFactorAndSize();
 
     // ----------------------------------------------------------------------------------------------------------------
     // DSP/Plugin Callbacks
@@ -86,9 +95,6 @@ private:
     // Widget Callbacks
 
     void onNanoDisplay() final;
-    void onResize(const ResizeEvent& ev) final;
-
-    void uiIdle() final;
 
     // ----------------------------------------------------------------------------------------------------------------
     // UI Widget Interface

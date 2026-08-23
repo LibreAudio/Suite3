@@ -6,14 +6,53 @@
 
 #include "ui/reference.hpp"
 #include "ui/base/container.hpp"
+#include "ui/widgets/root.hpp"
 #include "ui/widgets-todo/shader.hpp"
 #include "ui/widgets.hpp"
+
+#include <list>
 
 // --------------------------------------------------------------------------------------------------------------------
 
 START_NAMESPACE_DISTRHO
 
 // --------------------------------------------------------------------------------------------------------------------
+
+class LibreAudioRootWidgetWithShaders : public LibreAudioRootWidget<LibreAudioTopBar, LibreAudioMainArea>
+{
+    using BaseWidget = LibreAudioRootWidget<LibreAudioTopBar, LibreAudioMainArea>;
+
+    std::list<LibreAudioShaderBaseWidget*> fShaders;
+
+public:
+    LibreAudioRootWidgetWithShaders(Window& window, LibreAudioUIWidgetInterface* const iface)
+        : BaseWidget(window, iface)
+    {
+    }
+
+    void setup(const std::list<LibreAudioShaderBaseWidget*> &shaders)
+    {
+        fShaders = shaders;
+        updateSize(false);
+    }
+
+private:
+    void updateSize(const bool updateChildren) final
+    {
+        BaseWidget::updateSize(updateChildren);
+
+        const Point<int> pos = fMainArea->getMainAreaAbsolutePos();
+        const Size<uint> size = fMainArea->getMainAreaSize();
+        const float borderRadius = fMainArea->getMainAreaBorderRadius();
+
+        for (LibreAudioShaderBaseWidget* const sw : fShaders)
+        {
+            sw->setAbsolutePos(pos);
+            sw->setSize(size);
+            sw->setBorderRadius(borderRadius);
+        }
+    }
+};
 
 class LibreAudioUI : public LibreAudioBaseUI
 {
@@ -25,6 +64,8 @@ public:
     LibreAudioUI()
         : LibreAudioBaseUI()
     {
+        createRootWidget<LibreAudioRootWidgetWithShaders>();
+
         fShaderBackground.reset(new LibreAudioBackgroundShaderWidget<SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_DATA, SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_LEN>(this, this));
 
         // spectrum overlay: above the background, below the response curves
@@ -38,36 +79,12 @@ public:
         else
             fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_LIBREAUDIO_LINE_FRAG_DATA, SHADERS_LIBREAUDIO_LINE_FRAG_LEN>(this, this));
 
-        createRootWidget<LibreAudioTopBar, LibreAudioMainArea>();
-    }
-
-private:
-    void updateSize() final
-    {
-        LibreAudioBaseUI::updateSize();
-
-        const Point<int> pos = fRoot->getMainAreaAbsolutePos();
-        const Size<uint> size = fRoot->getMainAreaSize();
-        const float borderRadius = fRoot->getMainAreaBorderRadius();
-
-        if (LibreAudioShaderBaseWidget* const sw = fShaderBackground.get())
-        {
-            sw->setAbsolutePos(pos);
-            sw->setSize(size);
-            sw->setBorderRadius(borderRadius);
-        }
-        if (LibreAudioShaderBaseWidget* const sw = fShaderAnalyser.get())
-        {
-            sw->setAbsolutePos(pos);
-            sw->setSize(size);
-            sw->setBorderRadius(borderRadius);
-        }
-        if (LibreAudioShaderBaseWidget* const sw = fShaderLine.get())
-        {
-            sw->setAbsolutePos(pos);
-            sw->setSize(size);
-            sw->setBorderRadius(borderRadius);
-        }
+        const std::list<LibreAudioShaderBaseWidget*> shaders = {
+            fShaderBackground.get(),
+            fShaderAnalyser.get(),
+            fShaderLine.get(),
+        };
+        static_cast<LibreAudioRootWidgetWithShaders*>(fRootWidget.get())->setup(shaders);
     }
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LibreAudioUI)

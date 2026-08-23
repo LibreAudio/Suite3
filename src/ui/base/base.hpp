@@ -110,11 +110,6 @@ private:
 
     friend class LibreAudioBaseWidget<NanoSubWidget>;
     friend class LibreAudioBaseWidget<NanoTopLevelWidget>;
-
-    void onResize(const typename BaseWidget::ResizeEvent& ev) final
-    {
-        BaseWidget::onResize(ev);
-    }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -125,6 +120,10 @@ class LibreAudioTopLevelWidget : public LibreAudioBaseWidget<NanoTopLevelWidget>
 public:
     explicit LibreAudioTopLevelWidget(Window& windowToMapTo, LibreAudioUIWidgetInterface* const iface)
         : LibreAudioBaseWidget(windowToMapTo, iface) {}
+
+    void setWidth() = delete;
+    void setHeight() = delete;
+    void setSize() = delete;
 
 protected:
     void onNanoDisplay() override

@@ -118,8 +118,7 @@ public:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioMainArea : public LibreAudioReferenceContainerWidget<LibreAudioReference::MainArea>,
-                           public LibreAudioMainAreaWidgetInterface
+class LibreAudioMainArea : public LibreAudioReferenceContainerWidget<LibreAudioReference::MainArea>
 {
     std::unique_ptr<LibreAudioWidget> fMetersIn = addWidget<LibreAudioMeterWidget<Input>>();
     std::unique_ptr<LibreAudioStageWidget> fStage = addWidget<LibreAudioStageWidget, Expanding>();
@@ -131,17 +130,17 @@ public:
     {
     }
 
-    [[nodiscard]] Point<int> getMainAreaAbsolutePos() const noexcept final
+    [[nodiscard]] Point<int> getMainAreaAbsolutePos() const noexcept
     {
         return fStage->getAbsolutePos();
     }
 
-    [[nodiscard]] Size<uint> getMainAreaSize() const noexcept final
+    [[nodiscard]] Size<uint> getMainAreaSize() const noexcept
     {
         return fStage->getSize();
     }
 
-    [[nodiscard]] float getMainAreaBorderRadius() const noexcept final
+    [[nodiscard]] float getMainAreaBorderRadius() const noexcept
     {
         return fStage->getBorderRadius();
     }
