@@ -13,6 +13,7 @@ START_NAMESPACE_DISTRHO
 
 struct LibreAudioReference {
     struct Common {
+        static constexpr const MouseCursor cursor = kMouseCursorArrow;
         static constexpr const float fontSize = 17;
         static constexpr const float letterSpacing = fontSize * 0.01;
         static constexpr const uint margin = 12;
@@ -120,6 +121,7 @@ struct LibreAudioReference {
             static constexpr const Color backgroundColor = { 0x42, 0x42, 0x5a };
             static constexpr const Color color = Colors::acc;
             static constexpr const Color color〡deactivated = Colors::ink3;
+            static constexpr const MouseCursor cursor〡hover = kMouseCursorHand;
             static constexpr const float fontSize = Common::fontSize;
             static constexpr const float letterSpacing = Common::letterSpacing;
             static constexpr const uint borderRadius = 6;
