@@ -83,6 +83,70 @@ protected:
     LibreAudioUIWidgetInterface* const fInterface;
     float fScaleFactor;
 
+    template <class R>
+    void drawReferenceBackground()
+    {
+        const float w = BaseWidget::getWidth();
+        const float h = BaseWidget::getHeight();
+
+        BaseWidget::beginPath();
+
+        if constexpr (R::borderRadius != 0)
+            BaseWidget::roundedRect(0, 0, w, h, R::borderRadius * fScaleFactor);
+        else
+            BaseWidget::rect(0, 0, w, h);
+
+        if constexpr (d_isNotZero(R::backgroundColor.alpha))
+        {
+            BaseWidget::fillColor(R::backgroundColor);
+            BaseWidget::fill();
+        }
+
+        if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
+        {
+            const float border = d_roundToIntPositive(R::border * fScaleFactor);
+            const float borderh = border * 0.5f;
+
+            const float sx = borderh;
+            const float sy = borderh;
+            const float ex = w - borderh;
+            const float ey = h - borderh;
+
+            BaseWidget::beginPath();
+
+            if constexpr (R::borderRadius != 0)
+            {
+                const float borderRadius = R::borderRadius * fScaleFactor;
+                DISTRHO_SAFE_ASSERT_RETURN(borderRadius < w * 0.5f,);
+                DISTRHO_SAFE_ASSERT_RETURN(borderRadius < h * 0.5f,);
+                DISTRHO_SAFE_ASSERT_RETURN(borderRadius > border,);
+
+                const float arcRadius = borderRadius - border;
+
+                BaseWidget::moveTo(sx + borderRadius, sy);
+                BaseWidget::arcTo(sx, sy, sx, ey - borderRadius, arcRadius);
+                BaseWidget::lineTo(sx, ey - borderRadius);
+                BaseWidget::arcTo(sx, ey, sx + borderRadius, ey, arcRadius);
+                BaseWidget::lineTo(ex - borderRadius, ey);
+                BaseWidget::arcTo(ex, ey, ex, ey - borderRadius, arcRadius);
+                BaseWidget::lineTo(ex, sx + borderRadius);
+                BaseWidget::arcTo(ex, sy, ex - borderRadius, sy, arcRadius);
+            }
+            else
+            {
+                BaseWidget::moveTo(sx, sy);
+                BaseWidget::lineTo(sx, ey);
+                BaseWidget::lineTo(ex, ey);
+                BaseWidget::lineTo(ex, sy);
+            }
+
+            BaseWidget::closePath();
+            BaseWidget::strokeColor(R::borderColor);
+            BaseWidget::strokeWidth(border);
+            BaseWidget::stroke();
+        }
+    }
+
     void updateScaleFactor(const float scaleFactor)
     {
         fScaleFactor = scaleFactor;
