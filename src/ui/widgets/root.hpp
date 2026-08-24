@@ -43,9 +43,9 @@ public:
 
     void updateScaleFactorAndSize() final
     {
-        fScaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
-                                static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
-        updateScaleFactor(fScaleFactor);
+        const float scaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
+                                           static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
+        updateScaleFactor(scaleFactor);
         updateSize(true);
     }
 

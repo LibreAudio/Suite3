@@ -31,35 +31,37 @@ public:
 
 protected:
     void updateSize(const bool updateChildren) override
-    // void onResize(const ResizeEvent& ev) override
     {
-        // BaseWidget::onResize(ev);
-
         const float fScaleFactor = this->fScaleFactor;
+        const uint width = BaseWidget::getWidth();
+        const uint height = BaseWidget::getHeight();
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
         const uint padding = d_roundToUnsignedInt(R::padding * fScaleFactor);
 
+        if constexpr (orientation == kHorizontal)
+            Layout::setWidth(width, padding, border + margin);
+        else
+            Layout::setHeight(height, padding, border + margin);
+
+        BaseWidget::updateSize(updateChildren);
+
         if constexpr (std::is_same_v<W, LibreAudioTopLevelWidget>)
         {
-            Layout::align(0, 0, BaseWidget::getWidth(), BaseWidget::getHeight(), padding, border + margin);
+            Layout::align(0, 0, width, height, padding, border + margin);
         }
         else
         {
             Layout::align(BaseWidget::getAbsoluteX(),
                           BaseWidget::getAbsoluteY(),
-                          BaseWidget::getWidth(),
-                          BaseWidget::getHeight(),
+                          width,
+                          height,
                           padding,
                           border + margin);
         }
 
         BaseWidget::updateSize(updateChildren);
     }
-
-    // void updateSize() final
-    // {
-    // }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -79,18 +81,18 @@ public:
     explicit LibreAudioReferenceContainerWidget(LibreAudioTopLevelWidget* const parent)
         : BaseWidget(parent) {}
 
-protected:
-    void onPositionChanged(const PositionChangedEvent& ev) override
-    {
-        BaseWidget::onPositionChanged(ev);
-
-        const float fScaleFactor = this->fScaleFactor;
-        const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
-        const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
-        const uint padding = d_roundToUnsignedInt(R::padding * fScaleFactor);
-
-        Layout::setAbsolutePos(ev.pos.getX(), ev.pos.getY(), padding, border + margin);
-    }
+// protected:
+//     void onPositionChanged(const PositionChangedEvent& ev) override
+//     {
+//         BaseWidget::onPositionChanged(ev);
+//
+//         const float fScaleFactor = this->fScaleFactor;
+//         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
+//         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
+//         const uint padding = d_roundToUnsignedInt(R::padding * fScaleFactor);
+//
+//         Layout::setAbsolutePos(ev.pos.getX(), ev.pos.getY(), padding, border + margin);
+//     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
