@@ -124,8 +124,8 @@ struct LibreAudioReference {
             static constexpr const MouseCursor cursor〡hover = kMouseCursorHand;
             static constexpr const float fontSize = Common::fontSize;
             static constexpr const float letterSpacing = Common::letterSpacing;
-            static constexpr const uint borderRadius = 6;
-            static constexpr const uint margin = 6;
+            static constexpr const uint borderRadius = 11;
+            static constexpr const uint margin = 9;
         };
 
         struct Button〡Bypass : Button {
