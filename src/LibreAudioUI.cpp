@@ -18,7 +18,7 @@ START_NAMESPACE_DISTRHO
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioRootWidgetWithShaders : public LibreAudioRootWidget<LibreAudioTopBar, LibreAudioMainArea>
+class LibreAudioRootWidgetWithShaders final : public LibreAudioRootWidget<LibreAudioTopBar, LibreAudioMainArea>
 {
     using BaseWidget = LibreAudioRootWidget<LibreAudioTopBar, LibreAudioMainArea>;
 
@@ -64,33 +64,36 @@ public:
     LibreAudioUI()
         : LibreAudioBaseUI()
     {
-        createRootWidget<LibreAudioRootWidgetWithShaders>();
-
-        fShaderBackground.reset(new LibreAudioBackgroundShaderWidget<SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_DATA, SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_LEN>(this, this));
-
-        // spectrum overlay: above the background, below the response curves
-        fShaderAnalyser.reset(new LibreAudioBackgroundShaderWidget<SHADERS_ANALYSER_FFT_FRAG_DATA, SHADERS_ANALYSER_FFT_FRAG_LEN>(this, this));
-
         static constexpr const std::string_view label = DISTRHO_PLUGIN_LABEL;
-        if constexpr (label == "chorus")
-            fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_CHORUS_FRAG_DATA, SHADERS_CURVE_CHORUS_FRAG_LEN>(this, this));
-        else if constexpr (label == "vocalDoubler")
-            fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_VOCAL_DOUBLER_FRAG_DATA, SHADERS_CURVE_VOCAL_DOUBLER_FRAG_LEN>(this, this));
-        else if constexpr (label == "djFilter")
-            fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_DJ_FILTER_FRAG_DATA, SHADERS_CURVE_DJ_FILTER_FRAG_LEN>(this, this));
-        // the generic line is off for now, plugins without a curve of their own simply get none
-        // else
-        //     fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_LIBREAUDIO_LINE_FRAG_DATA, SHADERS_LIBREAUDIO_LINE_FRAG_LEN>(this, this));
 
-        std::list<LibreAudioShaderBaseWidget*> shaders = {
-            fShaderBackground.get(),
-            fShaderAnalyser.get(),
-        };
+        if constexpr (label == "chorus" || label == "djFilter" || label == "vocalDoubler")
+        {
+            fShaderBackground.reset(new LibreAudioBackgroundShaderWidget<SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_DATA, SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_LEN>(this, this));
 
-        if (fShaderLine != nullptr)
-            shaders.push_back(fShaderLine.get());
+            // spectrum overlay: above the background, below the response curves
+            fShaderAnalyser.reset(new LibreAudioBackgroundShaderWidget<SHADERS_ANALYSER_FFT_FRAG_DATA, SHADERS_ANALYSER_FFT_FRAG_LEN>(this, this));
 
-        static_cast<LibreAudioRootWidgetWithShaders*>(fRootWidget.get())->setup(shaders);
+            if constexpr (label == "chorus")
+                fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_CHORUS_FRAG_DATA, SHADERS_CURVE_CHORUS_FRAG_LEN>(this, this));
+            else if constexpr (label == "djFilter")
+                fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_DJ_FILTER_FRAG_DATA, SHADERS_CURVE_DJ_FILTER_FRAG_LEN>(this, this));
+            else if constexpr (label == "vocalDoubler")
+                fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_VOCAL_DOUBLER_FRAG_DATA, SHADERS_CURVE_VOCAL_DOUBLER_FRAG_LEN>(this, this));
+            else
+                __builtin_unreachable();
+
+            const std::list<LibreAudioShaderBaseWidget*> shaders = {
+                fShaderBackground.get(),
+                fShaderAnalyser.get(),
+                fShaderLine.get(),
+            };
+            createRootWidget<LibreAudioRootWidgetWithShaders>();
+            static_cast<LibreAudioRootWidgetWithShaders*>(fRootWidget.get())->setup(shaders);
+        }
+        else
+        {
+            createRootWidget<LibreAudioTopBar, LibreAudioMainArea>();
+        }
     }
 
     DISTRHO_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LibreAudioUI)
