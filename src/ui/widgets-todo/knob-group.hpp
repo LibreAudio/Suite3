@@ -24,14 +24,12 @@ START_NAMESPACE_DISTRHO
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<class KnobWidget = LibreAudioSmallKnobWidget>
+template<class KnobWidget = LibreAudioSmallKnobWidget, uint kMaxNumParameters = 5>
 class LibreAudioKnobGroupWidget : public LibreAudioReferenceContainerWidget<LibreAudioReference::Widgets::KnobGroup>,
                                   private IdleCallback
 {
     using R = LibreAudioReference::Widgets::KnobGroup;
     using BaseWidget = LibreAudioReferenceContainerWidget<R>;
-
-    static constexpr const uint kMaxNumParameters = 5;
 
     std::vector<std::unique_ptr<KnobWidget>> fKnobs;
     std::vector<std::unique_ptr<LibreAudioEmptyWidget>> fSpacers;
@@ -390,7 +388,7 @@ private:
         else
             knobHeight = d_roundToUnsignedInt(fScaleFactor);
 
-        BaseWidget::setHeight((border + margin) * 2 + knobHeight);
+        LibreAudioWidget::setHeight((border + margin) * 2 + knobHeight);
         BaseWidget::updateSize(updateChildren);
     }
 };

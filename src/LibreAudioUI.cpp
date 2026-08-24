@@ -6,6 +6,7 @@
 
 #include "ui/reference.hpp"
 #include "ui/base/container.hpp"
+#include "ui/widgets/parameter-dump-area.hpp"
 #include "ui/widgets/root.hpp"
 #include "ui/widgets-todo/shader.hpp"
 #include "ui/widgets.hpp"
@@ -92,7 +93,7 @@ public:
         }
         else
         {
-            createRootWidget<LibreAudioTopBar, LibreAudioMainArea>();
+            createRootWidget<LibreAudioTopBar, LibreAudioParameterDumpArea>();
         }
     }
 
