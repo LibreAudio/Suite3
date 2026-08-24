@@ -47,7 +47,7 @@ public:
     explicit LibreAudioKnobGroupWidget(LibreAudioWidget* const parent,
                                        const std::vector<FaustParameter>& parameters,
                                        const uint32_t idOffset = 0,
-                                       const uint32_t parameterOffset = 0)
+                                       const uint32_t parameterStart = 0)
         : BaseWidget(parent),
           fParameters(parameters),
           fParametersOffset(idOffset)
@@ -57,7 +57,7 @@ public:
         fKnobs.reserve(kMaxNumParameters);
         fSpacers.reserve(kMaxNumParameters + 1);
 
-        for (uint32_t i = parameterOffset, numVisibleWidgets = 0, count = parameters.size(); i < count && numVisibleWidgets < kMaxNumParameters; ++i)
+        for (uint32_t i = parameterStart, numVisibleWidgets = 0, count = parameters.size(); i < count && numVisibleWidgets < kMaxNumParameters; ++i)
         {
             const FaustParameter& parameter = parameters[i];
             if (parameter.isEnumerator || parameter.isOutput) {
