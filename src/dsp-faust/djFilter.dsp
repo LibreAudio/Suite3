@@ -12,11 +12,11 @@ Nch = 2;                            // djFilter is stereo
 process = si.bus(Nch) : with_highpass : with_lowpass : with_overdrive : volume_apply : with_reverb : limiter;
 
 // --- Knob ---
-knob = hslider("knob", 0, -1, 1, 0.0001) : si.smoo;
+knob = hslider("[01]DJ Filter[style:knob][symbol:knob][label:Filter][accentcolor:01][easy]", 0, -1, 1, 0.0001) : si.smoo;
 
 // filter frequency meters
-highpass_meter = _ <: attach(_, hbargraph("[scale:log][unit:Hz]highpass_frequency", highpass_frequency_low, highpass_frequency_hi));
-lowpass_meter = _ <: attach(_, hbargraph("[scale:log][unit:Hz]lowpass_frequency",  lowpass_frequency_low,  lowpass_frequency_hi));
+highpass_meter = _ <: attach(_, hbargraph("[1]HighPass Frequency[unit:Hz][scale:log][symbol:highpass_frequency]", highpass_frequency_low, highpass_frequency_hi));
+lowpass_meter = _ <: attach(_, hbargraph("[2]LowPass Frequency[unit:Hz][scale:log][symbol:lowpass_frequency]",  lowpass_frequency_low,  lowpass_frequency_hi));
 
 // --- Parameters ---
 
@@ -38,7 +38,7 @@ lowpassQ_min = 1;
 lowpassQ_max = 8;
 
 // 0 = no resonance (Q at min), 1 = max resonance
-emphasizeQ = hslider("emphasizeQ", 0, 0, 1, 0.001);
+emphasizeQ = hslider("[02]Resonance[style:knob][symbol:emphasize_q][label:Resonance][accentcolor:05]", 0, 0, 1, 0.001);
 
 // Exponential Q rise with knob travel; emphasizeQ scales the exponent (0 = flat at min, 1 = full rise to max)
 highpassQ = highpassQ_min * pow(highpassQ_max / highpassQ_min, emphasizeQ * t_highpass);
@@ -91,7 +91,7 @@ volume = pow(1 - t_fadeout_hi, 2) * pow(1 - t_fadeout_lo, 2);
 volume_apply = par(i, Nch, *(volume));
 
 // Overdrive: slider sets max amount, scales 0→max as knob moves to either extreme
-overdrive_amount = hslider("overdrive", 0, 0, 1, 0.001);
+overdrive_amount = hslider("[03]Overdrive[style:knob][symbol:overdrive][label:Drive][accentcolor:05]", 0, 0, 1, 0.001);
 
 overdrive_t = overdrive_amount * max(t_highpass, t_lowpass)^0.7;
 overdrive_drive = 1 + overdrive_t * 7;
@@ -100,7 +100,7 @@ overdrive_mono = _ <: *(1 - overdrive_t), (*(overdrive_drive) : ma.tanh : /(over
 with_overdrive = par(i, Nch, overdrive_mono);
 
 // Reverb send: adjustable maximum, scales 0→max as knob moves to either extreme
-reverb_send_max = hslider("reverb_send", 0, 0, 1, 0.001);
+reverb_send_max = hslider("[04]Reverb Send[style:knob][symbol:reverb_send][label:Reverb][accentcolor:04]", 0, 0, 1, 0.001);
 reverb_send = reverb_send_max * max(t_highpass, t_lowpass)^0.7;
 
 // Send/return: dry signal + reverb-processed send, summed together

@@ -76,14 +76,18 @@ public:
             fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_CHORUS_FRAG_DATA, SHADERS_CURVE_CHORUS_FRAG_LEN>(this, this));
         else if constexpr (label == "vocalDoubler")
             fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_VOCAL_DOUBLER_FRAG_DATA, SHADERS_CURVE_VOCAL_DOUBLER_FRAG_LEN>(this, this));
-        else
-            fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_LIBREAUDIO_LINE_FRAG_DATA, SHADERS_LIBREAUDIO_LINE_FRAG_LEN>(this, this));
+        // the generic line is off for now, plugins without a curve of their own simply get none
+        // else
+        //     fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_LIBREAUDIO_LINE_FRAG_DATA, SHADERS_LIBREAUDIO_LINE_FRAG_LEN>(this, this));
 
-        const std::list<LibreAudioShaderBaseWidget*> shaders = {
+        std::list<LibreAudioShaderBaseWidget*> shaders = {
             fShaderBackground.get(),
             fShaderAnalyser.get(),
-            fShaderLine.get(),
         };
+
+        if (fShaderLine != nullptr)
+            shaders.push_back(fShaderLine.get());
+
         static_cast<LibreAudioRootWidgetWithShaders*>(fRootWidget.get())->setup(shaders);
     }
 
