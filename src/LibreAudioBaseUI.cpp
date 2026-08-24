@@ -376,16 +376,6 @@ void LibreAudioBaseUI::stateChanged(const char* const key, const char* const val
     }
 }
 
-void LibreAudioBaseUI::updateScaleFactorAndSize()
-{
-    fScaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
-                            static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
-
-    DISTRHO_SAFE_ASSERT_RETURN(fRootWidget != nullptr,);
-
-    fRootWidget->updateScaleFactorAndSize(fScaleFactor);
-}
-
 // --------------------------------------------------------------------------------------------------------------------
 // Widget Callbacks
 
@@ -405,6 +395,14 @@ void LibreAudioBaseUI::onNanoDisplay()
         strokeWidth(R::border * 2 * fScaleFactor);
         stroke();
     }
+}
+
+void LibreAudioBaseUI::onResize(const ResizeEvent& ev)
+{
+    UI::onResize(ev);
+
+    fScaleFactor = std::min(static_cast<double>(ev.size.getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
+                            static_cast<double>(ev.size.getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
 }
 
 // --------------------------------------------------------------------------------------------------------------------

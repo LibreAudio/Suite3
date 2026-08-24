@@ -16,13 +16,20 @@ START_NAMESPACE_DISTRHO
 
 class LibreAudioUI : public LibreAudioBaseUI
 {
-    struct TopBar : LibreAudioReference::TopBar {
+    struct ReferenceTopBar : LibreAudioReference::TopBar {
         static constexpr const Color backgroundColor = LibreAudioReference::Colors::ink3;
     };
-    using TopBarWidget = LibreAudioReferenceWidget<TopBar>;
+    using TopBarWidget = LibreAudioReferenceWidget<ReferenceTopBar>;
 
-    static constexpr const float kColor[] = { 0.3f, 0.1f, 0.05f, 1.f };
-    using MainAreaWidget = LibreAudioColorWidget<kColor>;
+    struct ReferenceMainArea : LibreAudioReference::MainArea {
+        static constexpr const Color backgroundColor = LibreAudioReference::Colors::bg0;
+        static constexpr const Color borderColor = LibreAudioReference::Colors::ink;
+        static constexpr const uint border = 10;
+        static constexpr const uint borderRadius = 20;
+    };
+
+    // static constexpr const float kColor[] = { 0.3f, 0.1f, 0.05f, 1.f };
+    using MainAreaWidget = LibreAudioReferenceWidget<ReferenceMainArea>;
 
 public:
     LibreAudioUI()

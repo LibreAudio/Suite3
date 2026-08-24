@@ -17,7 +17,7 @@ class LibreAudioRootWidgetInterface
 {
 public:
     virtual ~LibreAudioRootWidgetInterface() = default;
-    virtual void updateScaleFactorAndSize(float scaleFactor) = 0;
+    virtual void updateScaleFactorAndSize() = 0;
 };
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -41,26 +41,19 @@ public:
                              false);
     }
 
-    void updateScaleFactorAndSize(const float scaleFactor) final
+    void updateScaleFactorAndSize() final
     {
-        updateScaleFactor(scaleFactor);
-
-        if (fFirstUpdate)
-        {
-            fFirstUpdate = false;
-            updateSize(true);
-        }
+        fScaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
+                                static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
+        updateScaleFactor(fScaleFactor);
+        updateSize(true);
     }
 
 private:
-    bool fFirstUpdate = true;
-
     void onResize(const ResizeEvent& ev) final
     {
-        DISTRHO_SAFE_ASSERT(! fFirstUpdate);
-
         BaseWidget::onResize(ev);
-        updateSize(true);
+        updateScaleFactorAndSize();
     }
 };
 

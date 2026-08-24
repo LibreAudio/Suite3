@@ -48,8 +48,46 @@ protected:
 
         if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
         {
+            const float border = d_roundToIntPositive(R::border * fScaleFactor);
+            const float borderh = border * 0.5f;
+
+            const float sx = borderh;
+            const float sy = borderh;
+            const float ex = w - borderh;
+            const float ey = h - borderh;
+
+            beginPath();
+
+            if constexpr (R::borderRadius != 0)
+            {
+                const float borderRadius = R::borderRadius * fScaleFactor;
+                DISTRHO_SAFE_ASSERT_RETURN(borderRadius < w * 0.5f,);
+                DISTRHO_SAFE_ASSERT_RETURN(borderRadius < h * 0.5f,);
+                DISTRHO_SAFE_ASSERT_RETURN(borderRadius > border,);
+
+                const float arcRadius = borderRadius - border;
+
+                pathWinding(CW);
+                moveTo(sx + borderRadius, sy);
+                arcTo(sx, sy, sx, ey - borderRadius, arcRadius);
+                lineTo(sx, ey - borderRadius);
+                arcTo(sx, ey, sx + borderRadius, ey, arcRadius);
+                lineTo(ex - borderRadius, ey);
+                arcTo(ex, ey, ex, ey - borderRadius, arcRadius);
+                lineTo(ex, sx + borderRadius);
+                arcTo(ex, sy, ex - borderRadius, sy, arcRadius);
+            }
+            else
+            {
+                moveTo(sx, sy);
+                lineTo(sx, ey);
+                lineTo(ex, ey);
+                lineTo(ex, sy);
+            }
+
+            closePath();
             strokeColor(R::borderColor);
-            strokeWidth(R::border * 2 * fScaleFactor);
+            strokeWidth(border);
             stroke();
         }
     }
