@@ -1,4 +1,4 @@
-/* Libre Audio Suite — https://libreaudio.org
+/* Libre Audio Suite - https://libreaudio.org
  * Copyright (C) 2026 Klaus Scheuermann <klaus@libreaudio.org>
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
