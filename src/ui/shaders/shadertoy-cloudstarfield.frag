@@ -1,3 +1,15 @@
+/* Libre Audio Suite — https://libreaudio.org
+ * Copyright (C) 2026 Klaus Scheuermann <klaus@libreaudio.org>
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * This file is part of the Libre Audio Suite. It comes with ABSOLUTELY NO
+ * WARRANTY; see the LICENSE file in the project root for the full terms.
+ *
+ * For some parts, a large language model was involved as a coding assistant.
+ * The ideas, the design decisions and the listening behind it are purely human.
+*/
+
+
 // Cloud starfield -- the colour clouds wash with a slow starfield behind it.
 //
 // Two layers. The clouds are a single simplex noise field used twice: once to
