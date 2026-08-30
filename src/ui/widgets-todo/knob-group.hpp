@@ -7,6 +7,7 @@
 #include "DistrhoPluginInfo.h"
 
 #include "../reference.hpp"
+#include "../reference/color.hpp"
 #include "../reference/container.hpp"
 #include "../reference/image.hpp"
 #include "DistrhoUtils.hpp"
@@ -32,7 +33,7 @@ class LibreAudioKnobGroupWidget : public LibreAudioReferenceContainerWidget<Libr
     using BaseWidget = LibreAudioReferenceContainerWidget<R>;
 
     std::vector<std::shared_ptr<KnobWidget>> fKnobs;
-    std::vector<std::shared_ptr<LibreAudioEmptyWidget>> fSpacers;
+    std::vector<std::shared_ptr<LibreAudioWidget>> fSpacers;
 
     struct Bracket {
         uint start;
@@ -137,6 +138,8 @@ private:
     void addSpacer(const uint id)
     {
         std::shared_ptr<LibreAudioEmptyWidget> spacer { new LibreAudioEmptyWidget(this) };
+        // static constexpr const float c[4] = { 0.9f, 0.11f, 0.11f, 1.f };
+        // std::shared_ptr<LibreAudioWidget> spacer { new LibreAudioColorWidget<c>(this) };
         spacer->setId(id);
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
@@ -172,9 +175,9 @@ private:
             }
         }
 
-        for (const std::shared_ptr<LibreAudioEmptyWidget>& spacer : fSpacers)
+        for (const std::shared_ptr<LibreAudioWidget>& spacer : fSpacers)
         {
-            if (LibreAudioEmptyWidget* const spacerPtr = spacer.get(); spacerPtr->getId() == id)
+            if (LibreAudioWidget* const spacerPtr = spacer.get(); spacerPtr->getId() == id)
             {
                 spacerPtr->setVisible(visible);
                 break;
@@ -254,6 +257,30 @@ private:
 
             updateVisibilityById(kParametersMainStart + kFaustParameterAdt_pan, mode == 0 && d_isNotEqual(f2voices, 2.f));
             updateVisibilityById(kParametersMainStart + kFaustParameterAdt_width, mode == 0 && d_isEqual(f2voices, 2.f));
+        }
+
+        // 1st widget must be a knob, not a spacer
+        uint firstVisibleKnobId = UINT_MAX;
+        for (const std::shared_ptr<KnobWidget>& knob : fKnobs)
+        {
+            if (KnobWidget* const knobPtr = knob.get(); knobPtr->isVisible())
+            {
+                firstVisibleKnobId = knobPtr->getId();
+                break;
+            }
+        }
+
+        if (firstVisibleKnobId != UINT_MAX)
+        {
+            for (const std::shared_ptr<LibreAudioWidget>& spacer : fSpacers)
+            {
+                if (LibreAudioWidget* const spacerPtr = spacer.get(); spacerPtr->isVisible())
+                {
+                    if (spacerPtr->getId() <= firstVisibleKnobId)
+                        spacerPtr->hide();
+                    break;
+                }
+            }
         }
 #else
         return false;
