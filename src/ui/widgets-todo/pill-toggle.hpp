@@ -26,8 +26,7 @@ public:
     explicit LibreAudioBackgroundPillToggleCellWidget(LibreAudioWidget* const parent,
                                                       ButtonEventHandler::Callback* const callback,
                                                       const FaustParameterEnumerationValue& scalePoint)
-        : BaseWidget(parent, scalePoint.label),
-          fScalePoint(scalePoint)
+        : BaseWidget(parent, scalePoint.label)
     {
         BaseWidget::setCallback(callback);
         BaseWidget::setCheckable(true);
@@ -48,9 +47,6 @@ protected:
 
         return BaseWidget::isChecked() ? R::color〡selected : R::color;
     }
-
-private:
-    const FaustParameterEnumerationValue& fScalePoint;
 };
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -122,30 +118,14 @@ private:
 
     void updateSize(const bool updateChildren) final
     {
+        DISTRHO_SAFE_ASSERT(updateChildren);
+
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
         const uint padding = d_roundToUnsignedInt(R::padding * fScaleFactor);
 
-        uint width = (border + margin) * 2;
-        if (const uint numWidgets = widgets.size())
-        {
-            width += padding * (numWidgets - 1);
-
-            for (const SubWidgetWithSizeHint& widgetWithSizeHint : widgets)
-                width += widgetWithSizeHint.widget->getWidth();
-        }
-
-        uint pillHeight;
-        if constexpr (R::height != 0)
-            pillHeight = R::height * fScaleFactor;
-        else if (! fCells.empty())
-            pillHeight = d_roundToUnsignedInt(fCells.front()->getHeight());
-        else
-            pillHeight = d_roundToUnsignedInt(fScaleFactor);
-
-        LibreAudioWidget::setSize(width, (border + margin) * 2 + pillHeight);
-
-        BaseWidget::updateSize(updateChildren);
+        // update children size first
+        LibreAudioWidget::updateSize(true);
 
         // make all cells have the same width
         uint cellWidth = 0;
@@ -155,6 +135,28 @@ private:
 
         for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
             cell->setWidth(cellWidth + margin * 2);
+
+        // set width and height
+        uint width = (border + margin) * 2;
+        uint height = width;
+
+        if (const uint numWidgets = widgets.size())
+        {
+            width += padding * (numWidgets - 1);
+            width += numWidgets * cellWidth;
+        }
+
+        if constexpr (R::height != 0)
+            height += R::height * fScaleFactor;
+        else if (! fCells.empty())
+            height += d_roundToUnsignedInt(fCells.front()->getHeight());
+        else
+            height += d_roundToUnsignedInt(fScaleFactor);
+
+        LibreAudioWidget::setSize(width, height);
+
+        // update everything else
+        BaseWidget::updateSize(false);
     }
 };
 
