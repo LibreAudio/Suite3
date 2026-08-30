@@ -41,9 +41,9 @@ public:
 
 protected:
     template<class W = LibreAudioEmptyWidget>
-    std::unique_ptr<W> addSpacer()
+    std::shared_ptr<W> addSpacer()
     {
-        std::unique_ptr<W> widget { new W(this) };
+        std::shared_ptr<W> widget { new W(this) };
         Layout::widgets.push_back({ widget.get(), Expanding });
         return widget;
     }
@@ -51,9 +51,9 @@ protected:
     template<class W,
              SizeHint sizeHint = Fixed,
              typename = std::enable_if_t<std::is_base_of_v<LibreAudioWidget, W>>>
-    std::unique_ptr<W> addWidget()
+    std::shared_ptr<W> addWidget()
     {
-        std::unique_ptr<W> widget { new W(this) };
+        std::shared_ptr<W> widget { new W(this) };
         Layout::widgets.push_back({ widget.get(), sizeHint });
         if (sizeHint == Fixed && widget->getSize().isNull())
             d_stderr2("Error: addWidget called with Fixed sizeHint but widget '%s' does not have a known size",

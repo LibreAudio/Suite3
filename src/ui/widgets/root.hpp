@@ -61,16 +61,12 @@ template <class TopBar, class MainArea>
 class LibreAudioRootWidget : public LibreAudioRootBaseWidget
 {
 protected:
-    std::unique_ptr<TopBar> fTopBar;
-    std::unique_ptr<MainArea> fMainArea;
+    std::shared_ptr<TopBar> fTopBar = addWidget<TopBar>();
+    std::shared_ptr<MainArea> fMainArea = addWidget<MainArea, Expanding>();
 
 public:
     LibreAudioRootWidget(Window& window, LibreAudioUIWidgetInterface* const iface)
-        : LibreAudioRootBaseWidget(window, iface)
-    {
-        fTopBar = addWidget<TopBar>();
-        fMainArea = addWidget<MainArea, Expanding>();
-    }
+        : LibreAudioRootBaseWidget(window, iface) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------

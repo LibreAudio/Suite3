@@ -35,8 +35,8 @@ class LibreAudioUI : public LibreAudioBaseUI
 
         static constexpr const float kColor1[] = { 0.3f, 0.1f, 0.05f, 1.f };
         static constexpr const float kColor2[] = { 0.1f, 0.3f, 0.05f, 1.f };
-        std::unique_ptr<LibreAudioWidget> w1 = addWidget<LibreAudioColorWidget<kColor1>, Expanding>();
-        std::unique_ptr<LibreAudioWidget> w2 = addWidget<LibreAudioColorWidget<kColor2>, Expanding>();
+        std::shared_ptr<LibreAudioWidget> w1 = addWidget<LibreAudioColorWidget<kColor1>, Expanding>();
+        std::shared_ptr<LibreAudioWidget> w2 = addWidget<LibreAudioColorWidget<kColor2>, Expanding>();
 
     public:
         explicit TopBarWidget(LibreAudioTopLevelWidget* const parent)

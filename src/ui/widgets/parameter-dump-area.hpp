@@ -19,9 +19,9 @@ class LibreAudioParameterDumpStageWidget final : public LibreAudioReferenceConta
     using BaseWidget = LibreAudioReferenceContainerWidget<R, kVertical>;
     using KnobGroupWidget = LibreAudioKnobGroupWidget<LibreAudioSmallKnobWidget, 10>;
 
-    std::unique_ptr<LibreAudioPillAreaWidget> fTopArea = addWidget<LibreAudioPillAreaWidget>();
-    std::list<std::unique_ptr<LibreAudioWidget>> fSpacers;
-    std::list<std::unique_ptr<KnobGroupWidget>> fKnobGroups;
+    std::shared_ptr<LibreAudioPillAreaWidget> fTopArea = addWidget<LibreAudioPillAreaWidget>();
+    std::list<std::shared_ptr<LibreAudioWidget>> fSpacers;
+    std::list<std::shared_ptr<KnobGroupWidget>> fKnobGroups;
 
     const std::vector<FaustParameter>& kParameters = getFaustParameters();
 
@@ -50,14 +50,14 @@ public:
 private:
     void addKnobGroup(const uint offset)
     {
-        std::unique_ptr<KnobGroupWidget> widget { new KnobGroupWidget(this, kParameters, kParametersMainStart, offset) };
+        std::shared_ptr<KnobGroupWidget> widget { new KnobGroupWidget(this, kParameters, kParametersMainStart, offset) };
         widgets.push_back({ widget.get(), Fixed });
         fKnobGroups.emplace_back(std::move(widget));
     }
 
     void addSpacer()
     {
-        std::unique_ptr<LibreAudioEmptyWidget> spacer { new LibreAudioEmptyWidget(this) };
+        std::shared_ptr<LibreAudioEmptyWidget> spacer { new LibreAudioEmptyWidget(this) };
         // spacer->setId(id);
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
@@ -99,9 +99,9 @@ private:
 
 class LibreAudioParameterDumpArea : public LibreAudioReferenceContainerWidget<LibreAudioReference::MainArea>
 {
-    std::unique_ptr<LibreAudioWidget> fMetersIn = addWidget<LibreAudioMeterWidget<Input>>();
-    std::unique_ptr<LibreAudioParameterDumpStageWidget> fStage = addWidget<LibreAudioParameterDumpStageWidget, Expanding>();
-    std::unique_ptr<LibreAudioWidget> fMetersOut = addWidget<LibreAudioMeterWidget<Output>>();
+    std::shared_ptr<LibreAudioWidget> fMetersIn = addWidget<LibreAudioMeterWidget<Input>>();
+    std::shared_ptr<LibreAudioParameterDumpStageWidget> fStage = addWidget<LibreAudioParameterDumpStageWidget, Expanding>();
+    std::shared_ptr<LibreAudioWidget> fMetersOut = addWidget<LibreAudioMeterWidget<Output>>();
 
 public:
     LibreAudioParameterDumpArea(LibreAudioTopLevelWidget* const parent)

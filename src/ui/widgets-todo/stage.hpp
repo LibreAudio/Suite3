@@ -17,9 +17,9 @@ class LibreAudioEasyStageWidget final : public LibreAudioReferenceContainerWidge
     using R = LibreAudioReference::Stage;
     using BaseWidget = LibreAudioReferenceContainerWidget<R, kVertical>;
 
-    std::unique_ptr<LibreAudioWidget> fSpacer1 = addSpacer();
-    std::unique_ptr<LibreAudioEasyKnobsGroupWidget> fEasyKnobs = addWidget<LibreAudioEasyKnobsGroupWidget>();
-    std::unique_ptr<LibreAudioWidget> fSpacer2 = addSpacer();
+    std::shared_ptr<LibreAudioWidget> fSpacer1 = addSpacer();
+    std::shared_ptr<LibreAudioEasyKnobsGroupWidget> fEasyKnobs = addWidget<LibreAudioEasyKnobsGroupWidget>();
+    std::shared_ptr<LibreAudioWidget> fSpacer2 = addSpacer();
 
 public:
     explicit LibreAudioEasyStageWidget(LibreAudioWidget* const parent)
@@ -61,9 +61,9 @@ class LibreAudioExpertStageWidget final : public LibreAudioReferenceContainerWid
     using R = LibreAudioReference::Stage;
     using BaseWidget = LibreAudioReferenceContainerWidget<R, kVertical>;
 
-    std::unique_ptr<LibreAudioPillAreaWidget> fTopArea = addWidget<LibreAudioPillAreaWidget>();
-    std::unique_ptr<LibreAudioWidget> fSpacer = addSpacer();
-    std::unique_ptr<LibreAudioExpertKnobsGroupWidget> fExpertKnobs = addWidget<LibreAudioExpertKnobsGroupWidget>();
+    std::shared_ptr<LibreAudioPillAreaWidget> fTopArea = addWidget<LibreAudioPillAreaWidget>();
+    std::shared_ptr<LibreAudioWidget> fSpacer = addSpacer();
+    std::shared_ptr<LibreAudioExpertKnobsGroupWidget> fExpertKnobs = addWidget<LibreAudioExpertKnobsGroupWidget>();
 
 public:
     explicit LibreAudioExpertStageWidget(LibreAudioWidget* const parent)
@@ -114,8 +114,8 @@ class LibreAudioStageWidget final : public LibreAudioWidget,
     using R = LibreAudioReference::Stage;
     using BaseWidget = LibreAudioWidget;
 
-    std::unique_ptr<LibreAudioWidget> fEasy { new LibreAudioEasyStageWidget(this) };
-    std::unique_ptr<LibreAudioWidget> fExpert;
+    std::shared_ptr<LibreAudioWidget> fEasy { new LibreAudioEasyStageWidget(this) };
+    std::shared_ptr<LibreAudioWidget> fExpert;
     // = { new LibreAudioExpertStageWidget(this) };
 
     Page fLastPage = kPageEasy;
