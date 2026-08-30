@@ -31,13 +31,8 @@ public:
     {
         BaseWidget::setCallback(callback);
         BaseWidget::setCheckable(true);
-        // BaseWidget::setId(scalePoint.value);
+        BaseWidget::setId(scalePoint.value);
         BaseWidget::setName(scalePoint.label);
-    }
-
-    [[nodiscard]] int getValue() const noexcept
-    {
-        return fScalePoint.value;
     }
 
 protected:
@@ -115,16 +110,16 @@ private:
 
         const uint id = getId();
         fInterface->parameterControlPressed(id);
-        fInterface->parameterControlModified(id, button->getValue());
+        fInterface->parameterControlModified(id, button->getId());
         fInterface->parameterControlReleased(id);
     }
 
     void idleCallback() final
     {
-        const int value = d_roundToIntPositive(fInterface->getParameterValue(getId()));
+        const uint value = d_roundToUnsignedInt(fInterface->getParameterValue(getId()));
 
         for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
-            cell->setChecked(cell->getValue() == value, false);
+            cell->setChecked(cell->getId() == value, false);
     }
 
     void updateSize(const bool updateChildren) final

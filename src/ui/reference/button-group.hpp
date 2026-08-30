@@ -33,16 +33,17 @@ public:
 
 protected:
     template<class B, typename = std::enable_if_t<std::is_base_of_v<LibreAudioButtonWidget, B>>>
-    std::shared_ptr<LibreAudioButtonWidget> addButton(const uint id)
+    std::shared_ptr<LibreAudioButtonWidget> addButton(const WidgetIds id)
     {
         std::shared_ptr<LibreAudioButtonWidget> widget { new B(this) };
         widget->setCallback(this);
         widget->setCheckable(true);
         widget->setId(id);
+        widget->setName(WidgetIds2Str(id));
         this->widgets.push_back({ widget.get(), Fixed });
         fWidgets.push_back(widget);
         if (widget->getSize().isNull())
-            d_stderr2("Error: addButton called but widget %u: '%s' does not have a known size", id, widget->getName());
+            d_stderr2("Error: addButton called but widget %u: '%s' does not have a known size", id, WidgetIds2Str(id));
         return widget;
     }
 
