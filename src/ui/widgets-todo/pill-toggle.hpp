@@ -62,7 +62,7 @@ class LibreAudioPillToggleWidget : public LibreAudioReferenceContainerWidget<Lib
     using R = LibreAudioReference::Widgets::PillToggle;
     using BaseWidget = LibreAudioReferenceContainerWidget<R>;
 
-    std::vector<std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>> fCells;
+    std::list<std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>> fCells;
 
 public:
     explicit LibreAudioPillToggleWidget(LibreAudioWidget* const parent,
@@ -73,8 +73,6 @@ public:
         addIdleCallback(this);
         setId(id);
         setName(parameter.label);
-
-        fCells.reserve(parameter.scalePointCount);
 
         for (uint i = 0; i < parameter.scalePointCount; ++i)
         {
@@ -169,17 +167,14 @@ class LibreAudioPillAreaWidget : public LibreAudioReferenceContainerWidget<Libre
 
     static constexpr const uint kMaxNumToggles = 2;
 
-    std::vector<std::unique_ptr<LibreAudioPillToggleWidget>> fToggles;
-    std::vector<std::unique_ptr<LibreAudioWidget>> fSpacers;
+    std::list<std::unique_ptr<LibreAudioPillToggleWidget>> fToggles;
+    std::list<std::unique_ptr<LibreAudioWidget>> fSpacers;
 
 public:
     explicit LibreAudioPillAreaWidget(LibreAudioWidget* const parent)
         : BaseWidget(parent)
     {
         const std::vector<FaustParameter>& parameters = getFaustParameters();
-
-        fToggles.reserve(kMaxNumToggles);
-        fSpacers.reserve(kMaxNumToggles + 1);
 
         uint8_t numPills = 0;
         for (const FaustParameter& parameter : parameters)
