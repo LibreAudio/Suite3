@@ -24,14 +24,13 @@ class LibreAudioBackgroundPillToggleCellWidget : public LibreAudioTextButtonWidg
 
 public:
     explicit LibreAudioBackgroundPillToggleCellWidget(LibreAudioWidget* const parent,
-                                                      ButtonEventHandler::Callback* const callback,
-                                                      const FaustParameterEnumerationValue& scalePoint)
-        : BaseWidget(parent, scalePoint.label)
+                                                      const uint id,
+                                                      const char* const label)
+        : BaseWidget(parent, label)
     {
-        BaseWidget::setCallback(callback);
         BaseWidget::setCheckable(true);
-        BaseWidget::setId(scalePoint.value);
-        BaseWidget::setName(scalePoint.label);
+        BaseWidget::setId(id);
+        BaseWidget::setName(label);
     }
 
 protected:
@@ -73,8 +72,10 @@ public:
         for (uint i = 0; i < parameter.scalePointCount; ++i)
         {
             std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget> widget {
-                new LibreAudioBackgroundPillToggleCellWidget(this, this, parameter.scalePoints[i])
+                new LibreAudioBackgroundPillToggleCellWidget(
+                    this, parameter.scalePoints[i].value, parameter.scalePoints[i].label)
             };
+            widget->setCallback(this);
             widgets.push_back({ widget.get(), Fixed });
             fCells.emplace_back(std::move(widget));
         }
@@ -120,12 +121,12 @@ private:
     {
         DISTRHO_SAFE_ASSERT(updateChildren);
 
+        // update children size first
+        LibreAudioWidget::updateSize(true);
+
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
         const uint padding = d_roundToUnsignedInt(R::padding * fScaleFactor);
-
-        // update children size first
-        LibreAudioWidget::updateSize(true);
 
         // make all cells have the same width
         uint cellWidth = 0;
@@ -134,7 +135,7 @@ private:
             cellWidth = std::max(cellWidth, cell->getWidth());
 
         for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
-            cell->setWidth(cellWidth + margin * 2);
+            cell->setWidth(cellWidth);
 
         // set width and height
         uint width = (border + margin) * 2;
