@@ -15,6 +15,7 @@
 
 #include "las-resources.h"
 
+#include <cmath>
 #include <cstring>
 #include <vector>
 
@@ -182,6 +183,7 @@ public:
         gl3.iTime = glGetUniformLocation(program, "iTime");
         gl3.iLevelSlow = glGetUniformLocation(program, "iLevelSlow");
         gl3.iLevelFast = glGetUniformLocation(program, "iLevelFast");
+        gl3.iLevelSlowTime = glGetUniformLocation(program, "iLevelSlowTime");
 
         gl3.dpfBounds = glGetAttribLocation(program, "_dpf_bounds");
         gl3.dpfBorderRadius = glGetUniformLocation(program, "_dpf_border_radius");
@@ -216,12 +218,12 @@ public:
         // state between frames -- so the two brightness envelopes are integrated
         // here and handed over as plain uniforms. They advance once per repaint,
         // which the idle callback above fixes at 16 ms.
-        fLevelSlow.setSampleRate(1.f / 0.016f);
+        fLevelSlow.setSampleRate(1.f / kFrameSeconds);
         fLevelSlow.setTimeConstant(kLevelSlowSeconds);
         fLevelSlow.setTargetValue(kLevelSilenceDb);
         fLevelSlow.clearToTargetValue();
 
-        fLevelFast.setSampleRate(1.f / 0.016f);
+        fLevelFast.setSampleRate(1.f / kFrameSeconds);
         fLevelFast.setTimeConstant(kLevelFastSeconds);
         fLevelFast.setTargetValue(kLevelSilenceDb);
         fLevelFast.clearToTargetValue();
@@ -263,7 +265,14 @@ private:
         glUniform3f(gl3.iMouse, fMouseX.next(), fMouseY.next(), fMouseZ);
         glUniform3f(gl3.iResolution, width, height, 0.f);
         glUniform1f(gl3.iScaleFactor, fScaleFactor);
-        glUniform1f(gl3.iTime, static_cast<float>(getApp().getTime() - fStartTime));
+
+        // Clamped so a stalled window -- hidden, dragged, starved -- resumes the
+        // level integral below where it left off instead of lurching forwards.
+        const float time = static_cast<float>(getApp().getTime() - fStartTime);
+        const float frameSeconds = std::min(std::max(time - fLastTime, 0.f), 0.1f);
+        fLastTime = time;
+
+        glUniform1f(gl3.iTime, time);
         glUniform1f(gl3.dpfBorderRadius, fBorderRadius);
 
         // Peak of the two input meters, in dBFS, run through a slow and a fast
@@ -280,8 +289,31 @@ private:
             fLevelSlow.setTargetValue(peakDb);
             fLevelFast.setTargetValue(peakDb);
 
-            glUniform1f(gl3.iLevelSlow, fLevelSlow.next());
+            const float levelSlowDb = fLevelSlow.next();
+
+            // A shader that drives a *rate* from the level -- the starfield flies
+            // faster when the input is hot -- cannot just multiply iTime by it:
+            // that would move everything already on screen every time the level
+            // changed. It needs the integral of the level over time, which, like
+            // the envelopes themselves, only the host can keep. Weighted by the
+            // normalised level so the shader can scale it into its own units.
+            const float levelSlowNorm = std::min(std::max((levelSlowDb - kLevelFloorDb) / (kLevelCeilDb - kLevelFloorDb), 0.f), 1.f);
+
+            // Rates want their own timing, and an asymmetric one: a fly-through
+            // picks up speed as the music arrives and coasts back down when it
+            // stops, so the fall is the longer of the two. Braking as briskly as
+            // it accelerated would read as the picture being yanked back.
+            const float levelTimeSeconds = levelSlowNorm >= fLevelSlowHeld ? kLevelTimeAttackSeconds
+                                                                           : kLevelTimeReleaseSeconds;
+
+            fLevelSlowHeld += (levelSlowNorm - fLevelSlowHeld)
+                            * (1.f - std::exp(-frameSeconds / levelTimeSeconds));
+
+            fLevelSlowTime += fLevelSlowHeld * frameSeconds;
+
+            glUniform1f(gl3.iLevelSlow, levelSlowDb);
             glUniform1f(gl3.iLevelFast, fLevelFast.next());
+            glUniform1f(gl3.iLevelSlowTime, fLevelSlowTime);
         }
 
         if (const uint32_t count = fInterface->getParameterCount())
@@ -363,6 +395,7 @@ private:
         GLint iTime;
         GLint iLevelSlow;
         GLint iLevelFast;
+        GLint iLevelSlowTime;
         GLint* parameterValues;
     } gl3 = {};
 
@@ -378,12 +411,36 @@ private:
     static constexpr const float kLevelFastSeconds = 1.5f;
     static constexpr const float kLevelSilenceDb = -70.0f;
 
+    // Nominal repaint period, matching the idle callback.
+    static constexpr const float kFrameSeconds = 0.016f;
+
+    // The window iLevelSlowTime normalises the slow envelope over, in dBFS.
+    // Shaders reading it must use the same one -- it is meterFloorDb/meterCeilDb
+    // in shadertoy-cloudstarfield.frag and friends.
+    static constexpr const float kLevelFloorDb = -40.0f;
+    static constexpr const float kLevelCeilDb  =   0.0f;
+
+    // How quickly iLevelSlowTime takes a level up, and how slowly it gives one
+    // back. Unlike the envelopes above these are plain one-pole taus, not T60s:
+    // each covers 63% of the distance in the time quoted and all but a twentieth
+    // of it in three times that.
+    //
+    // They sit on top of iLevelSlow's own smoothing rather than replacing it, so
+    // the rise is the two in series -- an attack of 0 here would still not be
+    // instant. Keep the attack the shorter of the two: arriving with the music and
+    // outlasting it is the asymmetry the flight wants.
+    static constexpr const float kLevelTimeAttackSeconds  = 1.0f;
+    static constexpr const float kLevelTimeReleaseSeconds = 2.0f;
+
     TopLevelWidget* const fParent;
     const float fScaleFactor;
     const double fStartTime;
     bool fFirstResize = true;
     ExponentialValueSmoother fLevelSlow;
     ExponentialValueSmoother fLevelFast;
+    float fLevelSlowTime = 0.f;
+    float fLevelSlowHeld = 0.f;
+    float fLastTime = 0.f;
     int fPeakParameterL = -1;
     int fPeakParameterR = -1;
     LinearValueSmoother fMouseX;
