@@ -16,17 +16,24 @@ LinF0    = 10;    // Hz, roll-off band low edge  (below audible)
 LinF1    = 18000; // Hz, band high edge — below Nyquist at 44.1 kHz keeps the
                   // top pole stable (a pole above Nyquist makes spectral_tilt blow up)
 
+// UI
+uiTop(x)    = hgroup("[0]Stage Top", x);
+uiBottom(x) = hgroup("[8]Stage Bottom", x);
+uiBottomLeft(x) = uiBottom(vgroup("[1]Stage Bottom Left", x));
+uiBottomCenter(x) = uiBottom(vgroup("[2]Stage Bottom Center", x));
+uiBottomRight(x) = uiBottom(hgroup("[3]Stage Bottom Right", x));
+
 //----------------------------------------------------------------- UI
 mode   = nentry("[0] Mode [style:menu{'Linear':0;'Shelf + Resonance':1;'Dual Shelf':2}][symbol:mode]", 0, 0, 2, 1);
 
 // shared by every mode
-tilt   = hslider("[1] Tilt [unit:dB][symbol:tilt][easy][accentcolor:01]", 0, -12, 12, 0.1) : si.smoo;
-freq   = hslider("[2] Frequency [unit:Hz][scale:log][symbol:freq][accentcolor:03]", 630, 20, 20000, 1) : si.smoo;
+tilt   = uiBottomCenter(hslider("[1] Tilt [unit:dB][symbol:tilt][easy][accentcolor:01]", 0, -12, 12, 0.1)) : si.smoo;
+freq   = uiBottomCenter(hslider("[2] Frequency [unit:Hz][scale:log][symbol:freq][accentcolor:03]", 630, 20, 20000, 1)) : si.smoo;
 
 // per-mode
-res    = hslider("[3] Resonance [symbol:res][accentcolor:06]", 0.707, 0.4, 8, 0.01) : si.smoo;         // Shelf + Resonance
-spread = hslider("[4] Spread [symbol:spread][accentcolor:04]", 2, 1, 20, 0.01) : si.smoo;               // Dual Shelf
-dsres  = hslider("[5] DS Resonance [unit:dB][symbol:ds_res][accentcolor:06]", 0, 0, 12, 0.1) : si.smoo; // Dual Shelf
+res    = uiBottomCenter(hslider("[3] Resonance [symbol:res][accentcolor:06]", 0.707, 0.4, 8, 0.01)) : si.smoo;         // Shelf + Resonance
+spread = uiBottomCenter(hslider("[4] Spread [symbol:spread][accentcolor:04]", 2, 1, 20, 0.01)) : si.smoo;               // Dual Shelf
+dsres  = uiBottomCenter(hslider("[5] DS Resonance [unit:dB][symbol:ds_res][accentcolor:06]", 0, 0, 12, 0.1)) : si.smoo; // Dual Shelf
 
 //----------------------------------------------------------------- process
 process = par(i, Nch, tiltMono);
