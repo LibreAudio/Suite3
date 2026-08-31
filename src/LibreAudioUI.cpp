@@ -67,7 +67,7 @@ public:
     {
         static constexpr const std::string_view label = DISTRHO_PLUGIN_LABEL;
 
-        if constexpr (label == "chorus" || label == "djFilter" || label == "vocalDoubler")
+        if constexpr (label == "chorus" || label == "djFilter" || label == "tiltEQ" || label == "vocalDoubler")
         {
             fShaderBackground.reset(new LibreAudioBackgroundShaderWidget<SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_DATA, SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_LEN>(this, this));
 
@@ -78,6 +78,8 @@ public:
                 fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_CHORUS_FRAG_DATA, SHADERS_CURVE_CHORUS_FRAG_LEN>(this, this));
             else if constexpr (label == "djFilter")
                 fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_DJ_FILTER_FRAG_DATA, SHADERS_CURVE_DJ_FILTER_FRAG_LEN>(this, this));
+            else if constexpr (label == "tiltEQ")
+                fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_TILT_EQ_FRAG_DATA, SHADERS_CURVE_TILT_EQ_FRAG_LEN>(this, this));
             else if constexpr (label == "vocalDoubler")
                 fShaderLine.reset(new LibreAudioBackgroundShaderWidget<SHADERS_CURVE_VOCAL_DOUBLER_FRAG_DATA, SHADERS_CURVE_VOCAL_DOUBLER_FRAG_LEN>(this, this));
             else
