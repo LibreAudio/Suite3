@@ -4,18 +4,18 @@
 
 #pragma once
 
-#include "../base/base.hpp"
+#include "base.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
 template<const uchar* imageData, uint imageDataSize, uint imageScale = 2>
-class LibreAudioImageWidget final : public LibreAudioWidget
+class ImageWidget final : public Widget
 {
 public:
-    explicit LibreAudioImageWidget(LibreAudioWidget* const parent)
-        : LibreAudioWidget(parent)
+    explicit ImageWidget(Widget* const parent)
+        : Widget(parent)
     {
         updateSize(false);
     }
@@ -57,11 +57,10 @@ private:
         else
             setWidth(fImageWidth);
 
-        LibreAudioWidget::updateSize(updateChildren);
+        Widget::updateSize(updateChildren);
     }
 };
 
-
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

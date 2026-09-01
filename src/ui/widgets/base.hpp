@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "../base/interface.hpp"
+#include "../reference/interface.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ enum WidgetIds : uint16_t {
     kWidgetUndo,
 };
 
-constexpr inline const char* WidgetIds2Str(const WidgetIds id) noexcept
+constexpr const char* WidgetIds2Str(const WidgetIds id) noexcept
 {
     switch (id)
     {
@@ -65,7 +65,7 @@ constexpr inline const char* WidgetIds2Str(const WidgetIds id) noexcept
     return "";
 }
 
-inline Page getCurrentPage(LibreAudioUIWidgetInterface* const iface) noexcept
+inline Page getCurrentPage(UIWidgetInterface* const iface) noexcept
 {
     if (iface->isButtonEnabled(kWidgetEasy) && iface->isButtonChecked(kWidgetEasy))
         return kPageEasy;
@@ -82,5 +82,4 @@ inline Page getCurrentPage(LibreAudioUIWidgetInterface* const iface) noexcept
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
-
+} /* namespace LibreAudio */

@@ -16,43 +16,43 @@ START_NAMESPACE_DISTRHO
 
 class LibreAudioUI : public LibreAudioBaseUI
 {
-    struct ReferenceTopBar : LibreAudioReference::TopBar {
-        static constexpr const Color backgroundColor = LibreAudioReference::Colors::ink3;
+    struct ReferenceTopBar : LibreAudio::Reference::TopBar {
+        static constexpr const Color backgroundColor = LibreAudio::Reference::Colors::ink3;
     };
 
-    // class TopBarSubWidget : public LibreAudioReferenceContainerWidget<ReferenceTopBar>
+    // class TopBarSubWidget : public LibreAudio::ReferenceContainerWidget<ReferenceTopBar>
     // {
-    //     using BaseWidget = LibreAudioReferenceContainerWidget<ReferenceTopBar>;
+    //     using BaseWidget = LibreAudio::ReferenceContainerWidget<ReferenceTopBar>;
     //
     // public:
-    //     explicit TopBarSubWidget(LibreAudioTopLevelWidget* const parent)
+    //     explicit TopBarSubWidget(LibreAudio::TopLevelWidget* const parent)
     //         : BaseWidget(parent) {}
     // };
 
-    class TopBarWidget : public LibreAudioReferenceContainerWidget<ReferenceTopBar>
+    class TopBarWidget : public LibreAudio::ReferenceContainerWidget<ReferenceTopBar>
     {
-        using BaseWidget = LibreAudioReferenceContainerWidget<ReferenceTopBar>;
+        using BaseWidget = LibreAudio::ReferenceContainerWidget<ReferenceTopBar>;
 
         static constexpr const float kColor1[] = { 0.3f, 0.1f, 0.05f, 1.f };
         static constexpr const float kColor2[] = { 0.1f, 0.3f, 0.05f, 1.f };
-        std::shared_ptr<LibreAudioWidget> w1 = addWidget<LibreAudioColorWidget<kColor1>, Expanding>();
-        std::shared_ptr<LibreAudioWidget> w2 = addWidget<LibreAudioColorWidget<kColor2>, Expanding>();
+        std::shared_ptr<LibreAudio::Widget> w1 = addWidget<LibreAudio::ColorWidget<kColor1>, Expanding>();
+        std::shared_ptr<LibreAudio::Widget> w2 = addWidget<LibreAudio::ColorWidget<kColor2>, Expanding>();
 
     public:
-        explicit TopBarWidget(LibreAudioTopLevelWidget* const parent)
+        explicit TopBarWidget(LibreAudio::TopLevelWidget* const parent)
             : BaseWidget(parent) {}
     };
-    // using TopBarWidget = LibreAudioReferenceWidget<ReferenceTopBar>;
+    // using TopBarWidget = LibreAudio::ReferenceWidget<ReferenceTopBar>;
 
-    struct ReferenceMainArea : LibreAudioReference::MainArea {
-        static constexpr const Color backgroundColor = LibreAudioReference::Colors::bg0;
-        static constexpr const Color borderColor = LibreAudioReference::Colors::ink;
+    struct ReferenceMainArea : LibreAudio::Reference::MainArea {
+        static constexpr const Color backgroundColor = LibreAudio::Reference::Colors::bg0;
+        static constexpr const Color borderColor = LibreAudio::Reference::Colors::ink;
         static constexpr const uint border = 10;
         static constexpr const uint borderRadius = 20;
     };
 
     // static constexpr const float kColor[] = { 0.3f, 0.1f, 0.05f, 1.f };
-    using MainAreaWidget = LibreAudioReferenceWidget<ReferenceMainArea>;
+    using MainAreaWidget = LibreAudio::ReferenceWidget<ReferenceMainArea>;
 
 public:
     LibreAudioUI()

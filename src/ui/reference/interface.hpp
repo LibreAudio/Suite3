@@ -6,14 +6,14 @@
 
 #include "DistrhoUtils.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioUIWidgetInterface
+class UIWidgetInterface
 {
 public:
-    virtual ~LibreAudioUIWidgetInterface() = default;
+    virtual ~UIWidgetInterface() = default;
 
     [[nodiscard]] virtual uint32_t getParameterCount() const noexcept = 0;
     [[nodiscard]] virtual const char* getParameterSymbol(uint32_t index) const noexcept = 0;
@@ -26,8 +26,10 @@ public:
     virtual void buttonClicked(uint32_t id) = 0;
     [[nodiscard]] virtual bool isButtonEnabled(uint32_t id) const noexcept = 0;
     [[nodiscard]] virtual bool isButtonChecked(uint32_t id) const noexcept = 0;
+
+    [[nodiscard]] virtual float getScaleFactor() const noexcept = 0;
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

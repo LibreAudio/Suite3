@@ -4,23 +4,23 @@
 
 #pragma once
 
-#include "../base/knob.hpp"
+#include "../reference/knob.hpp"
 #include "../reference.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
 template <class R>
-class LibreAudioDrawableKnobWidget final : public LibreAudioKnobWidget
+class DrawableKnobWidget final : public KnobWidget
 {
-    using BaseWidget = LibreAudioKnobWidget;
+    using BaseWidget = KnobWidget;
 
     static constexpr const double kTimeForShowingHostParameterChanges = 1;
     static constexpr const double kTimeForValueFadeout = 0.1;
 
 public:
-    LibreAudioDrawableKnobWidget(LibreAudioWidget* const parent, const FaustParameter& parameter, const uint32_t id)
+    DrawableKnobWidget(Widget* const parent, const FaustParameter& parameter, const uint32_t id)
         : BaseWidget(parent, parameter, id)
     {
         fKnobStyle.bipolar = d_isZero(parameter.init) && parameter.min < 0 && parameter.max > 0;
@@ -201,7 +201,7 @@ private:
 
     void idleCallback() final
     {
-        LibreAudioKnobWidget::idleCallback();
+        KnobWidget::idleCallback();
 
         if (timeEllapsed(fLastParameterChangedByHostTime, kTimeForShowingHostParameterChanges))
         {
@@ -306,9 +306,9 @@ private:
 #endif
 };
 
-using LibreAudioEasyKnobWidget = LibreAudioDrawableKnobWidget<LibreAudioReference::Widgets::EasyKnob>;
-using LibreAudioSmallKnobWidget = LibreAudioDrawableKnobWidget<LibreAudioReference::Widgets::Knob>;
+using EasyKnobWidget = DrawableKnobWidget<Reference::Widgets::EasyKnob>;
+using SmallKnobWidget = DrawableKnobWidget<Reference::Widgets::Knob>;
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

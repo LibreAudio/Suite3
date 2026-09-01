@@ -4,22 +4,55 @@
 
 #pragma once
 
-#include "../base/button.hpp"
+#include "base.hpp"
 
-START_NAMESPACE_DISTRHO
+#include "EventHandlers.hpp"
+
+namespace LibreAudio {
+
+// --------------------------------------------------------------------------------------------------------------------
+
+class ButtonBaseWidget : public Widget,
+                         public ButtonEventHandler
+{
+public:
+    explicit ButtonBaseWidget(Widget* const parent)
+        : Widget(parent),
+          ButtonEventHandler(this) {}
+
+    [[nodiscard]] virtual Corner getCorner() const noexcept = 0;
+
+protected:
+    [[nodiscard]] virtual const Color& getBackgroundColor() const noexcept = 0; // TODO remove
+    [[nodiscard]] virtual const Color& getForegroundColor() const noexcept = 0; // TODO remove
+
+private:
+    bool onMouse(const Widget::MouseEvent& ev) final
+    {
+        if (mouseEvent(ev))
+            return true;
+        return Widget::onMouse(ev);
+    }
+
+    bool onMotion(const Widget::MotionEvent& ev) final
+    {
+        if (motionEvent(ev))
+            return true;
+        return Widget::onMotion(ev);
+    }
+};
 
 // --------------------------------------------------------------------------------------------------------------------
 // reference button widget class
 
-template <class R, LibreAudioButtonWidget::Corner corner>
-class LibreAudioReferenceButtonWidget : public LibreAudioButtonWidget
+template<class R, Corner corner>
+class ReferenceButtonWidget : public ButtonBaseWidget
 {
+    using BaseWidget = ButtonBaseWidget;
+
 public:
-    explicit LibreAudioReferenceButtonWidget(LibreAudioWidget* const parent)
-        : LibreAudioButtonWidget(parent)
-    {
-        updateSize(false);
-    }
+    explicit ReferenceButtonWidget(Widget* const parent)
+        : BaseWidget(parent) {}
 
     [[nodiscard]] Corner getCorner() const noexcept final
     {
@@ -27,7 +60,7 @@ public:
     }
 
 protected:
-    [[nodiscard]] virtual const Color& getBackgroundColor() const noexcept
+    [[nodiscard]] const Color& getBackgroundColor() const noexcept override
     {
         if (isCheckable())
             return isChecked() ? R::color : R::backgroundColor;
@@ -35,7 +68,7 @@ protected:
         return R::backgroundColor;
     }
 
-    [[nodiscard]] virtual const Color& getForegroundColor() const noexcept
+    [[nodiscard]] const Color& getForegroundColor() const noexcept override
     {
         if (! isEnabled())
             return R::color〡deactivated;
@@ -48,6 +81,8 @@ protected:
 
     void onNanoDisplay() override
     {
+        // TODO use drawReferenceBackground<R>();
+
         const float w = getWidth();
         const float h = getHeight();
 
@@ -98,16 +133,11 @@ protected:
 
     void updateSize(const bool updateChildren) override
     {
-        if constexpr (R::width != 0)
-            LibreAudioWidget::setWidth(d_roundToUnsignedInt(R::width * this->fScaleFactor));
-
-        if constexpr (R::height != 0)
-            LibreAudioWidget::setHeight(d_roundToUnsignedInt(R::height * this->fScaleFactor));
-
-        LibreAudioButtonWidget::updateSize(updateChildren);
+        updateReferenceSize<R>();
+        BaseWidget::updateSize(updateChildren);
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

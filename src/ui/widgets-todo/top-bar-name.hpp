@@ -5,25 +5,25 @@
 #pragma once
 
 #include "../reference.hpp"
-#include "../base/base.hpp"
+#include "../reference/base.hpp"
 
 #include "DistrhoPluginInfo.h"
 
 #include <cctype>
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioTopBarNameWidget final : public LibreAudioWidget
+class TopBarNameWidget final : public Widget
 {
-    using R = LibreAudioReference::TopBar::PluginName;
+    using R = Reference::TopBar::PluginName;
 
     char fName[sizeof(DISTRHO_PLUGIN_NAME) - 3];
 
 public:
-    LibreAudioTopBarNameWidget(LibreAudioWidget* const parent)
-        : LibreAudioWidget(parent)
+    TopBarNameWidget(Widget* const parent)
+        : Widget(parent)
     {
         std::memcpy(fName, _constexpr_DISTRHO_PLUGIN_NAME + 3, sizeof(DISTRHO_PLUGIN_NAME) - 3);
         fName[sizeof(DISTRHO_PLUGIN_NAME) - 4] = '\0';
@@ -53,10 +53,10 @@ private:
         textBounds(0, 0, fName, nullptr, bounds);
         setWidth(bounds.getWidth());
 
-        LibreAudioWidget::updateSize(updateChildren);
+        Widget::updateSize(updateChildren);
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

@@ -7,11 +7,11 @@
 #include "Color.hpp"
 // #include "EventHandlers.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-struct LibreAudioReference {
+struct Reference {
     struct Common {
         static constexpr const MouseCursor cursor = kMouseCursorArrow;
         static constexpr const float fontSize = 17;
@@ -228,17 +228,17 @@ struct LibreAudioReference {
     };
 };
 
-static_assert(LibreAudioReference::Meter::width == (
-        LibreAudioReference::Meter::border * 2 +
-        LibreAudioReference::Meter::margin * 2 +
+static_assert(LibreAudio::Reference::Meter::width == (
+        LibreAudio::Reference::Meter::border * 2 +
+        LibreAudio::Reference::Meter::margin * 2 +
         // LibreAudioReference::Meter::padding +
-        LibreAudioReference::Meter::Track::width * 2
+        LibreAudio::Reference::Meter::Track::width * 2
     ), "incorrect meter size");
 
-static_assert(LibreAudioReference::Meter::Tick::width == (
-        LibreAudioReference::Meter::width - (LibreAudioReference::Meter::border + LibreAudioReference::Meter::margin) * 2
+static_assert(LibreAudio::Reference::Meter::Tick::width == (
+        LibreAudio::Reference::Meter::width - (LibreAudio::Reference::Meter::border + LibreAudio::Reference::Meter::margin) * 2
     ), "incorrect meter tick size");
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

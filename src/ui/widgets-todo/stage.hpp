@@ -8,21 +8,21 @@
 #include "knob-group.hpp"
 #include "pill-toggle.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioEasyStageWidget final : public LibreAudioReferenceContainerWidget<LibreAudioReference::Stage, kVertical>
+class EasyStageWidget final : public ReferenceContainerWidget<Reference::Stage, kVertical>
 {
-    using R = LibreAudioReference::Stage;
-    using BaseWidget = LibreAudioReferenceContainerWidget<R, kVertical>;
+    using R = Reference::Stage;
+    using BaseWidget = ReferenceContainerWidget<R, kVertical>;
 
-    std::shared_ptr<LibreAudioWidget> fSpacer1 = addSpacer();
-    std::shared_ptr<LibreAudioEasyKnobsGroupWidget> fEasyKnobs = addWidget<LibreAudioEasyKnobsGroupWidget>();
-    std::shared_ptr<LibreAudioWidget> fSpacer2 = addSpacer();
+    std::shared_ptr<Widget> fSpacer1 = addSpacer();
+    std::shared_ptr<EasyKnobsGroupWidget> fEasyKnobs = addWidget<EasyKnobsGroupWidget>();
+    std::shared_ptr<Widget> fSpacer2 = addSpacer();
 
 public:
-    explicit LibreAudioEasyStageWidget(LibreAudioWidget* const parent)
+    explicit EasyStageWidget(Widget* const parent)
         : BaseWidget(parent)
     {
     }
@@ -48,7 +48,7 @@ private:
                                  h - h * 0.4f,
                                  0,
                                  h - h * 0.2f,
-                                 LibreAudioReference::Colors::transparent,
+                                 Reference::Colors::transparent,
                                  Color(0.f, 0.f, 0.f, 0.2f)));
         fill();
     }
@@ -56,17 +56,17 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioExpertStageWidget final : public LibreAudioReferenceContainerWidget<LibreAudioReference::Stage, kVertical>
+class ExpertStageWidget final : public ReferenceContainerWidget<Reference::Stage, kVertical>
 {
-    using R = LibreAudioReference::Stage;
-    using BaseWidget = LibreAudioReferenceContainerWidget<R, kVertical>;
+    using R = Reference::Stage;
+    using BaseWidget = ReferenceContainerWidget<R, kVertical>;
 
-    std::shared_ptr<LibreAudioPillAreaWidget> fTopArea = addWidget<LibreAudioPillAreaWidget>();
-    std::shared_ptr<LibreAudioWidget> fSpacer = addSpacer();
-    std::shared_ptr<LibreAudioExpertKnobsGroupWidget> fExpertKnobs = addWidget<LibreAudioExpertKnobsGroupWidget>();
+    std::shared_ptr<PillAreaWidget> fTopArea = addWidget<PillAreaWidget>();
+    std::shared_ptr<Widget> fSpacer = addSpacer();
+    std::shared_ptr<ExpertKnobsGroupWidget> fExpertKnobs = addWidget<ExpertKnobsGroupWidget>();
 
 public:
-    explicit LibreAudioExpertStageWidget(LibreAudioWidget* const parent)
+    explicit ExpertStageWidget(Widget* const parent)
         : BaseWidget(parent)
     {
         fTopArea->setHeight(30 * fScaleFactor);
@@ -94,7 +94,7 @@ private:
             fill();
         }
 
-        fillPaint(linearGradient(0, h - h * 0.4f, 0, h - h * 0.2f, LibreAudioReference::Colors::transparent, Color(0.f, 0.f, 0.f, 0.2f)));
+        fillPaint(linearGradient(0, h - h * 0.4f, 0, h - h * 0.2f, Reference::Colors::transparent, Color(0.f, 0.f, 0.f, 0.2f)));
         fill();
 
         if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
@@ -108,23 +108,23 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioStageWidget final : public LibreAudioWidget,
+class StageWidget final : public Widget,
                                     private IdleCallback
 {
-    using R = LibreAudioReference::Stage;
-    using BaseWidget = LibreAudioWidget;
+    using R = Reference::Stage;
+    using BaseWidget = Widget;
 
-    std::shared_ptr<LibreAudioWidget> fEasy { new LibreAudioEasyStageWidget(this) };
-    std::shared_ptr<LibreAudioWidget> fExpert;
-    // = { new LibreAudioExpertStageWidget(this) };
+    std::shared_ptr<Widget> fEasy { new EasyStageWidget(this) };
+    std::shared_ptr<Widget> fExpert;
+    // = { new ExpertStageWidget(this) };
 
     Page fLastPage = kPageEasy;
 
 public:
-    LibreAudioStageWidget(LibreAudioWidget* const parent)
+    StageWidget(Widget* const parent)
         : BaseWidget(parent)
     {
-        fExpert.reset(new LibreAudioExpertStageWidget(this));
+        fExpert.reset(new ExpertStageWidget(this));
         fExpert->hide();
 
         addIdleCallback(this);
@@ -175,7 +175,7 @@ private:
 
     // void onResize(const ResizeEvent& ev) override
     // {
-    //     LibreAudioWidget::onResize(ev);
+    //     Widget::onResize(ev);
     //
     //     fEasy->setSize(ev.size);
     //     fExpert->setSize(ev.size);
@@ -192,4 +192,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

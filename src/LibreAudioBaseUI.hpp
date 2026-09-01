@@ -21,7 +21,7 @@ START_NAMESPACE_DISTRHO
 class LibreAudioBaseUI : public UI,
                          private LibreAudioSnapshots::Callback
 {
-    using R = LibreAudioReference::Window;
+    using R = LibreAudio::Reference::Window;
 
 public:
     LibreAudioBaseUI();
@@ -41,7 +41,7 @@ public:
     // protected data
 
 protected:
-    std::shared_ptr<LibreAudioRootBaseWidget> fRootWidget;
+    std::shared_ptr<LibreAudio::RootBaseWidget> fRootWidget;
 
     template <class RootWidget>
     void createRootWidget()
@@ -53,7 +53,7 @@ protected:
     template <class TopBar, class MainArea>
     void createRootWidget()
     {
-        fRootWidget.reset(new LibreAudioRootWidget<TopBar, MainArea>(getWindow(), this));
+        fRootWidget.reset(new LibreAudio::RootWidget<TopBar, MainArea>(getWindow(), this));
         fRootWidget->updateScaleFactorAndSize();
     }
 
@@ -68,15 +68,17 @@ private:
     float* const fParameterValues;
     float* const fParameterValuesWhenActivated;
 
-    Page fPage = kPageEasy;
-    Page fLastEasyExpertPage = kPageEasy;
+    LibreAudio::Page fPage = LibreAudio::kPageEasy;
+    LibreAudio::Page fLastEasyExpertPage = LibreAudio::kPageEasy;
 
     LibreAudioSnapshots fSnapshots;
     bool fCopyingSnapshot = false;
 
     float fScaleFactor = 1.f;
 
-    void pageButtonClicked(Page page);
+    [[nodiscard]] float getScaleFactor() const noexcept final { return fScaleFactor; }
+
+    void pageButtonClicked(LibreAudio::Page page);
     void snapshotButtonClicked(uint32_t button);
 
     // ----------------------------------------------------------------------------------------------------------------

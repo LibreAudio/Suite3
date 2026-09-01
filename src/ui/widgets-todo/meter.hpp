@@ -4,25 +4,25 @@
 
 #pragma once
 
-#include "../base/knob.hpp"
+#include "../reference/knob.hpp"
 #include "../reference.hpp"
 
 #include "LibreAudioParameters.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-enum LibreAudioMeterWidgetType : bool {
+enum MeterWidgetType : bool {
     Input,
     Output
 };
 
-template<LibreAudioMeterWidgetType type>
-class LibreAudioMeterWidget final : public LibreAudioKnobWidget
+template<MeterWidgetType type>
+class MeterWidget final : public KnobWidget
 {
-    using R = LibreAudioReference::Meter;
-    using BaseWidget = LibreAudioKnobWidget;
+    using R = Reference::Meter;
+    using BaseWidget = KnobWidget;
 
     static constexpr const uint kParameterL = type == Input
         ? kParametersInputStart + common_input::kFaustParameterInput_peak_l
@@ -43,7 +43,7 @@ class LibreAudioMeterWidget final : public LibreAudioKnobWidget
     }
 
 public:
-    LibreAudioMeterWidget(LibreAudioWidget* const parent)
+    MeterWidget(Widget* const parent)
         : BaseWidget(parent, getFaustParameter(), kParameterMeter)
     {
         updateSize(false);
@@ -234,4 +234,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

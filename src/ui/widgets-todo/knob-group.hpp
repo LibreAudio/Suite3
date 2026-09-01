@@ -21,19 +21,19 @@
 
 #include <memory>
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<class KnobWidget = LibreAudioSmallKnobWidget, uint kMaxNumParameters = 5>
-class LibreAudioKnobGroupWidget : public LibreAudioReferenceContainerWidget<LibreAudioReference::Widgets::KnobGroup>,
-                                  private IdleCallback
+template<class KnobWidget = SmallKnobWidget, uint kMaxNumParameters = 5>
+class KnobGroupWidget : public ReferenceContainerWidget<Reference::Widgets::KnobGroup>,
+                        private IdleCallback
 {
-    using R = LibreAudioReference::Widgets::KnobGroup;
-    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
+    using R = Reference::Widgets::KnobGroup;
+    using BaseWidget = ReferenceContainerWidget<R>;
 
     std::vector<std::shared_ptr<KnobWidget>> fKnobs;
-    std::vector<std::shared_ptr<LibreAudioWidget>> fSpacers;
+    std::vector<std::shared_ptr<Widget>> fSpacers;
 
     struct Bracket {
         uint start;
@@ -45,7 +45,7 @@ class LibreAudioKnobGroupWidget : public LibreAudioReferenceContainerWidget<Libr
     static constexpr const std::string_view kLabel = DISTRHO_PLUGIN_LABEL;
 
 public:
-    explicit LibreAudioKnobGroupWidget(LibreAudioWidget* const parent,
+    explicit KnobGroupWidget(Widget* const parent,
                                        const std::vector<FaustParameter>& parameters,
                                        const uint32_t idOffset = 0,
                                        const uint32_t parameterStart = 0)
@@ -137,9 +137,9 @@ private:
 
     void addSpacer(const uint id)
     {
-        std::shared_ptr<LibreAudioEmptyWidget> spacer { new LibreAudioEmptyWidget(this) };
+        std::shared_ptr<EmptyWidget> spacer { new EmptyWidget(this) };
         // static constexpr const float c[4] = { 0.9f, 0.11f, 0.11f, 1.f };
-        // std::shared_ptr<LibreAudioWidget> spacer { new LibreAudioColorWidget<c>(this) };
+        // std::shared_ptr<LibreAudi::oWidget> spacer { new ColorWidget<c>(this) };
         spacer->setId(id);
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
@@ -175,9 +175,9 @@ private:
             }
         }
 
-        for (const std::shared_ptr<LibreAudioWidget>& spacer : fSpacers)
+        for (const std::shared_ptr<Widget>& spacer : fSpacers)
         {
-            if (LibreAudioWidget* const spacerPtr = spacer.get(); spacerPtr->getId() == id)
+            if (Widget* const spacerPtr = spacer.get(); spacerPtr->getId() == id)
             {
                 spacerPtr->setVisible(visible);
                 break;
@@ -272,9 +272,9 @@ private:
 
         if (firstVisibleKnobId != UINT_MAX)
         {
-            for (const std::shared_ptr<LibreAudioWidget>& spacer : fSpacers)
+            for (const std::shared_ptr<Widget>& spacer : fSpacers)
             {
-                if (LibreAudioWidget* const spacerPtr = spacer.get(); spacerPtr->isVisible())
+                if (Widget* const spacerPtr = spacer.get(); spacerPtr->isVisible())
                 {
                     if (spacerPtr->getId() <= firstVisibleKnobId)
                         spacerPtr->hide();
@@ -352,19 +352,19 @@ private:
             const float y = 20;
 
             beginPath();
-            fontSize(LibreAudioReference::Common::fontSize * fScaleFactor);
+            fontSize(Reference::Common::fontSize * fScaleFactor);
             textAlign(ALIGN_CENTER | ALIGN_MIDDLE);
 
-            fillColor(Color(LibreAudioReference::Colors::ink.invert(), 0.5f));
+            fillColor(Color(Reference::Colors::ink.invert(), 0.5f));
             text(mx, 1 * fScaleFactor, bracket.label);
 
-            fillColor(LibreAudioReference::Colors::ink3);
+            fillColor(Reference::Colors::ink3);
             text(mx, 0, bracket.label);
 
             Rectangle<float> bounds;
             textBounds(mx, 0, bracket.label, nullptr, bounds);
 
-            strokeColor(LibreAudioReference::Colors::ink3);
+            strokeColor(Reference::Colors::ink3);
             strokeWidth(lw);
 
             beginPath();
@@ -415,20 +415,20 @@ private:
         else
             knobHeight = d_roundToUnsignedInt(fScaleFactor);
 
-        LibreAudioWidget::setHeight((border + margin) * 2 + knobHeight);
+        Widget::setHeight((border + margin) * 2 + knobHeight);
         BaseWidget::updateSize(updateChildren);
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioEasyKnobsGroupWidget final : public LibreAudioReferenceContainerWidget<LibreAudioReference::Widgets::KnobGroup>
+class EasyKnobsGroupWidget final : public ReferenceContainerWidget<Reference::Widgets::KnobGroup>
 {
-    using R = LibreAudioReference::Widgets::KnobGroup;
-    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
+    using R = Reference::Widgets::KnobGroup;
+    using BaseWidget = ReferenceContainerWidget<R>;
 
 public:
-    explicit LibreAudioEasyKnobsGroupWidget(LibreAudioWidget* const parent)
+    explicit EasyKnobsGroupWidget(Widget* const parent)
         : BaseWidget(parent)
     {
         addSpacer();
@@ -441,7 +441,7 @@ public:
             if (! parameter.isEasy) {
                 continue;
             }
-            std::shared_ptr<LibreAudioKnobWidget> widget { new LibreAudioEasyKnobWidget(this, parameter, kParametersMainStart + i) };
+            std::shared_ptr<KnobWidget> widget { new EasyKnobWidget(this, parameter, kParametersMainStart + i) };
             widgets.push_back({ widget.get(), Fixed });
             fKnobs.emplace_back(std::move(widget));
         }
@@ -454,8 +454,8 @@ public:
     void addWidget() = delete;
 
 private:
-    std::vector<std::shared_ptr<LibreAudioKnobWidget>> fKnobs;
-    std::vector<std::shared_ptr<LibreAudioWidget>> fSpacers;
+    std::vector<std::shared_ptr<KnobWidget>> fKnobs;
+    std::vector<std::shared_ptr<Widget>> fSpacers;
 
     void updateSize(const bool updateChildren) final
     {
@@ -476,7 +476,7 @@ private:
 
     void addSpacer()
     {
-        std::shared_ptr<LibreAudioEmptyWidget> spacer { new LibreAudioEmptyWidget(this) };
+        std::shared_ptr<EmptyWidget> spacer { new EmptyWidget(this) };
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
     }
@@ -484,24 +484,24 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioExpertKnobsGroupWidget final : public LibreAudioReferenceContainerWidget<LibreAudioReference::Widgets::KnobGroup>
+class ExpertKnobsGroupWidget final : public ReferenceContainerWidget<Reference::Widgets::KnobGroup>
 {
-    using R = LibreAudioReference::Widgets::KnobGroup;
-    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
+    using R = Reference::Widgets::KnobGroup;
+    using BaseWidget = ReferenceContainerWidget<R>;
 
 public:
-    explicit LibreAudioExpertKnobsGroupWidget(LibreAudioWidget* const parent)
+    explicit ExpertKnobsGroupWidget(Widget* const parent)
         : BaseWidget(parent)
     {
         const std::vector<FaustParameter>& parameters = getFaustParameters();
 
-        fKnobsLeft.reset(new LibreAudioKnobGroupWidget<>(this, parameters, kParametersMainStart, 0));
+        fKnobsLeft.reset(new KnobGroupWidget<>(this, parameters, kParametersMainStart, 0));
         widgets.push_back({ fKnobsLeft.get(), Expanding });
 
-        fLogo.reset(new LibreAudioImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>(this));
+        fLogo.reset(new ImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>(this));
         widgets.push_back({ fLogo.get(), Fixed });
 
-        fKnobsRight.reset(new LibreAudioKnobGroupWidget<>(this, parameters, kParametersMainStart, fKnobsLeft->getLastKnobId() + 1 - kParametersMainStart));
+        fKnobsRight.reset(new KnobGroupWidget<>(this, parameters, kParametersMainStart, fKnobsLeft->getLastKnobId() + 1 - kParametersMainStart));
         widgets.push_back({ fKnobsRight.get(), Expanding });
 
         updateSize(true);
@@ -510,9 +510,9 @@ public:
     void addWidget() = delete;
 
 private:
-    std::shared_ptr<LibreAudioKnobGroupWidget<>> fKnobsLeft;
-    std::shared_ptr<LibreAudioWidget> fLogo;
-    std::shared_ptr<LibreAudioKnobGroupWidget<>> fKnobsRight;
+    std::shared_ptr<KnobGroupWidget<>> fKnobsLeft;
+    std::shared_ptr<Widget> fLogo;
+    std::shared_ptr<KnobGroupWidget<>> fKnobsRight;
 
     void updateSize(const bool updateChildren) final
     {
@@ -532,4 +532,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

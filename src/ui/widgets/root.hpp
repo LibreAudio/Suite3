@@ -7,28 +7,18 @@
 #include "las-resources.h"
 
 #include "../reference.hpp"
-#include "../reference/container.hpp"
+#include "../reference/root.hpp"
 
-START_NAMESPACE_DISTRHO
-
-// --------------------------------------------------------------------------------------------------------------------
-
-class LibreAudioRootWidgetInterface
-{
-public:
-    virtual ~LibreAudioRootWidgetInterface() = default;
-    virtual void updateScaleFactorAndSize() = 0;
-};
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioRootBaseWidget : public LibreAudioReferenceContainerTopLevelWidget<LibreAudioReference::Window, kVertical>,
-                                 public LibreAudioRootWidgetInterface
+class RootBaseWidget : public RootReferenceTopLevelWidget<Reference::Window, kVertical>
 {
-    using BaseWidget = LibreAudioReferenceContainerTopLevelWidget<LibreAudioReference::Window, kVertical>;
+    using BaseWidget = RootReferenceTopLevelWidget<Reference::Window, kVertical>;
 
 public:
-    LibreAudioRootBaseWidget(Window& window, LibreAudioUIWidgetInterface* const iface)
+    RootBaseWidget(Window& window, UIWidgetInterface* const iface)
         : BaseWidget(window, iface)
     {
         createFontFromMemory("regular",
@@ -40,35 +30,20 @@ public:
                              FONTS_SPLINESANSMONO_REGULAR_TTF_LEN,
                              false);
     }
-
-    void updateScaleFactorAndSize() final
-    {
-        const float scaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
-                                           static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
-        updateScaleFactor(scaleFactor);
-        updateSize(true);
-    }
-
-private:
-    void onResize(const ResizeEvent& ev) final
-    {
-        BaseWidget::onResize(ev);
-        updateScaleFactorAndSize();
-    }
 };
 
 template <class TopBar, class MainArea>
-class LibreAudioRootWidget : public LibreAudioRootBaseWidget
+class RootWidget : public RootBaseWidget
 {
 protected:
     std::shared_ptr<TopBar> fTopBar = addWidget<TopBar>();
     std::shared_ptr<MainArea> fMainArea = addWidget<MainArea, Expanding>();
 
 public:
-    LibreAudioRootWidget(Window& window, LibreAudioUIWidgetInterface* const iface)
-        : LibreAudioRootBaseWidget(window, iface) {}
+    RootWidget(Window& window, UIWidgetInterface* const iface)
+        : RootBaseWidget(window, iface) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

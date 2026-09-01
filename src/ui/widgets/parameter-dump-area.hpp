@@ -9,24 +9,24 @@
 #include "../widgets-todo/meter.hpp"
 #include "../widgets-todo/pill-toggle.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioParameterDumpStageWidget final : public LibreAudioReferenceContainerWidget<LibreAudioReference::Stage, kVertical>
+class ParameterDumpStageWidget final : public ReferenceContainerWidget<Reference::Stage, kVertical>
 {
-    using R = LibreAudioReference::Stage;
-    using BaseWidget = LibreAudioReferenceContainerWidget<R, kVertical>;
-    using KnobGroupWidget = LibreAudioKnobGroupWidget<LibreAudioSmallKnobWidget, 10>;
+    using R = Reference::Stage;
+    using BaseWidget = ReferenceContainerWidget<R, kVertical>;
+    using KnobGroupWidget10 = KnobGroupWidget<SmallKnobWidget, 10>;
 
-    std::shared_ptr<LibreAudioPillAreaWidget> fTopArea = addWidget<LibreAudioPillAreaWidget>();
-    std::list<std::shared_ptr<LibreAudioWidget>> fSpacers;
-    std::list<std::shared_ptr<KnobGroupWidget>> fKnobGroups;
+    std::shared_ptr<PillAreaWidget> fTopArea = addWidget<PillAreaWidget>();
+    std::list<std::shared_ptr<Widget>> fSpacers;
+    std::list<std::shared_ptr<KnobGroupWidget10>> fKnobGroups;
 
     const std::vector<FaustParameter>& kParameters = getFaustParameters();
 
 public:
-    explicit LibreAudioParameterDumpStageWidget(LibreAudioWidget* const parent)
+    explicit ParameterDumpStageWidget(Widget* const parent)
         : BaseWidget(parent)
     {
         fTopArea->setHeight(30 * fScaleFactor);
@@ -50,14 +50,14 @@ public:
 private:
     void addKnobGroup(const uint offset)
     {
-        std::shared_ptr<KnobGroupWidget> widget { new KnobGroupWidget(this, kParameters, kParametersMainStart, offset) };
+        std::shared_ptr<KnobGroupWidget10> widget { new KnobGroupWidget10(this, kParameters, kParametersMainStart, offset) };
         widgets.push_back({ widget.get(), Fixed });
         fKnobGroups.emplace_back(std::move(widget));
     }
 
     void addSpacer()
     {
-        std::shared_ptr<LibreAudioEmptyWidget> spacer { new LibreAudioEmptyWidget(this) };
+        std::shared_ptr<EmptyWidget> spacer { new EmptyWidget(this) };
         // spacer->setId(id);
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
@@ -79,11 +79,11 @@ private:
             rect(0, 0, w, h);
 
         {
-            fillColor(LibreAudioReference::Colors::bg0);
+            fillColor(Reference::Colors::bg0);
             fill();
         }
 
-        fillPaint(linearGradient(0, h - h * 0.4f, 0, h - h * 0.2f, LibreAudioReference::Colors::transparent, Color(0.f, 0.f, 0.f, 0.2f)));
+        fillPaint(linearGradient(0, h - h * 0.4f, 0, h - h * 0.2f, Reference::Colors::transparent, Color(0.f, 0.f, 0.f, 0.2f)));
         fill();
 
         if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
@@ -97,19 +97,19 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioParameterDumpArea : public LibreAudioReferenceContainerWidget<LibreAudioReference::MainArea>
+class ParameterDumpArea : public ReferenceContainerWidget<Reference::MainArea>
 {
-    std::shared_ptr<LibreAudioWidget> fMetersIn = addWidget<LibreAudioMeterWidget<Input>>();
-    std::shared_ptr<LibreAudioParameterDumpStageWidget> fStage = addWidget<LibreAudioParameterDumpStageWidget, Expanding>();
-    std::shared_ptr<LibreAudioWidget> fMetersOut = addWidget<LibreAudioMeterWidget<Output>>();
+    std::shared_ptr<Widget> fMetersIn = addWidget<MeterWidget<Input>>();
+    std::shared_ptr<ParameterDumpStageWidget> fStage = addWidget<ParameterDumpStageWidget, Expanding>();
+    std::shared_ptr<Widget> fMetersOut = addWidget<MeterWidget<Output>>();
 
 public:
-    LibreAudioParameterDumpArea(LibreAudioTopLevelWidget* const parent)
-        : LibreAudioReferenceContainerWidget(parent)
+    ParameterDumpArea(TopLevelWidget* const parent)
+        : ReferenceContainerWidget(parent)
     {
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

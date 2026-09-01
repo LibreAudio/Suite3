@@ -4,22 +4,22 @@
 
 #pragma once
 
-#include "../base/button.hpp"
+#include "button.hpp"
 #include "container.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
 template <class R>
-class LibreAudioReferenceButtonGroupWidget : public LibreAudioReferenceContainerWidget<R>,
-                                             private ButtonEventHandler::Callback,
-                                             private IdleCallback
+class ReferenceButtonGroupWidget : public ReferenceContainerWidget<R>,
+                                   private ButtonEventHandler::Callback,
+                                   private IdleCallback
 {
-    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
+    using BaseWidget = ReferenceContainerWidget<R>;
 
 public:
-    explicit LibreAudioReferenceButtonGroupWidget(LibreAudioWidget* const parent)
+    explicit ReferenceButtonGroupWidget(Widget* const parent)
         : BaseWidget(parent)
     {
         BaseWidget::addIdleCallback(this);
@@ -32,18 +32,18 @@ public:
     }
 
 protected:
-    template<class B, typename = std::enable_if_t<std::is_base_of_v<LibreAudioButtonWidget, B>>>
-    std::shared_ptr<LibreAudioButtonWidget> addButton(const WidgetIds id)
+    template<class B, typename = std::enable_if_t<std::is_base_of_v<ButtonBaseWidget, B>>>
+    std::shared_ptr<ButtonBaseWidget> addButton(const uint id, const char* const name)
     {
-        std::shared_ptr<LibreAudioButtonWidget> widget { new B(this) };
+        std::shared_ptr<ButtonBaseWidget> widget { new B(this) };
         widget->setCallback(this);
         widget->setCheckable(true);
         widget->setId(id);
-        widget->setName(WidgetIds2Str(id));
+        widget->setName(name);
         this->widgets.push_back({ widget.get(), Fixed });
         fWidgets.push_back(widget);
         if (widget->getSize().isNull())
-            d_stderr2("Error: addButton called but widget %u: '%s' does not have a known size", id, WidgetIds2Str(id));
+            d_stderr2("Error: addButton called but widget %u: '%s' does not have a known size", id, name);
         return widget;
     }
 
@@ -64,7 +64,7 @@ private:
 
     void idleCallback() final
     {
-        for (const std::shared_ptr<LibreAudioButtonWidget>& widget : fWidgets)
+        for (const std::shared_ptr<ButtonBaseWidget>& widget : fWidgets)
         {
             widget->setChecked(this->fInterface->isButtonChecked(widget->getId()), false);
             widget->setEnabled(this->fInterface->isButtonEnabled(widget->getId()));
@@ -76,7 +76,7 @@ private:
         DISTRHO_SAFE_ASSERT(updateChildren);
 
         // update children size first
-        LibreAudioWidget::updateSize(true);
+        BaseWidget::updateSize(true);
 
         // set width and height
         const uint border = d_roundToUnsignedInt(R::border * this->fScaleFactor);
@@ -89,35 +89,35 @@ private:
         {
             width += padding * (numWidgets - 1);
 
-            for (const std::shared_ptr<LibreAudioButtonWidget>& widget : fWidgets)
+            for (const std::shared_ptr<ButtonBaseWidget>& widget : fWidgets)
                 width += widget->getWidth();
 
             if (numWidgets == 1)
             {
                 DISTRHO_CUSTOM_SAFE_ASSERT(
                     "Single button must have corner = both",
-                    fWidgets.front()->getCorner() == LibreAudioButtonWidget::kCornerBoth);
+                    fWidgets.front()->getCorner() == kCornerBoth);
             }
             else
             {
                 DISTRHO_CUSTOM_SAFE_ASSERT(
                     "First button must have corner = left",
-                    fWidgets.front()->getCorner() == LibreAudioButtonWidget::kCornerLeft);
+                    fWidgets.front()->getCorner() == kCornerLeft);
                 DISTRHO_CUSTOM_SAFE_ASSERT(
                     "First button must have corner = right",
-                    fWidgets.back()->getCorner() == LibreAudioButtonWidget::kCornerRight);
+                    fWidgets.back()->getCorner() == kCornerRight);
             }
         }
 
-        LibreAudioWidget::setWidth(width);
+        LibreAudio::Widget::setWidth(width);
 
         // update everything else
         BaseWidget::updateSize(false);
     }
 
-    std::list<std::shared_ptr<LibreAudioButtonWidget>> fWidgets;
+    std::list<std::shared_ptr<ButtonBaseWidget>> fWidgets;
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

@@ -9,19 +9,19 @@
 
 #include "las-resources.h"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<LibreAudioButtonWidget::Corner corner, const uchar* imageData, uint imageDataSize, class R = LibreAudioReference::Widgets::Button>
-class LibreAudioImageButtonWidget : public LibreAudioReferenceButtonWidget<R, corner>
+template<Corner corner, const uchar* imageData, uint imageDataSize, class R = Reference::Widgets::Button>
+class ImageButtonWidget : public ReferenceButtonWidget<R, corner>
 {
-    using BaseWidget = LibreAudioReferenceButtonWidget<R, corner>;
+    using BaseWidget = ReferenceButtonWidget<R, corner>;
 
     static constexpr const int imageScale = 2;
 
 public:
-    explicit LibreAudioImageButtonWidget(LibreAudioWidget* const parent)
+    explicit ImageButtonWidget(Widget* const parent)
         : BaseWidget(parent)
     {
         updateSize(false);
@@ -85,16 +85,16 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<LibreAudioButtonWidget::Corner corner, const uchar* image1Data, uint imageData1Size, const uchar* image2Data, uint imageData2Size, class R = LibreAudioReference::Widgets::Button>
-class LibreAudioDualImageButtonWidget : public LibreAudioReferenceButtonWidget<R, corner>
+template<Corner corner, const uchar* image1Data, uint imageData1Size, const uchar* image2Data, uint imageData2Size, class R = Reference::Widgets::Button>
+class DualImageButtonWidget : public ReferenceButtonWidget<R, corner>
 {
-    using BaseWidget = LibreAudioReferenceButtonWidget<R, corner>;
+    using BaseWidget = ReferenceButtonWidget<R, corner>;
 
     static constexpr const int imageScale = 2;
 
 public:
-    explicit LibreAudioDualImageButtonWidget(LibreAudioWidget* const parent)
-        : LibreAudioReferenceButtonWidget<R, corner>(parent)
+    explicit DualImageButtonWidget(Widget* const parent)
+        : BaseWidget(parent)
     {
         BaseWidget::setCheckable(true);
 
@@ -158,13 +158,13 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<LibreAudioButtonWidget::Corner corner, class R = LibreAudioReference::Widgets::Button>
-class LibreAudioTextButtonWidget : public LibreAudioReferenceButtonWidget<R, corner>
+template<Corner corner, class R = Reference::Widgets::Button>
+class TextButtonWidget : public ReferenceButtonWidget<R, corner>
 {
-    using BaseWidget = LibreAudioReferenceButtonWidget<R, corner>;
+    using BaseWidget = ReferenceButtonWidget<R, corner>;
 
 public:
-    explicit LibreAudioTextButtonWidget(LibreAudioWidget* const parent, const char* const text)
+    explicit TextButtonWidget(Widget* const parent, const char* const text)
         : BaseWidget(parent),
           fText(text)
     {
@@ -205,26 +205,26 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<LibreAudioButtonWidget::Corner corner, const char _text[], class R = LibreAudioReference::Widgets::Button>
-class LibreAudioStaticTextButtonWidget : public LibreAudioTextButtonWidget<corner, R>
+template<Corner corner, const char _text[], class R = Reference::Widgets::Button>
+class StaticTextButtonWidget : public TextButtonWidget<corner, R>
 {
-    using BaseWidget = LibreAudioTextButtonWidget<corner, R>;
+    using BaseWidget = TextButtonWidget<corner, R>;
 
 public:
-    explicit LibreAudioStaticTextButtonWidget(LibreAudioWidget* const parent)
+    explicit StaticTextButtonWidget(Widget* const parent)
         : BaseWidget(parent, _text) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<LibreAudioButtonWidget::Corner corner>
-class LibreAudioBypassButtonWidget final : public LibreAudioImageButtonWidget<corner, IMAGES_POWER_PNG_DATA, IMAGES_POWER_PNG_LEN, LibreAudioReference::Widgets::Button〡Bypass>
+template<Corner corner>
+class BypassButtonWidget final : public ImageButtonWidget<corner, IMAGES_POWER_PNG_DATA, IMAGES_POWER_PNG_LEN, Reference::Widgets::Button〡Bypass>
 {
-    using R = LibreAudioReference::Widgets::Button〡Bypass;
-    using BaseWidget = LibreAudioImageButtonWidget<corner, IMAGES_POWER_PNG_DATA, IMAGES_POWER_PNG_LEN, R>;
+    using R = Reference::Widgets::Button〡Bypass;
+    using BaseWidget = ImageButtonWidget<corner, IMAGES_POWER_PNG_DATA, IMAGES_POWER_PNG_LEN, R>;
 
 public:
-    explicit LibreAudioBypassButtonWidget(LibreAudioWidget* const parent)
+    explicit BypassButtonWidget(Widget* const parent)
         : BaseWidget(parent)
     {
         BaseWidget::setCheckable(true);
@@ -244,4 +244,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

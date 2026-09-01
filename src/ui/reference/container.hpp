@@ -4,29 +4,76 @@
 
 #pragma once
 
-#include "base.hpp"
-#include "../base/container.hpp"
+#include "empty.hpp"
 
-START_NAMESPACE_DISTRHO
+#include "Layout.hpp"
+
+#include <memory>
+#include <type_traits>
+
+namespace LibreAudio {
+
+// --------------------------------------------------------------------------------------------------------------------
+// widget container, with an horizontal or vertical layout for child widgets
+
+template<class BaseWidget, Orientation orientation>
+class ContainerBaseWidgetOf : public BaseWidget,
+                              public std::conditional_t<orientation == kHorizontal, HorizontalLayout, VerticalLayout>
+{
+public:
+    using Layout = std::conditional_t<orientation == kHorizontal, HorizontalLayout, VerticalLayout>;
+
+    explicit ContainerBaseWidgetOf(Widget* const parent)
+        : BaseWidget(parent) {}
+
+    explicit ContainerBaseWidgetOf(TopLevelWidget* const parent)
+        : BaseWidget(parent) {}
+
+    explicit ContainerBaseWidgetOf(Window& windowToMapTo, UIWidgetInterface* const iface)
+        : BaseWidget(windowToMapTo, iface) {}
+
+protected:
+    template<class W = EmptyWidget>
+    std::shared_ptr<W> addSpacer()
+    {
+        std::shared_ptr<W> widget { new W(this) };
+        Layout::widgets.push_back({ widget.get(), Expanding });
+        return widget;
+    }
+
+    template<class W,
+             SizeHint sizeHint = Fixed,
+             typename = std::enable_if_t<std::is_base_of_v<Widget, W>>>
+    std::shared_ptr<W> addWidget()
+    {
+        std::shared_ptr<W> widget { new W(this) };
+        Layout::widgets.push_back({ widget.get(), sizeHint });
+        if (sizeHint == Fixed && widget->getSize().isNull())
+            d_stderr2("Error: addWidget called with Fixed sizeHint but widget %u: '%s' does not have a known size",
+                      widget->getId(),
+                      widget->getName());
+        return widget;
+    }
+};
 
 // --------------------------------------------------------------------------------------------------------------------
 // reference container base widget class
 
-template<class W, class R, LibreAudioOrientation orientation>
-class LibreAudioReferenceContainerBaseWidget : public LibreAudioContainerBaseWidget<W, orientation>
+template<class W, class R, Orientation orientation>
+class ReferenceContainerBaseWidgetOf : public ContainerBaseWidgetOf<W, orientation>
 {
 public:
-    using BaseWidget = LibreAudioContainerBaseWidget<W, orientation>;
+    using BaseWidget = ContainerBaseWidgetOf<W, orientation>;
     using Layout = typename BaseWidget::Layout;
     using ResizeEvent = typename BaseWidget::ResizeEvent;
 
-    explicit LibreAudioReferenceContainerBaseWidget(LibreAudioWidget* const parent)
+    explicit ReferenceContainerBaseWidgetOf(Widget* const parent)
         : BaseWidget(parent) {}
 
-    explicit LibreAudioReferenceContainerBaseWidget(LibreAudioTopLevelWidget* const parent)
+    explicit ReferenceContainerBaseWidgetOf(TopLevelWidget* const parent)
         : BaseWidget(parent) {}
 
-    explicit LibreAudioReferenceContainerBaseWidget(Window& windowToMapTo, LibreAudioUIWidgetInterface* const iface)
+    explicit ReferenceContainerBaseWidgetOf(Window& windowToMapTo, UIWidgetInterface* const iface)
         : BaseWidget(windowToMapTo, iface) {}
 
 protected:
@@ -46,7 +93,7 @@ protected:
 
         BaseWidget::updateSize(updateChildren);
 
-        if constexpr (std::is_same_v<W, LibreAudioTopLevelWidget>)
+        if constexpr (std::is_same_v<W, TopLevelWidget>)
         {
             Layout::align(0, 0, width, height, padding, border + margin);
         }
@@ -67,18 +114,18 @@ protected:
 // --------------------------------------------------------------------------------------------------------------------
 // reference container (sub) widget class
 
-template<class R, LibreAudioOrientation orientation = kHorizontal>
-class LibreAudioReferenceContainerWidget : public LibreAudioReferenceContainerBaseWidget<LibreAudioReferenceWidget<R>, R, orientation>
+template<class R, Orientation orientation = kHorizontal>
+class ReferenceContainerWidget : public ReferenceContainerBaseWidgetOf<ReferenceWidget<R>, R, orientation>
 {
 public:
-    using BaseWidget = LibreAudioReferenceContainerBaseWidget<LibreAudioReferenceWidget<R>, R, orientation>;
+    using BaseWidget = ReferenceContainerBaseWidgetOf<ReferenceWidget<R>, R, orientation>;
     using Layout = typename BaseWidget::Layout;
     using PositionChangedEvent = typename BaseWidget::PositionChangedEvent;
 
-    explicit LibreAudioReferenceContainerWidget(LibreAudioWidget* const parent)
+    explicit ReferenceContainerWidget(Widget* const parent)
         : BaseWidget(parent) {}
 
-    explicit LibreAudioReferenceContainerWidget(LibreAudioTopLevelWidget* const parent)
+    explicit ReferenceContainerWidget(TopLevelWidget* const parent)
         : BaseWidget(parent) {}
 
 // protected:
@@ -98,17 +145,16 @@ public:
 // --------------------------------------------------------------------------------------------------------------------
 // reference container top-level widget class
 
-template<class R, LibreAudioOrientation orientation>
-class LibreAudioReferenceContainerTopLevelWidget : public LibreAudioReferenceContainerBaseWidget<LibreAudioTopLevelWidget, R, orientation>
+template<class R, Orientation orientation>
+class ReferenceContainerTopLevelWidget : public ReferenceContainerBaseWidgetOf<TopLevelWidget, R, orientation>
 {
 public:
-    using BaseWidget = LibreAudioReferenceContainerBaseWidget<LibreAudioTopLevelWidget, R, orientation>;
+    using BaseWidget = ReferenceContainerBaseWidgetOf<TopLevelWidget, R, orientation>;
 
-    explicit LibreAudioReferenceContainerTopLevelWidget(Window& windowToMapTo, LibreAudioUIWidgetInterface* const iface)
+    explicit ReferenceContainerTopLevelWidget(Window& windowToMapTo, UIWidgetInterface* const iface)
         : BaseWidget(windowToMapTo, iface) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
-
+} /* namespace LibreAudio */

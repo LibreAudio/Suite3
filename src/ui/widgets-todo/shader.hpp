@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../base/interface.hpp"
+#include "../reference/interface.hpp"
 
 #include "Application.hpp"
 #include "SubWidget.hpp"
@@ -27,14 +27,14 @@ __declspec(dllimport) PROC WINAPI wglGetProcAddress(LPCSTR);
 }
 #endif
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioShaderBaseWidget : public SubWidget
+class ShaderBaseWidget : public SubWidget
 {
 public:
-    explicit LibreAudioShaderBaseWidget(TopLevelWidget* const parent, LibreAudioUIWidgetInterface* const iface)
+    explicit ShaderBaseWidget(DGL_NAMESPACE::TopLevelWidget* const parent, UIWidgetInterface* const iface)
         : SubWidget(parent),
           fInterface(iface) {}
 
@@ -47,19 +47,19 @@ public:
     }
 
 protected:
-    LibreAudioUIWidgetInterface* const fInterface;
+    UIWidgetInterface* const fInterface;
     float fBorderRadius = 0.f;
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
 template<const char src[], uint size>
-class LibreAudioBackgroundShaderWidget final : public LibreAudioShaderBaseWidget,
-                                               public IdleCallback
+class BackgroundShaderWidget final : public ShaderBaseWidget,
+                                     public IdleCallback
 {
 public:
-    explicit LibreAudioBackgroundShaderWidget(TopLevelWidget* const parent, LibreAudioUIWidgetInterface* const iface)
-        : LibreAudioShaderBaseWidget(parent, iface),
+    explicit BackgroundShaderWidget(DGL_NAMESPACE::TopLevelWidget* const parent, UIWidgetInterface* const iface)
+        : ShaderBaseWidget(parent, iface),
           fParent(parent),
           fScaleFactor(parent->getScaleFactor()),
           fStartTime(parent->getApp().getTime())
@@ -233,7 +233,7 @@ public:
         fMouseY.setTimeConstant(0.5);
     }
 
-    ~LibreAudioBackgroundShaderWidget() final
+    ~BackgroundShaderWidget() final
     {
         fParent->removeIdleCallback(this);
 
@@ -252,7 +252,7 @@ private:
 
     void onDisplay() final
     {
-        const TopLevelWidget* const tlw = getTopLevelWidget();
+        const DGL_NAMESPACE::TopLevelWidget* const tlw = getTopLevelWidget();
 
         const uint width = getWidth();
         const uint height = getHeight();
@@ -378,7 +378,7 @@ private:
     static constexpr const float kLevelFastSeconds = 1.5f;
     static constexpr const float kLevelSilenceDb = -70.0f;
 
-    TopLevelWidget* const fParent;
+    DGL_NAMESPACE::TopLevelWidget* const fParent;
     const float fScaleFactor;
     const double fStartTime;
     bool fFirstResize = true;
@@ -457,4 +457,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

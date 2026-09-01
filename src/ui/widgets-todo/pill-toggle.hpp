@@ -6,26 +6,23 @@
 
 #include "button.hpp"
 #include "../reference/container.hpp"
-#include "../base/interface.hpp"
+#include "../reference/interface.hpp"
 
 #include "LibreAudioParameters.hpp"
 #include "FaustParameters.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioBackgroundPillToggleCellWidget : public LibreAudioTextButtonWidget<LibreAudioButtonWidget::kCornerBoth,
-                                                                                   LibreAudioReference::Widgets::PillToggle::Cell>
+class BackgroundPillToggleCellWidget : public TextButtonWidget<kCornerBoth,
+                                                                         Reference::Widgets::PillToggle::Cell>
 {
-    using R = LibreAudioReference::Widgets::PillToggle::Cell;
-    using BaseWidget = LibreAudioTextButtonWidget<LibreAudioButtonWidget::kCornerBoth,
-                                                  LibreAudioReference::Widgets::PillToggle::Cell>;
+    using R = Reference::Widgets::PillToggle::Cell;
+    using BaseWidget = TextButtonWidget<kCornerBoth, Reference::Widgets::PillToggle::Cell>;
 
 public:
-    explicit LibreAudioBackgroundPillToggleCellWidget(LibreAudioWidget* const parent,
-                                                      const uint id,
-                                                      const char* const label)
+    explicit BackgroundPillToggleCellWidget(Widget* const parent, const uint id, const char* const label)
         : BaseWidget(parent, label)
     {
         BaseWidget::setCheckable(true);
@@ -50,17 +47,17 @@ protected:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioPillToggleWidget : public LibreAudioReferenceContainerWidget<LibreAudioReference::Widgets::PillToggle>,
+class PillToggleWidget : public ReferenceContainerWidget<Reference::Widgets::PillToggle>,
                                    private ButtonEventHandler::Callback,
                                    private IdleCallback
 {
-    using R = LibreAudioReference::Widgets::PillToggle;
-    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
+    using R = Reference::Widgets::PillToggle;
+    using BaseWidget = ReferenceContainerWidget<R>;
 
-    std::list<std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>> fCells;
+    std::list<std::unique_ptr<BackgroundPillToggleCellWidget>> fCells;
 
 public:
-    explicit LibreAudioPillToggleWidget(LibreAudioWidget* const parent,
+    explicit PillToggleWidget(Widget* const parent,
                                         const FaustParameter& parameter,
                                         const uint32_t id)
         : BaseWidget(parent)
@@ -71,8 +68,8 @@ public:
 
         for (uint i = 0; i < parameter.scalePointCount; ++i)
         {
-            std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget> widget {
-                new LibreAudioBackgroundPillToggleCellWidget(
+            std::unique_ptr<BackgroundPillToggleCellWidget> widget {
+                new BackgroundPillToggleCellWidget(
                     this, parameter.scalePoints[i].value, parameter.scalePoints[i].label)
             };
             widget->setCallback(this);
@@ -91,7 +88,7 @@ private:
 
     void buttonClicked(SubWidget* const widget, int) final
     {
-        LibreAudioBackgroundPillToggleCellWidget* const button = static_cast<LibreAudioBackgroundPillToggleCellWidget*>(widget);
+        BackgroundPillToggleCellWidget* const button = static_cast<BackgroundPillToggleCellWidget*>(widget);
 
         if (! button->isChecked())
         {
@@ -99,7 +96,7 @@ private:
             return;
         }
 
-        for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
+        for (const std::unique_ptr<BackgroundPillToggleCellWidget>& cell : fCells)
             if (cell.get() != button)
                 cell->setChecked(false, false);
 
@@ -113,7 +110,7 @@ private:
     {
         const uint value = d_roundToUnsignedInt(fInterface->getParameterValue(getId()));
 
-        for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
+        for (const std::unique_ptr<BackgroundPillToggleCellWidget>& cell : fCells)
             cell->setChecked(cell->getId() == value, false);
     }
 
@@ -122,7 +119,7 @@ private:
         DISTRHO_SAFE_ASSERT(updateChildren);
 
         // update children size first
-        LibreAudioWidget::updateSize(true);
+        Widget::updateSize(true);
 
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
@@ -131,10 +128,10 @@ private:
         // make all cells have the same width
         uint cellWidth = 0;
 
-        for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
+        for (const std::unique_ptr<BackgroundPillToggleCellWidget>& cell : fCells)
             cellWidth = std::max(cellWidth, cell->getWidth());
 
-        for (const std::unique_ptr<LibreAudioBackgroundPillToggleCellWidget>& cell : fCells)
+        for (const std::unique_ptr<BackgroundPillToggleCellWidget>& cell : fCells)
             cell->setWidth(cellWidth);
 
         // set width and height
@@ -154,7 +151,7 @@ private:
         else
             height += d_roundToUnsignedInt(fScaleFactor);
 
-        LibreAudioWidget::setSize(width, height);
+        Widget::setSize(width, height);
 
         // update everything else
         BaseWidget::updateSize(false);
@@ -163,18 +160,18 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioPillAreaWidget : public LibreAudioReferenceContainerWidget<LibreAudioReference::Widgets::PillArea>
+class PillAreaWidget : public ReferenceContainerWidget<Reference::Widgets::PillArea>
 {
-    using R = LibreAudioReference::Widgets::PillArea;
-    using BaseWidget = LibreAudioReferenceContainerWidget<R>;
+    using R = Reference::Widgets::PillArea;
+    using BaseWidget = ReferenceContainerWidget<R>;
 
     static constexpr const uint kMaxNumToggles = 2;
 
-    std::list<std::unique_ptr<LibreAudioPillToggleWidget>> fToggles;
-    std::list<std::unique_ptr<LibreAudioWidget>> fSpacers;
+    std::list<std::unique_ptr<PillToggleWidget>> fToggles;
+    std::list<std::unique_ptr<Widget>> fSpacers;
 
 public:
-    explicit LibreAudioPillAreaWidget(LibreAudioWidget* const parent)
+    explicit PillAreaWidget(Widget* const parent)
         : BaseWidget(parent)
     {
         const std::vector<FaustParameter>& parameters = getFaustParameters();
@@ -200,7 +197,7 @@ public:
                 continue;
             }
             d_stdout("using pill for parameter %s", parameter.label);
-            std::unique_ptr<LibreAudioPillToggleWidget> widget { new LibreAudioPillToggleWidget(this, parameter, kParametersMainStart + i) };
+            std::unique_ptr<PillToggleWidget> widget { new PillToggleWidget(this, parameter, kParametersMainStart + i) };
             widgets.push_back({ widget.get(), Fixed });
             fToggles.emplace_back(std::move(widget));
 
@@ -220,7 +217,7 @@ public:
 private:
     void addSpacer()
     {
-        std::unique_ptr<LibreAudioWidget> spacer { new LibreAudioEmptyWidget(this) };
+        std::unique_ptr<Widget> spacer { new EmptyWidget(this) };
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
     }
@@ -240,7 +237,7 @@ private:
         else
             pillHeight = d_roundToUnsignedInt(fScaleFactor);
 
-        LibreAudioWidget::setHeight((border + margin) * 2 + pillHeight);
+        Widget::setHeight((border + margin) * 2 + pillHeight);
 
         BaseWidget::updateSize(updateChildren);
     }
@@ -248,4 +245,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

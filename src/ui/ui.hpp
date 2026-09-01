@@ -8,20 +8,28 @@
 #pragma once
 
 #include "NanoVG.hpp"
-#include "base/interface.hpp"
+#include "reference/interface.hpp"
+
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace LibreAudio {
+
+class UIWidget : public DGL_NAMESPACE::NanoTopLevelWidget,
+                 public UIWidgetInterface
+{
+public:
+    explicit UIWidget(Window& window)
+        : DGL_NAMESPACE::NanoTopLevelWidget(window) {}
+};
+
+}
+
+// --------------------------------------------------------------------------------------------------------------------
 
 START_NAMESPACE_DISTRHO
 
-// --------------------------------------------------------------------------------------------------------------------
-
-class LibreAudioUIWidget : public NanoTopLevelWidget,
-                           public LibreAudioUIWidgetInterface
-{
-public:
-    explicit LibreAudioUIWidget(Window& window)
-        : NanoTopLevelWidget(window) {}
-};
-
-// --------------------------------------------------------------------------------------------------------------------
+using LibreAudioUIWidget = LibreAudio::UIWidget;
 
 END_NAMESPACE_DISTRHO
+
+// --------------------------------------------------------------------------------------------------------------------

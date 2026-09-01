@@ -10,7 +10,7 @@
 #include "common_output-parameters.hpp"
 
 #include "nlohmann/json.hpp"
-#include "ui/base/base.hpp"
+#include "ui/widgets/base.hpp"
 
 #if defined(__GNUC__) && !defined(__clang__)
 #define constexprstr constexpr
@@ -56,7 +56,7 @@ LibreAudioBaseUI::LibreAudioBaseUI()
     std::memcpy(fParameterValuesWhenActivated, fParameterValues, sizeof(float) * kParameterCount);
 
     // set minimum size
-    const double scaleFactor = getScaleFactor();
+    const double scaleFactor = TopLevelWidget::getScaleFactor();
     setGeometryConstraints(DISTRHO_UI_DEFAULT_WIDTH * scaleFactor, DISTRHO_UI_DEFAULT_HEIGHT * scaleFactor);
 }
 
@@ -143,8 +143,10 @@ void LibreAudioBaseUI::uiIdle()
 // --------------------------------------------------------------------------------------------------------------------
 // private data
 
-void LibreAudioBaseUI::pageButtonClicked(const Page page)
+void LibreAudioBaseUI::pageButtonClicked(const LibreAudio::Page page)
 {
+    using namespace LibreAudio;
+
     if (fPage == page)
     {
         if (page == kPageSettings)
@@ -168,6 +170,8 @@ void LibreAudioBaseUI::pageButtonClicked(const Page page)
 
 void LibreAudioBaseUI::snapshotButtonClicked(const uint32_t button)
 {
+    using namespace LibreAudio;
+
     if (button == kWidgetSnapshotCopy)
     {
         fCopyingSnapshot = !fCopyingSnapshot;
@@ -226,6 +230,8 @@ void LibreAudioBaseUI::parameterChanged(const uint32_t index, const float value)
 
 void LibreAudioBaseUI::stateChanged(const char* const key, const char* const value)
 {
+    using namespace LibreAudio;
+
     if (std::strcmp(key, kStateKeys[kStateMode]) == 0)
     {
         DISTRHO_SAFE_ASSERT_RETURN(value[0] != '\0',);
@@ -448,6 +454,8 @@ void LibreAudioBaseUI::parameterControlModified(const uint32_t index, const floa
 
 void LibreAudioBaseUI::buttonClicked(const uint32_t id)
 {
+    using namespace LibreAudio;
+
     switch (static_cast<WidgetIds>(id))
     {
     case kWidgetAbout:
@@ -486,6 +494,8 @@ void LibreAudioBaseUI::buttonClicked(const uint32_t id)
 
 bool LibreAudioBaseUI::isButtonEnabled(const uint32_t id) const noexcept
 {
+    using namespace LibreAudio;
+
     switch (static_cast<WidgetIds>(id))
     {
     case kWidgetAbout:
@@ -515,6 +525,8 @@ bool LibreAudioBaseUI::isButtonEnabled(const uint32_t id) const noexcept
 
 bool LibreAudioBaseUI::isButtonChecked(const uint32_t id) const noexcept
 {
+    using namespace LibreAudio;
+
     switch (static_cast<WidgetIds>(id))
     {
     case kWidgetAbout:

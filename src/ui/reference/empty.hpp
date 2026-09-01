@@ -4,42 +4,28 @@
 
 #pragma once
 
-#include "../base/empty.hpp"
+#include "base.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
-// reference empty widget class, useful for making space and alignment of other widgets
+// empty widget class, useful for making space and alignment of other widgets
 
-template<class R>
-class LibreAudioReferenceEmptyWidget final : public LibreAudioWidget
+class EmptyWidget final : public Widget
 {
 public:
-    explicit LibreAudioReferenceEmptyWidget(LibreAudioWidget* const parent)
-        : LibreAudioWidget(parent)
-    {
-        updateSize(false);
-    }
+    explicit EmptyWidget(Widget* const parent)
+        : Widget(parent) {}
 
-    explicit LibreAudioReferenceEmptyWidget(LibreAudioTopLevelWidget* const parent)
-        : LibreAudioWidget(parent)
-    {
-        updateSize(false);
-    }
+    explicit EmptyWidget(TopLevelWidget* const parent)
+        : Widget(parent) {}
 
 private:
-    void updateSize(const bool updateChildren) final
+    void onNanoDisplay() final
     {
-        if constexpr (R::width != 0)
-            setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
-
-        if constexpr (R::height != 0)
-            setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
-
-        LibreAudioWidget::updateSize(updateChildren);
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

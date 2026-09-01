@@ -4,23 +4,23 @@
 
 #pragma once
 
-#include "../base/base.hpp"
+#include "base.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
 template<const float rgba[4]>
-class LibreAudioColorWidget : public LibreAudioWidget
+class ColorWidget final : public Widget
 {
     static constexpr const Color kColor = { rgba[0], rgba[1], rgba[2], rgba[3] };
 
 public:
-    explicit LibreAudioColorWidget(LibreAudioWidget* const parent)
-        : LibreAudioWidget(parent) {}
+    explicit ColorWidget(Widget* const parent)
+        : Widget(parent) {}
 
-    explicit LibreAudioColorWidget(LibreAudioTopLevelWidget* const parent)
-        : LibreAudioWidget(parent) {}
+    explicit ColorWidget(TopLevelWidget* const parent)
+        : Widget(parent) {}
 
 protected:
     void onNanoDisplay() final
@@ -35,4 +35,4 @@ protected:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */

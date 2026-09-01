@@ -11,20 +11,20 @@
 
 #include "FaustParameters.hpp"
 
-START_NAMESPACE_DISTRHO
+namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class LibreAudioKnobWidget : public LibreAudioWidget,
-                             public KnobEventHandler,
-                             protected IdleCallback,
-                             private KnobEventHandler::Callback
+class KnobWidget : public Widget,
+                   public KnobEventHandler,
+                   protected IdleCallback,
+                   private KnobEventHandler::Callback
 {
     static constexpr const float kMouseDeceleration = 500.f;
 
 public:
-    explicit LibreAudioKnobWidget(LibreAudioWidget* const parent, const FaustParameter& parameter, const uint32_t id)
-        : LibreAudioWidget(parent),
+    explicit KnobWidget(Widget* const parent, const FaustParameter& parameter, const uint32_t id)
+        : Widget(parent),
           KnobEventHandler(this),
           fParameter(parameter)
     {
@@ -80,24 +80,24 @@ private:
     {
         if (mouseEvent(ev, fScaleFactor))
             return true;
-        return LibreAudioWidget::onMouse(ev);
+        return Widget::onMouse(ev);
     }
 
     bool onMotion(const Widget::MotionEvent& ev) final
     {
         if (motionEvent(ev, fScaleFactor))
             return true;
-        return LibreAudioWidget::onMotion(ev);
+        return Widget::onMotion(ev);
     }
 
     bool onScroll(const Widget::ScrollEvent& ev) final
     {
         if (scrollEvent(ev))
             return true;
-        return LibreAudioWidget::onScroll(ev);
+        return Widget::onScroll(ev);
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-END_NAMESPACE_DISTRHO
+} /* namespace LibreAudio */
