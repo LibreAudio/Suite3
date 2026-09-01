@@ -54,6 +54,14 @@ import("stdfaust.lib");
 //   All three modes comb *subtractively* — see the note at bbdEngine for why
 //   that is what Clean does and why the other two invert their wet legs to
 //   match it.
+//
+// Sync applies to all three and to nothing else in the file. Each mode keeps
+// its own Rate knob and gains its own Division menu beside it; the Sync switch
+// decides which of the two is read, and BPM is shared, since there is only
+// ever one tempo. A division sets the LFO *period* rather than a delay time —
+// one full sweep per note value — so at 120 BPM the 1/1 default is a two
+// second sweep, which is exactly where Clean's free Speed default already sat.
+// See syncRate for the arithmetic and for what is and is not clamped.
 
 /* Grey-out list — which controls actually reach the output, per mode.
    Verified by measurement, not by reading: '.' means the rendered output is
@@ -69,49 +77,69 @@ import("stdfaust.lib");
 
                                 Clean    BBD   Barber
     Mode [0]
+      [0]  mode                   o       o       o
+      [1]  sync                   o       o       o
+      [2]  bpm                    t       t       t     requires sync:1
     Clean [0]
       [01] delay                  o       .       .
       [02] delay_offset           o       .       .
-      [03] speed                  o       .       .
-      [04] depth                  o       .       .
-      [05] feedback               o       .       .
+      [03] speed                  f       .       .
+      [04] speed_div              t       .       .
+      [05] depth                  o       .       .
+      [06] feedback               o       .       .
     BBD [1]
       [11] bbd_manual             .       o       .
       [12] bbd_width              .       o       .
-      [13] bbd_rate               .       o       .
-      [14] bbd_regen              .       o       .
-      [15] bbd_color              .       o       .
-      [16] bbd_drive              .       o       .
+      [13] bbd_rate               .       f       .
+      [14] bbd_div                .       t       .
+      [15] bbd_regen              .       o       .
+      [16] bbd_color              .       o       .
+      [17] bbd_drive              .       o       .
     Barberpole [2]
       [21] bp_low                 .       .       o
       [22] bp_span                .       .       o
-      [23] bp_rate                .       .       o
-      [24] bp_direction           .       .       o
-      [25] bp_resonance           .       .       o
+      [23] bp_rate                .       .       f
+      [24] bp_div                 .       .       t
+      [25] bp_direction           .       .       o
+      [26] bp_resonance           .       .       o
     Stage Bottom Right [1] — global
       [31] hp_freq                o       o       o
       [32] lp_freq                o       o       o
       [33] stereo_width           o       o       o
       [34] drywet                 o       o       o
 
+   f  live only with Sync on Free; in Tempo the Division beneath it supplies
+      the rate instead and the Rate knob does not reach the output.
+   t  the mirror image: live only with Sync on Tempo.
+
    Each mode's section is dead in the other two: the select3 after the three
    engines discards the unselected branches whole. The four global rows are
    live everywhere, because the tone filters, Width and the mixer sit after
    that select rather than inside any one engine.
 
+   Only bpm declares its Sync condition. The six Rate and Division rows each
+   have two — the mode, and the Sync state — and FaustParameter carries one
+   requirement apiece (FaustParameters.hpp), so they declare the mode, which is
+   the one that decides whether the control is on screen at all, and stay lit
+   but inert in the wrong Sync state. delay.dsp's Div R makes the same trade
+   for the same reason.
+
    Two grey-out rules that are not the mode:
 
    Depth at 0 kills the whole Clean delay section. pf.flanger_mono multiplies
       its delayed leg by ±depth before the sum, so at Depth 0 delay,
-      delay_offset, speed and feedback are all measurably inert — the delay
-      line cannot reach the output at all, and feedback has nothing to feed
-      back into it however hard it is driven. Clean at Depth 0 is a highpass, a
-      lowpass and a width control on the dry signal.
+      delay_offset, speed, speed_div and feedback are all measurably inert —
+      the delay line cannot reach the output at all, and feedback has nothing
+      to feed back into it however hard it is driven. Clean at Depth 0 is a
+      highpass, a lowpass and a width control on the dry signal. bpm goes with
+      them when Clean is the selected mode, being nothing but a route into
+      speed_div.
 
-   Sweep Width at 0 kills bbd_rate, and nothing else. The LFO still runs, it
-      just has nothing to scale, so the BBD comb stands still at whatever
-      Manual asks for — the Electric Mistress "filter matrix" sound, a static
-      comb you tune by hand. Manual, Regen, Color and Drive all stay live.
+   Sweep Width at 0 kills bbd_rate and bbd_div, and nothing else. The LFO still
+      runs, it just has nothing to scale, so the BBD comb stands still at
+      whatever Manual asks for — the Electric Mistress "filter matrix" sound, a
+      static comb you tune by hand. Manual, Regen, Color and Drive all stay
+      live, and bpm goes dead alongside the two rate controls it feeds.
 
    Barberpole has no such rule — every one of its five controls was measured
       live at every setting of the other four. Rate at its minimum comes
@@ -149,13 +177,91 @@ uiBarber(x)= uiBottomLeft(hgroup("[2]Barberpole", x));
 
 mode = uiTop(nentry("[0]Mode[symbol:mode][style:radio{'Clean':0;'BBD':1;'Barberpole':2}]", 0, 0, 2, 1)) : int;
 
+//======================= Tempo sync =======================
+// Sync and BPM sit with Mode rather than inside any one engine, because they
+// are the one thing the three engines share: a tempo is a property of the
+// session, not of the flanger that happens to be selected. The Division that
+// reads them stays down in each mode's own group, next to the Rate knob it
+// replaces, since which note value suits a sweep is very much a property of
+// the engine doing the sweeping.
+
+sync = uiTop(nentry("[1]Sync[symbol:sync][style:radio{'Free':0;'Tempo':1}]", 0, 0, 1, 1)) : int;
+
+// Set by hand until the host-tempo plumbing exists. When it lands, the host
+// BPM replaces this knob's value and nothing else here changes: everything
+// downstream reads `bpm` as a plain signal.
+//
+// Deliberately not smoothed, as in delay.dsp: the three LFOs take a frequency
+// and integrate it, so a step in bpm is a step in the rate of a phase that is
+// already continuous — there is nothing to click. Smoothing it would only make
+// a tempo change arrive late, and the free Rate knobs beside it are unsmoothed
+// for the same reason.
+bpm = uiTop(hslider("[2]BPM[style:knob][unit:bpm][symbol:bpm][label:BPM][accentcolor:03][requires:sync:1]
+      [tooltip: Tempo for the note divisions, shared by all three modes. Set by hand -- the host tempo is not read yet]",
+      120, 20, 300, 0.01));
+
+// Sixteen divisions relative to a quarter note, ordered long to short with the
+// dotted value ahead of its straight partner and the triplet behind it, so
+// turning the knob one way always speeds the sweep up. That ordering is what
+// makes the menu read as one continuous scale rather than a grouped list.
+//
+// The long end reaches eight bars of 4/4 where delay.dsp's otherwise identical
+// table stops at one, and that difference is the whole reason this is a
+// separate table rather than a shared one: a delay time of eight bars is an
+// echo nobody asked for, whereas a flanger sweep of eight bars is the slow
+// drift these three engines are usually set to. Clean's free Speed default of 0.5 Hz is
+// already a two second sweep, and the barberpole's 0.25 Hz is four.
+NDIV = 16;
+divTable = (32.0, 16.0, 8.0, 4.0, 3.0, 2.0, 4.0/3.0, 1.5,
+            1.0, 2.0/3.0, 0.75, 0.5, 1.0/3.0, 0.375, 0.25, 1.0/6.0);
+
+// The menu string is repeated verbatim on each of the three Division controls
+// below. Faust has no way to name a label fragment and reuse it -- metadata is
+// literal text -- so the alternative to three copies is not one copy, it is a
+// generated file.
+
+// Multiplier for a division index, as a signal rather than a compile-time
+// lookup: ba.take needs a constant index and this one comes from a knob.
+divMult(idx) = divTable : ba.selectn(NDIV, idx);
+
+// The two sources of an LFO rate, picked by Sync. One cycle per note value, so
+// the division is a period and the rate is its reciprocal; bpm is floored well
+// above zero by its own range and divMult is never zero, so the division is
+// safe as written.
+//
+// Not clamped at the top, and that is a choice rather than an oversight. The
+// three free Rate knobs stop at 5, 8 and 4 Hz, and short divisions at fast
+// tempi walk straight past all three — 1/16T at 300 BPM is 30 Hz, and even
+// 1/16 at 120 BPM is 8 Hz, already above what Clean's knob will reach. Pinning
+// the synced rate back inside each knob's range would mean a division that
+// silently stops dividing, which is worse than a sweep that is faster than the
+// knob could ask for: 30 Hz is deep into audio-rate modulation but it is
+// perfectly stable in all three engines, none of which has a loop whose gain
+// depends on how fast the delay time moves.
+//
+// There is a floor, at the 0.01 Hz Clean's Speed knob already allows. Eight
+// bars at 20 BPM is 0.0104 Hz and the floor never bites there; it exists
+// because os.oscrs is a recursive resonator whose coefficient rounds to
+// exactly 1.0 in single precision somewhere below that, and a resonator with a
+// coefficient of 1.0 has stopped being an oscillator.
+syncRate(freeHz, idx) = select2(sync, freeHz, max(0.01, bpm / (60.0 * divMult(idx))));
+
 //======================= Clean controls =======================
 
 delayMs  = uiClean(hslider("[01]Flange Delay[style:knob][unit:ms][symbol:delay][label:Delay][requires:mode:0][accentcolor:02][bracket:DELAY]", 10, 0, 20, 0.001)) : si.smoo;
 offsetMs = uiClean(hslider("[02]Delay Offset[style:knob][unit:ms][symbol:delay_offset][label:Offset][requires:mode:0][accentcolor:02][bracket:DELAY]", 1, 0, 20, 0.001)) : si.smoo;
-speed    = uiClean(hslider("[03]Speed[style:knob][unit:Hz][symbol:speed][label:Speed][requires:mode:0][accentcolor:03][bracket:LFO]", 0.5, 0.01, 5, 0.0001));
-depth    = uiClean(hslider("[04]Depth[style:knob][symbol:depth][label:Depth][requires:mode:0][accentcolor:03]", 0.5, 0, 1, 0.001)) : si.smoo;
-fb       = uiClean(hslider("[05]Feedback[style:knob][symbol:feedback][label:Feedback][requires:mode:0][accentcolor:05]", 0, -0.999, 0.999, 0.001)) : si.smoo;
+speedFree = uiClean(hslider("[03]Speed[style:knob][unit:Hz][symbol:speed][label:Speed][requires:mode:0][accentcolor:03][bracket:LFO]
+      [tooltip: Sweep rate in Hz. In Tempo sync this is replaced by Division]", 0.5, 0.01, 5, 0.0001));
+
+// 1/1 at 120 BPM is a two second sweep, which is where the free Speed default
+// above already sits -- switching Sync at both defaults changes nothing.
+speedDiv = uiClean(nentry("[04]Speed Division[style:menu{'8/1':0;'4/1':1;'2/1':2;'1/1':3;'1/2.':4;'1/2':5;'1/2T':6;'1/4.':7;'1/4':8;'1/4T':9;'1/8.':10;'1/8':11;'1/8T':12;'1/16.':13;'1/16':14;'1/16T':15}][symbol:speed_div][label:Division][requires:mode:0][accentcolor:03][bracket:LFO]
+      [tooltip: Sweep length as a note value, one full sweep per division. A dot lengthens by half, a T shortens to two thirds]", 3, 0, NDIV - 1, 1)) : int;
+
+speed    = syncRate(speedFree, speedDiv);
+
+depth    = uiClean(hslider("[05]Depth[style:knob][symbol:depth][label:Depth][requires:mode:0][accentcolor:03]", 0.5, 0, 1, 0.001)) : si.smoo;
+fb       = uiClean(hslider("[06]Feedback[style:knob][symbol:feedback][label:Feedback][requires:mode:0][accentcolor:05]", 0, -0.999, 0.999, 0.001)) : si.smoo;
 
 //======================= BBD controls =======================
 
@@ -163,10 +269,19 @@ fb       = uiClean(hslider("[05]Feedback[style:knob][symbol:feedback][label:Feed
 // BBD clock and the sweep only ever climbs from there.
 bbd_manual = uiBbd(hslider("[11]BBD Manual[style:knob][unit:ms][scale:log][symbol:bbd_manual][label:Manual][requires:mode:1][accentcolor:02]", 0.5, 0.1, 10, 0.01)) : si.smoo;
 bbd_width  = uiBbd(hslider("[12]BBD Sweep Width[style:knob][unit:%][symbol:bbd_width][label:Sweep][requires:mode:1][accentcolor:03][bracket:SWEEP]", 70, 0, 100, 1)) / 100 : si.smoo;
-bbd_rate   = uiBbd(hslider("[13]BBD Rate[style:knob][unit:Hz][scale:log][symbol:bbd_rate][label:Rate][requires:mode:1][accentcolor:03][bracket:SWEEP]", 0.3, 0.02, 8, 0.001));
-bbd_regen  = uiBbd(hslider("[14]BBD Regen[style:knob][symbol:bbd_regen][label:Regen][requires:mode:1][accentcolor:05]", 0.3, -0.95, 0.95, 0.001)) : si.smoo;
-bbd_color  = uiBbd(hslider("[15]BBD Color[style:knob][unit:Hz][scale:log][symbol:bbd_color][label:Color][requires:mode:1][accentcolor:06]", 6000, 1000, 16000, 1)) : si.smoo;
-bbd_drive  = uiBbd(hslider("[16]BBD Drive[style:knob][unit:%][symbol:bbd_drive][label:Drive][requires:mode:1][accentcolor:05]", 25, 0, 100, 1)) / 100 : si.smoo;
+bbd_rate_free = uiBbd(hslider("[13]BBD Rate[style:knob][unit:Hz][scale:log][symbol:bbd_rate][label:Rate][requires:mode:1][accentcolor:03][bracket:SWEEP]
+      [tooltip: Sweep rate in Hz. In Tempo sync this is replaced by Division]", 0.3, 0.02, 8, 0.001));
+
+// 2/1 rather than Clean's 1/1: the free default of 0.3 Hz is a 3.3 second
+// sweep, and four seconds at 120 BPM is the division nearest to it.
+bbd_div    = uiBbd(nentry("[14]BBD Division[style:menu{'8/1':0;'4/1':1;'2/1':2;'1/1':3;'1/2.':4;'1/2':5;'1/2T':6;'1/4.':7;'1/4':8;'1/4T':9;'1/8.':10;'1/8':11;'1/8T':12;'1/16.':13;'1/16':14;'1/16T':15}][symbol:bbd_div][label:Division][requires:mode:1][accentcolor:03][bracket:SWEEP]
+      [tooltip: Sweep length as a note value, one full sweep per division. A dot lengthens by half, a T shortens to two thirds]", 2, 0, NDIV - 1, 1)) : int;
+
+bbd_rate   = syncRate(bbd_rate_free, bbd_div);
+
+bbd_regen  = uiBbd(hslider("[15]BBD Regen[style:knob][symbol:bbd_regen][label:Regen][requires:mode:1][accentcolor:05]", 0.3, -0.95, 0.95, 0.001)) : si.smoo;
+bbd_color  = uiBbd(hslider("[16]BBD Color[style:knob][unit:Hz][scale:log][symbol:bbd_color][label:Color][requires:mode:1][accentcolor:06]", 6000, 1000, 16000, 1)) : si.smoo;
+bbd_drive  = uiBbd(hslider("[17]BBD Drive[style:knob][unit:%][symbol:bbd_drive][label:Drive][requires:mode:1][accentcolor:05]", 25, 0, 100, 1)) / 100 : si.smoo;
 
 //======================= Barberpole controls =======================
 
@@ -177,9 +292,20 @@ bbd_drive  = uiBbd(hslider("[16]BBD Drive[style:knob][unit:%][symbol:bbd_drive][
 // apart; at the default 4 octaves over 4 taps that is exactly one octave.
 bp_low  = uiBarber(hslider("[21]BARBER Low[style:knob][unit:ms][scale:log][symbol:bp_low][label:Low][requires:mode:2][accentcolor:02][bracket:RANGE]", 0.4, 0.2, 2, 0.01)) : si.smoo;
 bp_span = uiBarber(hslider("[22]BARBER Span[style:knob][unit:oct][symbol:bp_span][label:Span][requires:mode:2][accentcolor:02][bracket:RANGE]", 4, 1, 5, 0.1)) : si.smoo;
-bp_rate = uiBarber(hslider("[23]BARBER Rate[style:knob][unit:Hz][scale:log][symbol:bp_rate][label:Rate][requires:mode:2][accentcolor:03][bracket:SWEEP]", 0.25, 0.02, 4, 0.001));
-bp_dir  = uiBarber(hslider("[24]BARBER Direction[style:knob][symbol:bp_direction][label:Direction][requires:mode:2][accentcolor:03][bracket:SWEEP]", 1, 0, 1, 1)) : int;
-bp_fb   = uiBarber(hslider("[25]BARBER Resonance[style:knob][symbol:bp_resonance][label:Resonance][requires:mode:2][accentcolor:05]", 0.2, -0.85, 0.85, 0.001)) : si.smoo;
+bp_rate_free = uiBarber(hslider("[23]BARBER Rate[style:knob][unit:Hz][scale:log][symbol:bp_rate][label:Rate][requires:mode:2][accentcolor:03][bracket:SWEEP]
+      [tooltip: Crawl rate in Hz. In Tempo sync this is replaced by Division]", 0.25, 0.02, 4, 0.001));
+
+// One cycle of the phasor is one tap's whole travel, not the audible period:
+// with NBP taps a quarter cycle apart a notch family hands over four times per
+// cycle, so 2/1 at 120 BPM reads as a notch arriving every second rather than
+// every four. Matched to the free default of 0.25 Hz all the same.
+bp_div  = uiBarber(nentry("[24]BARBER Division[style:menu{'8/1':0;'4/1':1;'2/1':2;'1/1':3;'1/2.':4;'1/2':5;'1/2T':6;'1/4.':7;'1/4':8;'1/4T':9;'1/8.':10;'1/8':11;'1/8T':12;'1/16.':13;'1/16':14;'1/16T':15}][symbol:bp_div][label:Division][requires:mode:2][accentcolor:03][bracket:SWEEP]
+      [tooltip: Length of one full tap travel as a note value. With four taps a notch family hands over four times per division]", 2, 0, NDIV - 1, 1)) : int;
+
+bp_rate = syncRate(bp_rate_free, bp_div);
+
+bp_dir  = uiBarber(hslider("[25]BARBER Direction[style:knob][symbol:bp_direction][label:Direction][requires:mode:2][accentcolor:03][bracket:SWEEP]", 1, 0, 1, 1)) : int;
+bp_fb   = uiBarber(hslider("[26]BARBER Resonance[style:knob][symbol:bp_resonance][label:Resonance][requires:mode:2][accentcolor:05]", 0.2, -0.85, 0.85, 0.001)) : si.smoo;
 
 //======================= Global controls =======================
 
