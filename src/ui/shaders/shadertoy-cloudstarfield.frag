@@ -34,6 +34,11 @@ const vec3 backgroundColor = vec3(0.0, 0.0, 0.0);
 const vec3 colorLow  = vec3(0.8549, 0.7569, 0.9529); // soft violet
 const vec3 colorHigh = vec3(0.7647, 0.8510, 1.0000); // pale blue
 
+// Clouds on/off. Off leaves the starfield alone over backgroundColor. A switch
+// rather than a tunable because it compiles the noise field out entirely, which
+// is most of the shader's cost -- the starfield is comparatively cheap.
+#define CLOUDS_ENABLED 0
+
 const float timeScale     = 0.1; // animation speed
 const float noiseScale    = 3.0; // spatial frequency of the cloud structure
 const float intensityGain = 1.0; // overall strength of the lit band
@@ -48,11 +53,17 @@ const float cloudSpreadY = 0.45; // distance from the centre at which it reaches
 const float cloudSpreadX = 0.60; // same, horizontally, measured from the middle
 
 // Starfield. Measured in centred, width-normalised space so the flight axis is the
-// middle of the widget and stars stay round whatever shape it is. Deliberately
-// independent of the input meters -- like backgroundColor, the sky does not pump.
+// middle of the widget and stars stay round whatever shape it is.
 const vec3  starColor      = vec3(0.86, 0.91, 1.0);
 const int   starLayers     = 4;     // depth slices; more = denser stream, more cost
-const float starSpeed      = 0.05;  // depth cycles per second -- how fast you fly
+
+// How fast you fly, in depth cycles per second. Unlike the clouds' brightness this
+// is not a level the picture sits at but a rate, so the slow input envelope moves
+// it between these two: silence drifts at starSpeedMin, a hot input flies at
+// starSpeedMax, and it coasts back down over a few seconds rather than braking.
+// Standalone there are no meters, so it sits halfway. See starPhase.
+const float starSpeedMin   = 0.01;
+const float starSpeedMax   = 0.1;
 const float starNearZ      = 0.2;  // depth a slice reaches before recycling; lower = more zoom
 const float starDensity    = 50.0;  // cells across the width at the far plane
 const float starChance     = 0.2;  // fraction of cells that actually hold a star
@@ -64,7 +75,7 @@ const float starOcclusion  = 0.;  // how much the clouds hide the stars behind t
 // so the clouds brighten with the signal; standalone it is a flat 1.0, since the
 // Shadertoy editor has no custom uniforms.
 #ifndef LIBREAUDIO_HOSTED
-#define brightness 1.0
+#define brightness 0.0
 #else
 // Peak of the two input meters in dBFS, smoothed by the host over two different
 // time constants: iLevelSlow settles in about 5 s, iLevelFast in about 1.5 s.
@@ -72,6 +83,15 @@ const float starOcclusion  = 0.;  // how much the clouds hide the stars behind t
 // frames -- so these arrive already integrated. See LibreAudioBackgroundShaderWidget.
 uniform float iLevelSlow;
 uniform float iLevelFast;
+
+// Elapsed time weighted by the normalised slow level, in seconds -- the host's
+// running integral of the same 0..1 value levelSlow works out below. It is what
+// lets the starfield change speed without jumping; see starPhase.
+//
+// It runs on its own attack and release, set host-side, with the release the
+// longer of the two: a rate that fell as fast as the brightness does would read as
+// the flight being yanked back rather than coasting down.
+uniform float iLevelSlowTime;
 
 // The input window the picture responds to, in dBFS. Programme material peaks
 // mostly between -40 and 0, so that is the span worth spending the whole
@@ -237,15 +257,35 @@ float starSlice(vec2 sp, float z, float seed)
     return core * exists * magnitude * fade;
 }
 
+// How far into the flight we are, in depth cycles.
+//
+// This has to be the *integral* of the speed over time, not iTime multiplied by
+// the current speed: the speed moves with the input, and scaling the whole
+// elapsed time by it would drag every star along with the change. A minute into a
+// session that is already dozens of cycles per frame -- static, not acceleration.
+// Integrating leaves the position continuous and lets only its rate follow the
+// meter. A fragment shader keeps no state, so the host accumulates the level part
+// for us:
+//   phase = integral of mix(min, max, level) dt
+//         = min * iTime + (max - min) * integral of level dt.
+float starPhase()
+{
+#ifdef LIBREAUDIO_HOSTED
+    return starSpeedMin * iTime + (starSpeedMax - starSpeedMin) * iLevelSlowTime;
+#else
+    return iTime * mix(starSpeedMin, starSpeedMax, 0.5);
+#endif
+}
+
 // The slices are spread evenly through the cycle and all advance together, so
 // what arrives is a steady stream rather than pulses.
-float starfield(vec2 sp, float t)
+float starfield(vec2 sp, float phase)
 {
     float total = 0.0;
 
     for (int i = 0; i < starLayers; ++i)
     {
-        float z = fract(float(i) / float(starLayers) + t * starSpeed);
+        float z = fract(float(i) / float(starLayers) + phase);
         total += starSlice(sp, z, float(i) * 37.3);
     }
 
@@ -256,6 +296,13 @@ float starfield(vec2 sp, float t)
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
+    // What the clouds contribute, already scaled by brightness, and how much of
+    // the sky they hide. Both stay zero when the clouds are switched off, which
+    // leaves everything below working on the starfield alone.
+    vec3  clouds     = vec3(0.0);
+    float cloudCover = 0.0;
+
+#if CLOUDS_ENABLED
     // Aspect-corrected UV: both axes are normalised by the *width*, so the noise
     // stays square regardless of the widget's shape. This is the one-divide form
     // of the original `uv = coord / res; uv.y *= res.y / res.x;`.
@@ -289,19 +336,22 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 
     vec3 tint = mix(colorLow, colorHigh, gradientHeight * gradientSpan + noise);
 
+    // brightness scales only the clouds -- background and stars stay put, so
+    // neither the base nor the sky pumps with the meters.
+    clouds = tint * intensity * brightness;
+
     // Stars sit behind the clouds, so thick cloud hides them. `intensity` doubles
     // as the cloud density here, which is why this reads the unclamped value back
     // through clamp rather than reusing the envelope on its own.
-    float cloudCover = clamp(intensity, 0.0, 1.0);
+    cloudCover = clamp(intensity, 0.0, 1.0);
+#endif
 
     // Centred, width-normalised coords put the vanishing point in the middle of
     // the widget; the starfield does its own scaling per depth slice.
     vec2 flight = (fragCoord.xy - 0.5 * iResolution.xy) / iResolution.x;
-    float stars = starfield(flight, iTime) * (1.0 - starOcclusion * cloudCover);
+    float stars = starfield(flight, starPhase()) * (1.0 - starOcclusion * cloudCover);
 
-    // brightness scales only the clouds -- background and stars stay put, so
-    // neither the base nor the sky pumps with the meters.
     vec3 sky = backgroundColor + starColor * (stars * starBrightness);
 
-    fragColor = vec4(sky + tint * intensity * brightness, 1.0);
+    fragColor = vec4(sky + clouds, 1.0);
 }
