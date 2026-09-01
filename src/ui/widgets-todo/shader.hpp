@@ -198,13 +198,11 @@ public:
             {
                 // null for the common parameters, which have no Faust symbol
                 const char* const parameterSymbol = fInterface->getParameterSymbol(i);
+                DISTRHO_SAFE_ASSERT_BREAK(parameterSymbol != nullptr);
 
                 symbol = "u_";
                 symbol += parameterSymbol;
                 gl3.parameterValues[i] = glGetUniformLocation(program, symbol);
-
-                if (parameterSymbol == nullptr)
-                    continue;
 
                 // remember the input meters so the level smoothers can follow them
                 if (std::strcmp(parameterSymbol, "input_peak_L") == 0)
@@ -320,8 +318,6 @@ private:
         {
             for (uint32_t i = 0; i < count; ++i)
             {
-                // glGetUniformLocation returns -1 when the shader does not use the
-                // uniform; 0 is a valid location, so this must not test against 0.
                 if (gl3.parameterValues[i] >= 0)
                     glUniform1f(gl3.parameterValues[i], fInterface->getParameterValue(i));
             }
