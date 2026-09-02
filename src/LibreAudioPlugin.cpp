@@ -155,7 +155,7 @@ void LibreAudioPlugin::initParameter(uint32_t index, Parameter& parameter)
     case kCommonParameterDryWet:
         parameter.hints = kParameterIsAutomatable;
         parameter.name = "Dry / Wet";
-        parameter.symbol = "dry_wet";
+        parameter.symbol = kCommonParameterSymbols[index];
         parameter.unit = "%";
         parameter.ranges.def = 50.f;
         parameter.ranges.min = 0.f;

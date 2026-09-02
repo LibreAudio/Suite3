@@ -198,7 +198,7 @@ public:
             {
                 // null for the common parameters, which have no Faust symbol
                 const char* const parameterSymbol = fInterface->getParameterSymbol(i);
-                DISTRHO_SAFE_ASSERT_BREAK(parameterSymbol != nullptr);
+                DISTRHO_SAFE_ASSERT_UINT_CONTINUE(parameterSymbol != nullptr, i);
 
                 symbol = "u_";
                 symbol += parameterSymbol;

@@ -46,6 +46,14 @@ enum Parameters {
     kParametersMainStart,
 };
 
+inline constexpr const char* kCommonParameterSymbols[kCommonParameterCount] = {
+    ParameterDesignationSymbols::bypass,
+    ParameterDesignationSymbols::reset,
+   #if LIBREAUDIO_WANT_DRYWET
+    "dry_wet",
+   #endif
+};
+
 inline void initCommonParameterValuesToDefault(float values[kCommonParameterCount])
 {
     for (uint32_t i = 0; i < kCommonParameterCount; ++i)

@@ -58,6 +58,9 @@ LibreAudioBaseUI::LibreAudioBaseUI()
     // set minimum size
     const double scaleFactor = TopLevelWidget::getScaleFactor();
     setGeometryConstraints(DISTRHO_UI_DEFAULT_WIDTH * scaleFactor, DISTRHO_UI_DEFAULT_HEIGHT * scaleFactor);
+
+    fScaleFactor = std::min(static_cast<double>(getWidth()) / DISTRHO_UI_DEFAULT_WIDTH,
+                            static_cast<double>(getHeight()) / DISTRHO_UI_DEFAULT_HEIGHT);
 }
 
 LibreAudioBaseUI::~LibreAudioBaseUI()
@@ -129,7 +132,7 @@ const char* LibreAudioBaseUI::getParameterSymbol(const uint32_t index) const noe
         index >= kParametersMainStart ? kFaustParameters[index - kParametersMainStart].symbol :
         index >= kParametersOutputStart ? kFaustParametersOut[index - kParametersOutputStart + kCommonIOParameters].symbol :
         index >= kParametersInputStart ? kFaustParametersIn[index - kParametersInputStart].symbol :
-        nullptr;
+        kCommonParameterSymbols[index];
 }
 
 // --------------------------------------------------------------------------------------------------------------------
