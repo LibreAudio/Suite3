@@ -1,6 +1,6 @@
 // -*-Faust-*-
 
-declare author "Klaus Scheuermann after Daniel Leonov";
+declare author "Klaus Scheuermann after Daniel Leonov and faust standard library";
 declare description "";
 declare license "GPL-3.0-or-later";
 declare name "Spring Reverb";
