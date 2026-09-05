@@ -22,10 +22,12 @@ public:
         : BaseWidget(parent),
           ButtonEventHandler(this) {}
 
-    [[nodiscard]] virtual Corner getCorner() const noexcept = 0;
+    [[nodiscard]] Corner getCorner() const noexcept override
+    {
+        __builtin_unreachable();
+    }
 
 protected:
-    [[nodiscard]] virtual const Color& getBackgroundColor() const noexcept = 0; // TODO remove
     [[nodiscard]] virtual const Color& getForegroundColor() const noexcept = 0; // TODO remove
 
 private:
@@ -83,54 +85,7 @@ protected:
 
     void onNanoDisplay() override
     {
-        // TODO use drawReferenceBackground<R>();
-
-        const float w = getWidth();
-        const float h = getHeight();
-
-        beginPath();
-
-        if constexpr (corner != kCornerNone && R::borderRadius != 0)
-            roundedRect(0, 0, w, h, R::borderRadius * fScaleFactor);
-        else
-            rect(0, 0, w, h);
-
-        const Color& bgcolor = getBackgroundColor();
-
-        if (d_isNotZero(bgcolor.alpha))
-        {
-            if constexpr ((corner == kCornerLeft || corner == kCornerRight) && R::borderRadius != 0)
-            {
-                DISTRHO_CUSTOM_SAFE_ASSERT_RETURN("Buttons with corners must have opaque color",
-                                                  d_isEqual(bgcolor.alpha, 1.f),);
-            }
-
-            fillColor(bgcolor);
-            fill();
-        }
-
-        if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
-        {
-            strokeColor(R::borderColor);
-            strokeWidth(R::border * 2 * this->fScaleFactor);
-            stroke();
-        }
-
-        if constexpr (corner != kCornerNone && R::borderRadius != 0)
-        {
-            if constexpr (corner == kCornerLeft)
-            {
-                beginPath();
-                rect(w * 0.5f, 0, w * 0.5f, h);
-                fill();
-            }
-            if constexpr (corner == kCornerRight)
-            {
-                beginPath();
-                rect(0, 0, w * 0.5f, h);
-                fill();
-            }
-        }
+        drawReferenceBackground<R, corner>();
     }
 
     void updateSize(const bool updateChildren) override

@@ -25,6 +25,8 @@ enum Orientation : bool {
     kVertical,
 };
 
+constexpr inline const Corner kCornerAuto = static_cast<Corner>(UINT8_MAX);
+
 // --------------------------------------------------------------------------------------------------------------------
 // base widget class
 
@@ -97,67 +99,116 @@ protected:
     LabUIWidgetInterface* const fInterface;
     float fScaleFactor;
 
-    template <class R>
+    [[nodiscard]] virtual const Color& getBackgroundColor() const noexcept
+    {
+        __builtin_unreachable();
+    }
+
+    [[nodiscard]] virtual const Color& getBorderColor() const noexcept
+    {
+        __builtin_unreachable();
+    }
+
+    [[nodiscard]] virtual Corner getCorner() const noexcept
+    {
+        __builtin_unreachable();
+    }
+
+    template <class R, Corner _corner = kCornerAuto>
     void drawReferenceBackground()
     {
+        constexpr Corner corner = _corner != kCornerAuto ? _corner : R::borderRadius != 0 ? kCornerBoth : kCornerNone;
+       #ifdef __GNUC__
+        #pragma GCC poison _corner
+       #endif
+        static_assert(corner == kCornerNone || R::borderRadius != 0, "corner != none requires borderRadius");
+
         const float w = BaseWidget::getWidth();
         const float h = BaseWidget::getHeight();
 
-        BaseWidget::beginPath();
-
-        if constexpr (R::borderRadius != 0)
-            BaseWidget::roundedRect(0, 0, w, h, R::borderRadius * fScaleFactor);
-        else
-            BaseWidget::rect(0, 0, w, h);
-
-        if constexpr (d_isNotZero(R::backgroundColor.alpha))
         {
-            BaseWidget::fillColor(R::backgroundColor);
-            BaseWidget::fill();
-        }
-
-        if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
-        {
-            const float border = d_roundToIntPositive(R::border * fScaleFactor);
-            const float borderh = border * 0.5f;
-
-            const float sx = borderh;
-            const float sy = borderh;
-            const float ex = w - borderh;
-            const float ey = h - borderh;
+            const Color& backgroundColor = this->getBackgroundColor();
 
             BaseWidget::beginPath();
 
-            if constexpr (R::borderRadius != 0)
-            {
-                const float borderRadius = R::borderRadius * fScaleFactor;
-                DISTRHO_SAFE_ASSERT_RETURN(borderRadius < w * 0.5f,);
-                DISTRHO_SAFE_ASSERT_RETURN(borderRadius < h * 0.5f,);
-                DISTRHO_SAFE_ASSERT_RETURN(borderRadius > border,);
-
-                const float arcRadius = borderRadius - border;
-
-                BaseWidget::moveTo(sx + borderRadius, sy);
-                BaseWidget::arcTo(sx, sy, sx, ey - borderRadius, arcRadius);
-                BaseWidget::lineTo(sx, ey - borderRadius);
-                BaseWidget::arcTo(sx, ey, sx + borderRadius, ey, arcRadius);
-                BaseWidget::lineTo(ex - borderRadius, ey);
-                BaseWidget::arcTo(ex, ey, ex, ey - borderRadius, arcRadius);
-                BaseWidget::lineTo(ex, sx + borderRadius);
-                BaseWidget::arcTo(ex, sy, ex - borderRadius, sy, arcRadius);
-            }
+            if constexpr (R::borderRadius != 0 && corner != kCornerNone)
+                BaseWidget::roundedRect(0, 0, w, h, R::borderRadius * fScaleFactor);
             else
-            {
-                BaseWidget::moveTo(sx, sy);
-                BaseWidget::lineTo(sx, ey);
-                BaseWidget::lineTo(ex, ey);
-                BaseWidget::lineTo(ex, sy);
-            }
+                BaseWidget::rect(0, 0, w, h);
 
-            BaseWidget::closePath();
-            BaseWidget::strokeColor(R::borderColor);
-            BaseWidget::strokeWidth(border);
-            BaseWidget::stroke();
+            if /*constexpr*/ (d_isNotZero(backgroundColor.alpha))
+            {
+                if constexpr (corner == kCornerLeft || corner == kCornerRight)
+                {
+                    DISTRHO_CUSTOM_SAFE_ASSERT_RETURN("Corners must have opaque color",
+                                                      d_isEqual(R::backgroundColor.alpha, 1.f),);
+                }
+
+                BaseWidget::fillColor(backgroundColor);
+                BaseWidget::fill();
+
+                if constexpr (corner == kCornerLeft)
+                {
+                    BaseWidget::beginPath();
+                    BaseWidget::rect(w * 0.5f, 0, w * 0.5f, h);
+                    BaseWidget::fill();
+                }
+                if constexpr (corner == kCornerRight)
+                {
+                    BaseWidget::beginPath();
+                    BaseWidget::rect(0, 0, w * 0.5f, h);
+                    BaseWidget::fill();
+                }
+            }
+        }
+
+        if constexpr (R::border != 0)
+        {
+            const Color& borderColor = this->getBorderColor();
+
+            if /*constexpr*/ (d_isNotZero(borderColor.alpha))
+            {
+                const float border = d_roundToIntPositive(R::border * fScaleFactor);
+                const float borderh = border * 0.5f;
+
+                const float sx = borderh;
+                const float sy = borderh;
+                const float ex = w - borderh;
+                const float ey = h - borderh;
+
+                BaseWidget::beginPath();
+
+                if constexpr (R::borderRadius != 0)
+                {
+                    const float borderRadius = R::borderRadius * fScaleFactor;
+                    DISTRHO_SAFE_ASSERT_RETURN(borderRadius < w * 0.5f,);
+                    DISTRHO_SAFE_ASSERT_RETURN(borderRadius < h * 0.5f,);
+                    DISTRHO_SAFE_ASSERT_RETURN(borderRadius > border,);
+
+                    const float arcRadius = borderRadius - border;
+
+                    BaseWidget::moveTo(sx + borderRadius, sy);
+                    BaseWidget::arcTo(sx, sy, sx, ey - borderRadius, arcRadius);
+                    BaseWidget::lineTo(sx, ey - borderRadius);
+                    BaseWidget::arcTo(sx, ey, sx + borderRadius, ey, arcRadius);
+                    BaseWidget::lineTo(ex - borderRadius, ey);
+                    BaseWidget::arcTo(ex, ey, ex, ey - borderRadius, arcRadius);
+                    BaseWidget::lineTo(ex, sx + borderRadius);
+                    BaseWidget::arcTo(ex, sy, ex - borderRadius, sy, arcRadius);
+                }
+                else
+                {
+                    BaseWidget::moveTo(sx, sy);
+                    BaseWidget::lineTo(sx, ey);
+                    BaseWidget::lineTo(ex, ey);
+                    BaseWidget::lineTo(ex, sy);
+                }
+
+                BaseWidget::closePath();
+                BaseWidget::strokeColor(borderColor);
+                BaseWidget::strokeWidth(border);
+                BaseWidget::stroke();
+            }
         }
     }
 
@@ -246,7 +297,7 @@ public:
 // --------------------------------------------------------------------------------------------------------------------
 // reference (sub) widget class
 
-template<class R>
+template<class R, Corner corner = kCornerAuto>
 class LabReferenceWidget : public LabWidget
 {
     using BaseWidget = LabWidget;
@@ -265,9 +316,24 @@ public:
     }
 
 protected:
+    [[nodiscard]] const Color& getBackgroundColor() const noexcept override
+    {
+        return R::backgroundColor;
+    }
+
+    [[nodiscard]] const Color& getBorderColor() const noexcept override
+    {
+        return R::borderColor;
+    }
+
+    [[nodiscard]] Corner getCorner() const noexcept override
+    {
+        return corner;
+    }
+
     void onNanoDisplay() override
     {
-        drawReferenceBackground<R>();
+        drawReferenceBackground<R, corner>();
     }
 
     void updateSize(const bool updateChildren) override
