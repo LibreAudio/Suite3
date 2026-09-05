@@ -9,10 +9,10 @@
 #include "widgets/base.hpp"
 #include "widgets/button-group.hpp"
 #include "widgets/meter.hpp"
+#include "widgets/plugin-name.hpp"
 #include "widgets/root.hpp"
 #include "widgets-todo/button.hpp"
 #include "widgets-todo/stage.hpp"
-#include "widgets-todo/top-bar-name.hpp"
 
 #include "las-resources.h"
 
@@ -20,7 +20,7 @@ namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-using TopBarLogoWidget = ImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>;
+using TopBarLogoWidget = LabImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>;
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -70,8 +70,8 @@ class TopBarEasyExpertGroupWidget : public ButtonGroupWidget
 {
     static constexpr const char kTextEasy[] = "Easy";
     static constexpr const char kTextExpert[] = "Expert";
-    std::shared_ptr<ButtonBaseWidget> fEasy = addButton<StaticTextButtonWidget<kCornerLeft, kTextEasy>>(kWidgetEasy);
-    std::shared_ptr<ButtonBaseWidget> fExpert = addButton<StaticTextButtonWidget<kCornerRight, kTextExpert>>(kWidgetExpert);
+    std::shared_ptr<LabWidget> fEasy = addButton<StaticTextButtonWidget<kCornerLeft, kTextEasy>>(kWidgetEasy);
+    std::shared_ptr<LabWidget> fExpert = addButton<StaticTextButtonWidget<kCornerRight, kTextExpert>>(kWidgetExpert);
 
 public:
     explicit TopBarEasyExpertGroupWidget(LabWidget* const parent)
@@ -85,8 +85,8 @@ public:
 
 class TopBarMenuPowerGroupWidget : public ButtonGroupWidget
 {
-    std::shared_ptr<ButtonBaseWidget> fMenu = addButton<ImageButtonWidget<kCornerLeft, IMAGES_MENU_PNG_DATA, IMAGES_MENU_PNG_LEN>>(kWidgetMenu);
-    std::shared_ptr<ButtonBaseWidget> fPower = addButton<BypassButtonWidget<kCornerRight>>(kWidgetPower);
+    std::shared_ptr<LabWidget> fMenu = addButton<ImageButtonWidget<kCornerLeft, IMAGES_MENU_PNG_DATA, IMAGES_MENU_PNG_LEN>>(kWidgetMenu);
+    std::shared_ptr<LabWidget> fPower = addButton<BypassButtonWidget<kCornerRight>>(kWidgetPower);
 
 public:
     explicit TopBarMenuPowerGroupWidget(LabWidget* const parent)
@@ -102,13 +102,13 @@ class TopBar : public ReferenceContainerWidget<Reference::TopBar>
 {
     using BaseWidget = ReferenceContainerWidget<Reference::TopBar>;
 
-    std::shared_ptr<TopBarLogoWidget> fLogo = addWidget<TopBarLogoWidget>();
-    std::shared_ptr<TopBarNameWidget> fPluginName = addWidget<TopBarNameWidget>();
+    std::shared_ptr<LabWidget> fLogo = addWidget<TopBarLogoWidget>();
+    std::shared_ptr<LabWidget> fPluginName = addWidget<PluginNameWidget>();
     std::shared_ptr<LabWidget> fSpacer = addSpacer();
-    std::shared_ptr<ButtonGroupWidget> fUndoRedoGroup = addWidget<TopBarUndoRedoGroupWidget>();
-    std::shared_ptr<ButtonGroupWidget> fSnapshotsGroup = addWidget<TopBarSnapshotsGroupWidget>();
-    std::shared_ptr<ButtonGroupWidget> fEasyExpertGroup = addWidget<TopBarEasyExpertGroupWidget>();
-    std::shared_ptr<ButtonGroupWidget> fMenuPowerGroup = addWidget<TopBarMenuPowerGroupWidget>();
+    std::shared_ptr<LabWidget> fUndoRedoGroup = addWidget<TopBarUndoRedoGroupWidget>();
+    std::shared_ptr<LabWidget> fSnapshotsGroup = addWidget<TopBarSnapshotsGroupWidget>();
+    std::shared_ptr<LabWidget> fEasyExpertGroup = addWidget<TopBarEasyExpertGroupWidget>();
+    std::shared_ptr<LabWidget> fMenuPowerGroup = addWidget<TopBarMenuPowerGroupWidget>();
 
 public:
     TopBar(LabTopLevelWidget* const parent)

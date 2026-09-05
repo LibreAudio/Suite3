@@ -11,12 +11,12 @@ START_NAMESPACE_DGL
 // --------------------------------------------------------------------------------------------------------------------
 
 template<const uchar* imageData, uint imageDataSize, uint imageScale = 2>
-class ImageWidget final : public LabWidget
+class LabImageWidget final : public LabWidget
 {
     using BaseWidget = LabWidget;
 
 public:
-    explicit ImageWidget(LabWidget* const parent)
+    explicit LabImageWidget(LabWidget* const parent)
         : LabWidget(parent)
     {
         updateSize(false);

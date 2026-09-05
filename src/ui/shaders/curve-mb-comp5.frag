@@ -194,9 +194,9 @@ uniform float u_listen_floor;
 #define LSN4   u_band4_listen
 #define LSN5   u_band5_listen
 #define FLOORDB u_listen_floor
-#define GLOWW  (2.0 * iScaleFactor)
-#define THICK  (1.5 * iScaleFactor)
-#define DPX    iScaleFactor
+#define GLOWW  (2.0 * _dpf_scale_factor)
+#define THICK  (1.5 * _dpf_scale_factor)
+#define DPX    _dpf_scale_factor
 #endif
 
 float log10_(float x){ return log(x) * 0.43429448190325176; }

@@ -69,8 +69,8 @@ uniform float u_Right;
 #define GAINL   u_Left
 #define GAINC   u_Center
 #define GAINR   u_Right
-#define GLOWW   (2.0 * iScaleFactor)
-#define THICK   (1.5 * iScaleFactor)
+#define GLOWW   (2.0 * _dpf_scale_factor)
+#define THICK   (1.5 * _dpf_scale_factor)
 #endif
 
 #define TAU 6.28318530718

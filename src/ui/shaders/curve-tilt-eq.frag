@@ -80,8 +80,8 @@ uniform float u_ds_res;
 #define RES    u_res
 #define SPREAD u_spread
 #define DSRES  u_ds_res
-#define GLOWW  (2.0 * iScaleFactor)
-#define THICK  (1.5 * iScaleFactor)
+#define GLOWW  (2.0 * _dpf_scale_factor)
+#define THICK  (1.5 * _dpf_scale_factor)
 #endif
 
 float log10_(float x){ return log(x) * 0.43429448190325176; }

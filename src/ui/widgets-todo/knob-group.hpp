@@ -470,7 +470,7 @@ public:
         fKnobsLeft.reset(new KnobGroupWidget<>(this, parameters, kParametersMainStart, 0));
         widgets.push_back({ fKnobsLeft.get(), Expanding });
 
-        fLogo.reset(new ImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>(this));
+        fLogo.reset(new LabImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>(this));
         widgets.push_back({ fLogo.get(), Fixed });
 
         fKnobsRight.reset(new KnobGroupWidget<>(this, parameters, kParametersMainStart, fKnobsLeft->getLastKnobId() + 1 - kParametersMainStart));

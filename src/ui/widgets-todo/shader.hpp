@@ -62,8 +62,7 @@ public:
     explicit BackgroundShaderWidget(TopLevelWidget* const parent, LabUIWidgetInterface* const iface)
         : ShaderBaseWidget(parent, iface),
           fParent(parent),
-          fScaleFactor(parent->getScaleFactor()),
-          fStartTime(parent->getApp().getTime())
+          fScaleFactor(parent->getScaleFactor())
     {
         // 8ms was 125 Hz: on a 60 Hz display more than half of those frames were rendered
         // and then thrown away. The shader widgets all cover the same area, so the window
@@ -179,15 +178,17 @@ public:
         gl3.program = program;
         gl3.iMouse = glGetUniformLocation(program, "iMouse");
         gl3.iResolution = glGetUniformLocation(program, "iResolution");
-        gl3.iScaleFactor = glGetUniformLocation(program, "iScaleFactor");
         gl3.iTime = glGetUniformLocation(program, "iTime");
-        gl3.iLevelSlow = glGetUniformLocation(program, "iLevelSlow");
-        gl3.iLevelFast = glGetUniformLocation(program, "iLevelFast");
-        gl3.iLevelSlowTime = glGetUniformLocation(program, "iLevelSlowTime");
+
+        // FIXME remove these, rely on iTime instead
+        gl3.fixmeLevelSlow = glGetUniformLocation(program, "iLevelSlow");
+        gl3.fixmeLevelFast = glGetUniformLocation(program, "iLevelFast");
+        gl3.fixmeLevelSlowTime = glGetUniformLocation(program, "iLevelSlowTime");
 
         gl3.dpfBounds = glGetAttribLocation(program, "_dpf_bounds");
         gl3.dpfBorderRadius = glGetUniformLocation(program, "_dpf_border_radius");
         gl3.dpfPosition = glGetUniformLocation(program, "_dpf_position");
+        gl3.dpfScaleFactor = glGetUniformLocation(program, "_dpf_scale_factor");
 
         if (const uint32_t count = fInterface->getParameterCount())
         {
@@ -196,7 +197,8 @@ public:
 
             for (uint32_t i = 0; i < count; ++i)
             {
-                // null for the common parameters, which have no Faust symbol
+                gl3.parameterValues[i] = -1;
+
                 const char* const parameterSymbol = fInterface->getParameterSymbol(i);
                 DISTRHO_SAFE_ASSERT_UINT_CONTINUE(parameterSymbol != nullptr, i);
 
@@ -257,21 +259,19 @@ private:
         const uint width = getWidth();
         const uint height = getHeight();
 
-        glUseProgram(gl3.program);
-
-        glUniform2f(gl3.dpfPosition, getAbsoluteX(), tlw->getHeight() - height - getAbsoluteY());
-        glUniform3f(gl3.iMouse, fMouseX.next(), fMouseY.next(), fMouseZ);
-        glUniform3f(gl3.iResolution, width, height, 0.f);
-        glUniform1f(gl3.iScaleFactor, fScaleFactor);
-
-        // Clamped so a stalled window -- hidden, dragged, starved -- resumes the
-        // level integral below where it left off instead of lurching forwards.
-        const float time = static_cast<float>(getApp().getTime() - fStartTime);
-        const float frameSeconds = std::min(std::max(time - fLastTime, 0.f), 0.1f);
+        const double time = getApp().getTime() - fStartTime;
+        const double frameSeconds = std::clamp<double>(time - fLastTime, 0.0, 0.1);
         fLastTime = time;
 
-        glUniform1f(gl3.iTime, time);
+        glUseProgram(gl3.program);
+
         glUniform1f(gl3.dpfBorderRadius, fBorderRadius);
+        glUniform2f(gl3.dpfPosition, getAbsoluteX(), tlw->getHeight() - height - getAbsoluteY());
+        glUniform1f(gl3.dpfScaleFactor, fScaleFactor);
+
+        glUniform3f(gl3.iMouse, fMouseX.next(), fMouseY.next(), fMouseZ);
+        glUniform3f(gl3.iResolution, width, height, 0.f);
+        glUniform1f(gl3.iTime, time);
 
         // Peak of the two input meters, in dBFS, run through a slow and a fast
         // envelope. Shaders blend the two to decide how bright to draw.
@@ -309,9 +309,9 @@ private:
 
             fLevelSlowTime += fLevelSlowHeld * frameSeconds;
 
-            glUniform1f(gl3.iLevelSlow, levelSlowDb);
-            glUniform1f(gl3.iLevelFast, fLevelFast.next());
-            glUniform1f(gl3.iLevelSlowTime, fLevelSlowTime);
+            glUniform1f(gl3.fixmeLevelSlow, levelSlowDb);
+            glUniform1f(gl3.fixmeLevelFast, fLevelFast.next());
+            glUniform1f(gl3.fixmeLevelSlowTime, fLevelSlowTime);
         }
 
         if (const uint32_t count = fInterface->getParameterCount())
@@ -385,13 +385,13 @@ private:
         GLint dpfBounds;
         GLint dpfBorderRadius;
         GLint dpfPosition;
+        GLint dpfScaleFactor;
         GLint iMouse;
         GLint iResolution;
-        GLint iScaleFactor;
         GLint iTime;
-        GLint iLevelSlow;
-        GLint iLevelFast;
-        GLint iLevelSlowTime;
+        GLint fixmeLevelSlow;
+        GLint fixmeLevelFast;
+        GLint fixmeLevelSlowTime;
         GLint* parameterValues;
     } gl3 = {};
 
@@ -431,13 +431,14 @@ private:
     TopLevelWidget* const fParent;
 
     const float fScaleFactor;
-    const double fStartTime;
+    const double fStartTime = getApp().getTime();
+    double fLastTime = fStartTime;
+
     bool fFirstResize = true;
     ExponentialValueSmoother fLevelSlow;
     ExponentialValueSmoother fLevelFast;
     float fLevelSlowTime = 0.f;
     float fLevelSlowHeld = 0.f;
-    float fLastTime = 0.f;
     int fPeakParameterL = -1;
     int fPeakParameterR = -1;
     LinearValueSmoother fMouseX;

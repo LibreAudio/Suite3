@@ -15,15 +15,15 @@ namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class TopBarNameWidget final : public LabWidget
+class PluginNameWidget final : public LabReferenceWidget<Reference::PluginName>
 {
-    using R = Reference::TopBar::PluginName;
-    using BaseWidget = LabWidget;
+    using R = Reference::PluginName;
+    using BaseWidget = LabReferenceWidget<R>;
 
     char fName[sizeof(DISTRHO_PLUGIN_NAME) - 3];
 
 public:
-    TopBarNameWidget(LabWidget* const parent)
+    PluginNameWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         std::memcpy(fName, _constexpr_DISTRHO_PLUGIN_NAME + 3, sizeof(DISTRHO_PLUGIN_NAME) - 3);
@@ -38,6 +38,8 @@ public:
 private:
     void onNanoDisplay() final
     {
+        BaseWidget::onNanoDisplay();
+
         fillColor(R::color);
         fontSize(R::fontSize * fScaleFactor);
         textAlign(ALIGN_CENTER | ALIGN_MIDDLE);
@@ -47,12 +49,15 @@ private:
 
     void updateSize(const bool updateChildren) final
     {
+        const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
+        const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
+
         Rectangle<float> bounds;
         fontSize(R::fontSize * fScaleFactor);
         textAlign(0);
         textLetterSpacing(R::letterSpacing * fScaleFactor);
         textBounds(0, 0, fName, nullptr, bounds);
-        setWidth(bounds.getWidth());
+        setWidth(bounds.getWidth() + (border + margin) * 2);
 
         BaseWidget::updateSize(updateChildren);
     }

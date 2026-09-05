@@ -59,11 +59,12 @@ struct Reference {
     struct TopBar : Zero {
         static constexpr const uint height = 28;
         static constexpr const uint padding = 20;
-        struct PluginName {
-            static constexpr const Color color = Colors::acc;
-            static constexpr const float fontSize = 22;
-            static constexpr const float letterSpacing = fontSize * 0.05;
-        };
+    };
+
+    struct PluginName : Zero {
+        static constexpr const Color color = Colors::acc;
+        static constexpr const float fontSize = 20;
+        static constexpr const float letterSpacing = fontSize * 0.05;
     };
 
     struct Line {

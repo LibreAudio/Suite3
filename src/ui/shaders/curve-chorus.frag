@@ -61,8 +61,8 @@ uniform float u_rate2;
 #define R1 u_rate1
 #define R2 u_rate2
 #define SHOWB (u_mode == 1. || u_mode == 2. ? 1. : 0.)
-#define GLOWW (2.0 * iScaleFactor)
-#define THICK (1.5 * iScaleFactor)
+#define GLOWW (2.0 * _dpf_scale_factor)
+#define THICK (1.5 * _dpf_scale_factor)
 #endif
 
 #define TAU 6.28318530718
