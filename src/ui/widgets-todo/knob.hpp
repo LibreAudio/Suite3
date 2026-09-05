@@ -62,6 +62,11 @@ public:
         updateSize(false);
     }
 
+    const FaustParameter& getParameter() const noexcept
+    {
+        return fParameter;
+    }
+
 private:
     const FaustParameter& fParameter;
 

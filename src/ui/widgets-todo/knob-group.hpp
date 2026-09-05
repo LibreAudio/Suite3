@@ -31,15 +31,15 @@ class KnobGroupWidget : public ReferenceContainerWidget<Reference::Widgets::Knob
     using R = Reference::Widgets::KnobGroup;
     using BaseWidget = ReferenceContainerWidget<R>;
 
-    std::vector<std::shared_ptr<KnobWidget>> fKnobs;
-    std::vector<std::shared_ptr<LabWidget>> fSpacers;
+    std::list<std::shared_ptr<KnobWidget>> fKnobs;
+    std::list<std::shared_ptr<LabWidget>> fSpacers;
 
     struct Bracket {
-        uint start;
-        uint end;
-        const char* label;
+        const char* const label;
+        std::shared_ptr<KnobWidget> start;
+        std::shared_ptr<KnobWidget> end;
     };
-    std::vector<Bracket> fBrackets;
+    std::list<Bracket> fBrackets;
 
     static constexpr const std::string_view kLabel = DISTRHO_PLUGIN_LABEL;
 
@@ -53,9 +53,6 @@ public:
           fParametersOffset(idOffset)
     {
         DISTRHO_SAFE_ASSERT_RETURN(!parameters.empty(),);
-
-        fKnobs.reserve(kMaxNumParameters);
-        fSpacers.reserve(kMaxNumParameters + 1);
 
         for (uint32_t i = parameterStart, numVisibleWidgets = 0, count = parameters.size(); i < count && numVisibleWidgets < kMaxNumParameters; ++i)
         {
@@ -137,7 +134,7 @@ private:
     void addSpacer(const uint id)
     {
         std::shared_ptr<LabWidget> spacer { new LabEmptyWidget(this) };
-        // static constexpr const float c[4] = { 0.9f, 0.11f, 0.11f, 1.f };
+        // static constexpr const float c[4] = { 0.0f, 0.71f, 0.11f, 1.f };
         // std::shared_ptr<LabWidget> spacer { new LabColorWidget<c>(this) };
         spacer->setId(id);
         widgets.push_back({ spacer.get(), Expanding });
@@ -287,52 +284,28 @@ private:
 
         fBrackets.clear();
 
-#if 0
         const char* lastBracket = "";
-        for (uint i = 0, size = fKnobs.size(); i < size; ++i)
+        for (const std::shared_ptr<KnobWidget>& knob : fKnobs)
         {
-            const std::unique_ptr<KnobWidget>& knob = fKnobs[i];
-
-            const FaustParameter& parameter = fParameters.at(knob->getId() - fParametersOffset);
+            const FaustParameter& parameter = knob->getParameter();
 
             if (std::strcmp(parameter.bracket, lastBracket) != 0)
             {
-                if (fBrackets.empty())
-                {
-                    if (knob->isVisible())
-                        fBrackets.push_back({ i, i, parameter.bracket });
-                }
-                else
-                {
-                    if (*lastBracket != '\0' && ! fBrackets.empty())
-                        fBrackets.back().end = i - 1;
+                if (*parameter.bracket != '\0' && knob->isVisible())
+                    fBrackets.push_back({ parameter.bracket, knob, knob });
 
-                    if (*parameter.bracket != '\0' && knob->isVisible())
-                        fBrackets.push_back({ i, i, parameter.bracket });
-                }
+                lastBracket = parameter.bracket;
             }
+            else if (! fBrackets.empty())
+            {
+                Bracket& bracket = fBrackets.back();
 
-            lastBracket = parameter.bracket;
+                if (std::strcmp(bracket.label, lastBracket) == 0)
+                    bracket.end = knob;
+            }
         }
 
-        if (*lastBracket != '\0' && ! fBrackets.empty())
-            fBrackets.back().end = fKnobs.size() - 1;
-
-        for (const Bracket& bracket : fBrackets)
-            d_stdout("bracket %s: %u -> %u", bracket.label, bracket.start, bracket.end);
-#endif
-
-        if (fHasCachedValues)
-        {
-            // ResizeEvent ev;
-            // ev.size = getSize();
-            // onResize(ev);
-        }
-        else
-        {
-            fHasCachedValues = true;
-        }
-
+        fHasCachedValues = true;
         updateSize(true);
         return true;
     }
@@ -341,12 +314,12 @@ private:
     {
         for (const Bracket& bracket : fBrackets)
         {
-            const KnobWidget* const knobS = fKnobs[bracket.start].get();
-            const KnobWidget* const knobE = fKnobs[bracket.end].get();
+            const KnobWidget* const knobS = bracket.start.get();
+            const KnobWidget* const knobE = bracket.end.get();
 
             const float lw = 2;
-            const float sx = knobS->getAbsoluteX() /*- knobS->getWidth()*/;
-            const float ex = knobE->getAbsoluteX() /*+ knobE->getWidth()*/;
+            const float sx = knobS->getAbsoluteX() - getAbsoluteX();
+            const float ex = knobE->getAbsoluteX() + knobE->getWidth() - getAbsoluteX();
             const float mx = sx + (ex - sx) * 0.5f;
             const float y = 20;
 
