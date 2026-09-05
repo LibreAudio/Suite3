@@ -21,8 +21,16 @@ class DrawableKnobWidget final : public LabKnobWidget
 
 public:
     DrawableKnobWidget(LabWidget* const parent, const FaustParameter& parameter, const uint32_t id)
-        : BaseWidget(parent, parameter, id)
+        : BaseWidget(parent, id),
+          fParameter(parameter)
     {
+        setName(parameter.label);
+        setDefault(parameter.init);
+        setRange(parameter.min, parameter.max);
+        setStep(parameter.step);
+        // setUsingLogScale(parameter.isLogarithmic); // FIXME
+        setValue(parameter.init, false);
+
         fKnobStyle.bipolar = d_isZero(parameter.init) && parameter.min < 0 && parameter.max > 0;
         fKnobStyle.invert = d_isEqual(parameter.init, parameter.max);
 
@@ -55,6 +63,8 @@ public:
     }
 
 private:
+    const FaustParameter& fParameter;
+
     void onNanoDisplay() final
     {
         const float w = getWidth();
@@ -71,6 +81,8 @@ private:
         {
             if (isInteger())
                 std::snprintf(textBuffer, sizeof(textBuffer), "%d", d_roundToInt(getValue()));
+            else if (std::strcmp(fParameter.unit, "dB") == 0)
+                std::snprintf(textBuffer, sizeof(textBuffer), "%.1f", getValue());
             else
                 std::snprintf(textBuffer, sizeof(textBuffer), "%.2f", getValue());
             textBuffer[sizeof(textBuffer) - 1] = '\0';

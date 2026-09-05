@@ -5,8 +5,8 @@
 #pragma once
 
 #include "../widgets/base.hpp"
+#include "../widgets/meter.hpp"
 #include "../widgets-todo/knob-group.hpp"
-#include "../widgets-todo/meter.hpp"
 #include "../widgets-todo/pill-toggle.hpp"
 
 namespace LibreAudio {

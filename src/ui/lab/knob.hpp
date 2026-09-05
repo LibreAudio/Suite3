@@ -9,8 +9,6 @@
 
 #include "EventHandlers.hpp"
 
-#include "FaustParameters.hpp"
-
 START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -23,28 +21,19 @@ class LabKnobWidget : public LabWidget,
     static constexpr const float kMouseDeceleration = 500.f;
 
 public:
-    explicit LabKnobWidget(LabWidget* const parent, const FaustParameter& parameter, const uint32_t id)
+    explicit LabKnobWidget(LabWidget* const parent, const uint32_t id)
         : LabWidget(parent),
-          KnobEventHandler(this),
-          fParameter(parameter)
+          KnobEventHandler(this)
     {
         setId(id);
-        setName(parameter.label);
         setCallback(this);
-        setDefault(parameter.init);
         setMouseDeceleration(kMouseDeceleration);
         setOrientation(Vertical);
-        setRange(parameter.min, parameter.max);
-        setStep(parameter.step);
-        // setUsingLogScale(parameter.isLogarithmic); // FIXME
-        setValue(parameter.init, false);
 
         addIdleCallback(this);
     }
 
 protected:
-    const FaustParameter& fParameter;
-
     void idleCallback() override
     {
         // NOTE this only triggers updates if the value doesnt match

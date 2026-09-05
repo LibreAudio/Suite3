@@ -8,9 +8,9 @@
 #include "lab/interface.hpp"
 #include "widgets/base.hpp"
 #include "widgets/button-group.hpp"
+#include "widgets/meter.hpp"
 #include "widgets/root.hpp"
 #include "widgets-todo/button.hpp"
-#include "widgets-todo/meter.hpp"
 #include "widgets-todo/stage.hpp"
 #include "widgets-todo/top-bar-name.hpp"
 

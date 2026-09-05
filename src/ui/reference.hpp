@@ -104,6 +104,20 @@ struct Reference {
             static constexpr const Color colorGradientStop = Colors::accGlow;
             static constexpr const uint width = 9;
         };
+
+        struct Value {
+            static constexpr const Color color = Colors::ink2;
+            static constexpr const float fontSize = 11;
+            // static constexpr const float letterSpacing = fontSize * 0.02f;
+            // font-mono
+        };
+
+        struct Unit {
+            static constexpr const Color color = Colors::ink3;
+            static constexpr const float fontSize = 10;
+            // static constexpr const float letterSpacing = fontSize * 0.02f;
+            // font-ui
+        };
     };
 
     struct Stage : Zero {
@@ -160,7 +174,7 @@ struct Reference {
             struct Unit {
                 static constexpr const Color color = Colors::ink3;
                 static constexpr const float fontSize = 14;
-                static constexpr const float letterSpacing = fontSize * 0.02;
+                static constexpr const float letterSpacing = fontSize * 0.02f;
                 // font-ui
             };
         };
@@ -185,7 +199,7 @@ struct Reference {
             struct Unit {
                 static constexpr const Color color = Colors::ink3;
                 static constexpr const float fontSize = 19;
-                static constexpr const float letterSpacing = fontSize * 0.02;
+                static constexpr const float letterSpacing = fontSize * 0.02f;
                 // font-ui
             };
         };
@@ -228,15 +242,12 @@ struct Reference {
     };
 };
 
-static_assert(LibreAudio::Reference::Meter::width == (
-        LibreAudio::Reference::Meter::border * 2 +
-        LibreAudio::Reference::Meter::margin * 2 +
-        // LibreAudioReference::Meter::padding +
-        LibreAudio::Reference::Meter::Track::width * 2
-    ), "incorrect meter size");
+static_assert(Reference::Meter::width == (Reference::Meter::border +
+                                          Reference::Meter::margin +
+                                          Reference::Meter::Track::width) * 2, "incorrect meter size");
 
-static_assert(LibreAudio::Reference::Meter::Tick::width == (
-        LibreAudio::Reference::Meter::width - (LibreAudio::Reference::Meter::border + LibreAudio::Reference::Meter::margin) * 2
+static_assert(Reference::Meter::Tick::width == (
+        Reference::Meter::width - (Reference::Meter::border + Reference::Meter::margin) * 2
     ), "incorrect meter tick size");
 
 // --------------------------------------------------------------------------------------------------------------------

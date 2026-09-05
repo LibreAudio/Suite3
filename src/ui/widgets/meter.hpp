@@ -34,57 +34,73 @@ class MeterWidget final : public LabKnobWidget
         ? kParametersInputStart + common_input::kFaustParameterInput_trim
         : kParametersOutputStart + common_output::kFaustParameterOutput_trim - 1;
 
-    static const FaustParameter& getFaustParameter()
-    {
-        if constexpr (type == Input)
-            return common_input::getFaustParameters().at(common_input::kFaustParameterInput_trim);
-        else
-            return common_output::getFaustParameters().at(common_output::kFaustParameterOutput_trim);
-    }
-
-public:
-    MeterWidget(LabWidget* const parent)
-        : BaseWidget(parent, getFaustParameter(), kParameterMeter)
-    {
-        updateSize(false);
-    }
-
-private:
-    // FIXME non-hardcoded
-    static constexpr const float min = -70.0;
-    static constexpr const float max = 12.0;
-
     static constexpr const float linearPointDB = -12.f;
     static constexpr const float linearPointPC = 0.48f;
 
     // NOTE major tick at 0dB, these are minor ticks
     static constexpr const float ticks[] = { +12, +6, -12, -24, -36, -48 };
 
-    float fValueL = min;
-    float fValueR = min;
+public:
+    MeterWidget(LabWidget* const parent)
+        : BaseWidget(parent, kParameterMeter)
+    {
+        updateReferenceSize<R>();
 
-    [[nodiscard]] static constexpr float db2height(const float db, const float height) noexcept
+        setName(fParameter.label);
+        setDefault(fParameter.init);
+        setRange(fParameter.min, fParameter.max);
+        setStep(fParameter.step);
+        // setUsingLogScale(fParameter.isLogarithmic); // FIXME
+        setValue(fParameter.init, false);
+    }
+
+private:
+    const FaustParameter& fParameter = type == Input
+        ? common_input::getFaustParameters().at(common_input::kFaustParameterInput_trim)
+        : common_output::getFaustParameters().at(common_output::kFaustParameterOutput_trim);
+
+    float fValueL = fParameter.min;
+    float fValueR = fParameter.min;
+
+    bool fDrawingBackground = false;
+
+    [[nodiscard]] float db2height(const float db, const float height) noexcept
     {
         if (db >= linearPointDB)
         {
-            const float normalized = 1.f - d_clamp((db - linearPointDB) / (max - linearPointDB), 0.f, 1.f);
-            return (1.f - linearPointPC) * height * normalized;
+            const float normalized = 1.f - d_clamp((db - linearPointDB) / (fParameter.max - linearPointDB), 0.f, 1.f);
+            return d_roundToIntPositive(linearPointPC * height * normalized);
         }
 
-        const float normalized = 1.f - d_clamp(db / (min - linearPointDB), 0.f, 1.f);
-        return height - linearPointPC * height * normalized;
+        const float normalized = 1.f - d_clamp((db - linearPointDB) / (fParameter.min - linearPointDB), 0.f, 1.f);
+        return d_roundToIntPositive(height - (1.f - linearPointPC) * height * normalized);
+    }
+
+    [[nodiscard]] const Color& getBackgroundColor() const noexcept final
+    {
+        return fDrawingBackground ? R::backgroundColor : Reference::Colors::transparent;
+    }
+
+    [[nodiscard]] const Color& getBorderColor() const noexcept final
+    {
+        return !fDrawingBackground ? R::borderColor : Reference::Colors::transparent;
+    }
+
+    [[nodiscard]] Corner getCorner() const noexcept final
+    {
+        return kCornerBoth;
     }
 
     void idleCallback() final
     {
-        if (const float valueL = std::clamp(fInterface->getParameterValue(kParameterL), min, max);
+        if (const float valueL = std::clamp(fInterface->getParameterValue(kParameterL), fParameter.min, fParameter.max);
             d_isNotEqual(fValueL, valueL))
         {
             fValueL = valueL;
             repaint();
         }
 
-        if (const float valueR = std::clamp(fInterface->getParameterValue(kParameterR), min, max);
+        if (const float valueR = std::clamp(fInterface->getParameterValue(kParameterR), fParameter.min, fParameter.max);
             d_isNotEqual(fValueR, valueR))
         {
             fValueR = valueR;
@@ -107,18 +123,11 @@ private:
         // ------------------------------------------------------------------------------------------------------------
         // draw background
 
-        beginPath();
+        fDrawingBackground = true;
+        drawReferenceBackground<R>();
 
-        if constexpr (R::borderRadius != 0)
-            roundedRect(0, 0, w, h, R::borderRadius * fScaleFactor);
-        else
-            rect(0, 0, w, h);
-
-        if constexpr (d_isNotZero(R::backgroundColor.alpha))
-        {
-            fillColor(R::backgroundColor);
-            fill();
-        }
+        // ------------------------------------------------------------------------------------------------------------
+        // prevent drawing over the border
 
         scissor(R::border * fScaleFactor,
                 R::border * fScaleFactor,
@@ -134,7 +143,7 @@ private:
 
             fillPaint(linearGradient(0, 0, 0, h, R::Track::colorGradientStart, R::Track::colorGradientStop));
 
-            if (d_isNotEqual(fValueL, min))
+            if (d_isNotEqual(fValueL, fParameter.min))
             {
                 const float lh = db2height(fValueL, mheight);
 
@@ -143,7 +152,7 @@ private:
                 fill();
             }
 
-            if (d_isNotEqual(fValueR, min))
+            if (d_isNotEqual(fValueR, fParameter.min))
             {
                 const float rh = db2height(fValueR, mheight);
 
@@ -151,23 +160,6 @@ private:
                 rect(tc + fScaleFactor * 0.5f, startx + rh, tw, endy - rh);
                 fill();
             }
-        }
-
-        // ------------------------------------------------------------------------------------------------------------
-        // draw border
-
-        if constexpr (R::border != 0 && d_isNotZero(R::borderColor.alpha))
-        {
-            beginPath();
-
-            if constexpr (R::borderRadius != 0)
-                roundedRect(0, 0, w, h, R::borderRadius * fScaleFactor);
-            else
-                rect(0, 0, w, h);
-
-            strokeColor(R::borderColor);
-            strokeWidth(R::border * 2 * fScaleFactor);
-            stroke();
         }
 
         // ------------------------------------------------------------------------------------------------------------
@@ -200,34 +192,61 @@ private:
         // draw slider
 
         {
-            const float tpos = db2height(fInterface->getParameterValue(kParameterMeter), mheight);
+            const float tposx = R::border * fScaleFactor;
+            const float tposy = starty + db2height(fInterface->getParameterValue(kParameterMeter), mheight);
 
             strokeColor(R::Slider::color);
             strokeWidth(R::Slider::height * fScaleFactor);
 
             beginPath();
-            moveTo(0, starty + tpos);
-            lineTo(w, starty + tpos);
+            moveTo(tposx, tposy);
+            lineTo(w - tposx, tposy);
             stroke();
 
             beginPath();
-            rect(0, starty + tpos, w, endy - starty);
+            rect(tposx, tposy, w - tposx * 2, endy - starty);
             fillPaint(linearGradient(0, 0, 0, h, R::Slider::colorGradientStart, R::Slider::colorGradientStop));
             fill();
         }
 
         // ------------------------------------------------------------------------------------------------------------
         // draw labels
+
+        if ((getState() & kKnobStateDraggingHover) != 0)
+        {
+            fillColor(R::Unit::color);
+            fontFace("regular");
+            fontSize(R::Unit::fontSize * fScaleFactor);
+            textAlign(ALIGN_CENTER | ALIGN_BOTTOM);
+            // textLetterSpacing(R::Value::letterSpacing * fScaleFactor);
+            text(w * 0.5f, endy, fParameter.unit);
+
+            char textBuffer[24];
+
+            if (isInteger())
+                std::snprintf(textBuffer, sizeof(textBuffer), "%d", d_roundToInt(getValue()));
+            else
+                std::snprintf(textBuffer, sizeof(textBuffer), "%.1f", getValue());
+            textBuffer[sizeof(textBuffer) - 1] = '\0';
+
+            fillColor(R::Value::color);
+            fontFace("mono");
+            fontSize(R::Value::fontSize * fScaleFactor);
+            textAlign(ALIGN_CENTER | ALIGN_TOP);
+            // textLetterSpacing(R::Value::letterSpacing * fScaleFactor);
+            text(w * 0.5f, starty, textBuffer);
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // draw border
+
+        fDrawingBackground = false;
+        drawReferenceBackground<R>();
     }
 
     void updateSize(const bool updateChildren) final
     {
-        if constexpr (R::width != 0)
-            BaseWidget::setWidth(d_roundToUnsignedInt(R::width * fScaleFactor));
-
-        if constexpr (R::height != 0)
-            BaseWidget::setHeight(d_roundToUnsignedInt(R::height * fScaleFactor));
-
+        updateReferenceSize<R>();
         BaseWidget::updateSize(updateChildren);
     }
 };
