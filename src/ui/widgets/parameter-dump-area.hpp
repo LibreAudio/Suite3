@@ -19,7 +19,7 @@ class ParameterDumpStageWidget final : public ReferenceContainerWidget<Reference
     using BaseWidget = ReferenceContainerWidget<R, kVertical>;
     using KnobGroupWidget10 = KnobGroupWidget<SmallKnobWidget, 10>;
 
-    std::shared_ptr<PillAreaWidget> fTopArea = addWidget<PillAreaWidget>();
+    std::shared_ptr<LabWidget> fTopArea = addWidget<PillAreaWidget<>>();
     std::list<std::shared_ptr<LabWidget>> fSpacers;
     std::list<std::shared_ptr<KnobGroupWidget10>> fKnobGroups;
 

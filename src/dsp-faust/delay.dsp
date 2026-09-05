@@ -211,7 +211,7 @@ mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol
 // wrong topology for the whole length of its tail. Measured before the fix: an
 // impulse at sample 0 with Ping-Pong selected came out of both channels at
 // once, which is precisely the thing ping-pong is not.
-ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping-Pong L':1;'Ping-Pong R':2}][symbol:pingpong][bracket:MODE]", 0, 0, 2, 1)) : int;
+ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping':1;'Pong':2}][symbol:pingpong][bracket:MODE]", 0, 0, 2, 1)) : int;
 
 // One coefficient per handed topology, and their sum is how ping-pong the
 // engine is at all.

@@ -59,7 +59,7 @@ class ExpertStageWidget final : public ReferenceContainerWidget<Reference::Stage
     using R = Reference::Stage;
     using BaseWidget = ReferenceContainerWidget<R, kVertical>;
 
-    std::shared_ptr<PillAreaWidget> fTopArea = addWidget<PillAreaWidget>();
+    std::shared_ptr<LabWidget> fTopArea = addWidget<PillAreaWidget<>>();
     std::shared_ptr<LabWidget> fSpacer = addSpacer();
     std::shared_ptr<ExpertKnobsGroupWidget> fExpertKnobs = addWidget<ExpertKnobsGroupWidget>();
 

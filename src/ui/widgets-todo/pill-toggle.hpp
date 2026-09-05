@@ -160,25 +160,25 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
+template<uint kMaxNumToggles = 2>
 class PillAreaWidget : public ReferenceContainerWidget<Reference::Widgets::PillArea>
 {
     using R = Reference::Widgets::PillArea;
     using BaseWidget = ReferenceContainerWidget<R>;
 
-    static constexpr const uint kMaxNumToggles = 2;
-
     std::list<std::unique_ptr<PillToggleWidget>> fToggles;
     std::list<std::unique_ptr<Widget>> fSpacers;
 
 public:
-    explicit PillAreaWidget(LabWidget* const parent)
+    explicit PillAreaWidget(LabWidget* const parent, const uint32_t parameterStart = 0)
         : BaseWidget(parent)
     {
         const std::vector<FaustParameter>& parameters = getFaustParameters();
 
         uint8_t numPills = 0;
-        for (const FaustParameter& parameter : parameters)
+        for (uint32_t i = parameterStart, count = parameters.size(); i < count && numPills < kMaxNumToggles; ++i)
         {
+            const FaustParameter& parameter = parameters[i];
             if (! parameter.isEnumerator || parameter.isOutput) {
                 d_stdout("pill area skipped parameter %s", parameter.label);
                 continue;
@@ -189,7 +189,7 @@ public:
         if (numPills == 1)
             addSpacer();
 
-        for (uint32_t i = 0, count = parameters.size(); i < count && widgets.size() < kMaxNumToggles * 2; ++i)
+        for (uint32_t i = parameterStart, count = parameters.size(); i < count && fToggles.size() < kMaxNumToggles; ++i)
         {
             const FaustParameter& parameter = parameters[i];
             if (! parameter.isEnumerator || parameter.isOutput) {

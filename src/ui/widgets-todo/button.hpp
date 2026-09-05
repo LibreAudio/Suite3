@@ -158,7 +158,7 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<Corner corner, class R = Reference::Widgets::Button>
+template<Corner corner, class R = Reference::Widgets::Button, Orientation orientation = kHorizontal>
 class TextButtonWidget : public ReferenceButtonWidget<R, corner>
 {
     using BaseWidget = ReferenceButtonWidget<R, corner>;
@@ -197,7 +197,11 @@ private:
         BaseWidget::textAlign(0);
         BaseWidget::textLetterSpacing(R::letterSpacing * this->fScaleFactor);
         BaseWidget::textBounds(0, 0, fText, nullptr, bounds);
-        BaseWidget::setWidth(bounds.getWidth() + margin);
+
+        if constexpr (orientation == kHorizontal)
+            BaseWidget::setWidth(bounds.getWidth() + margin);
+        else
+            BaseWidget::setHeight(bounds.getHeight() + margin);
 
         BaseWidget::updateSize(updateChildren);
     }

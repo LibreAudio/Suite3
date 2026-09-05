@@ -24,15 +24,96 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
     using R = Reference::TransparentStage;
     using BaseWidget = ReferenceContainerWidget<R, kHorizontal>;
 
-    const std::vector<FaustParameter>& kParameters = getFaustParameters();
-
-    class DelayP1 : public ReferenceContainerWidget<Reference::OpaqueStage, kVertical>
+    template<class R>
+    class Controls : public ReferenceContainerWidget<R, kVertical>
     {
-        using BaseWidget = ReferenceContainerWidget<Reference::OpaqueStage, kVertical>;
+        using BaseWidget = ReferenceContainerWidget<R, kVertical>;
+        using Layout = typename BaseWidget::Layout;
+
+        const std::vector<FaustParameter>& kParameters = getFaustParameters();
+
+        std::list<std::shared_ptr<LabWidget>> fWidgets;
+
+        struct TextReference : Reference::Zero {
+            static constexpr const Color color = Reference::Colors::ink2;
+            static constexpr const float fontSize = 12;
+            static constexpr const float letterSpacing = fontSize * 0.01;
+        };
 
     public:
-        explicit DelayP1(LabWidget* const parent)
+        explicit Controls(LabWidget* const parent)
             : BaseWidget(parent) {}
+
+        void addPillToggle(const uint32_t parameter)
+        {
+            std::shared_ptr<LabWidget> widget { new PillAreaWidget<1>(this, parameter) };
+            Layout::widgets.push_back({ widget.get(), Fixed });
+            fWidgets.emplace_back(std::move(widget));
+        }
+
+        template<uint maxNumParameters>
+        void addKnobGroup(const uint32_t parameterStart)
+        {
+            std::shared_ptr<LabWidget> widget {
+                new KnobGroupWidget<SmallKnobWidget, maxNumParameters>(this, kParameters, kParametersMainStart, parameterStart)
+            };
+            Layout::widgets.push_back({ widget.get(), Fixed });
+            fWidgets.emplace_back(std::move(widget));
+        }
+
+        void addSpacer()
+        {
+            std::shared_ptr<LabWidget> spacer { new LabEmptyWidget(this) };
+            Layout::widgets.push_back({ spacer.get(), Expanding });
+            fWidgets.emplace_back(std::move(spacer));
+        }
+
+        void addText(const char* const text)
+        {
+            std::shared_ptr<LabWidget> spacer { new TextButtonWidget<kCornerNone, TextReference, kVertical>(this, text) };
+            Layout::widgets.push_back({ spacer.get(), Fixed });
+            fWidgets.emplace_back(std::move(spacer));
+        }
+    };
+
+    class ControlsColumn : public ReferenceContainerWidget<Reference::TransparentStage, kVertical>
+    {
+        using BaseWidget = ReferenceContainerWidget<Reference::TransparentStage, kVertical>;
+
+    protected:
+        std::shared_ptr<Controls<Reference::OpaqueStage>> fTop = addWidget<Controls<Reference::OpaqueStage>, Expanding>();
+        std::shared_ptr<Controls<Reference::OpaqueSmallStage>> fBottom = addWidget<Controls<Reference::OpaqueSmallStage>>();
+
+    public:
+        explicit ControlsColumn(LabWidget* const parent)
+            : BaseWidget(parent)
+        {
+        }
+
+    private:
+        void updateSize(const bool updateChildren) final
+        {
+            // FIXME
+            static_cast<LabWidget*>(fBottom.get())->setHeight(120 * fScaleFactor);
+
+            BaseWidget::updateSize(updateChildren);
+        }
+    };
+
+    class ControlsColumnLeft : public ControlsColumn
+    {
+    public:
+        explicit ControlsColumnLeft(LabWidget* const parent)
+            : ControlsColumn(parent)
+        {
+            fTop->addPillToggle(delay::kFaustParameterMode);
+            // fTop->addSpacer();
+            fTop->addKnobGroup<2>(delay::kFaustParameterSync);
+            // fTop->addSpacer();
+            fTop->addKnobGroup<2>(delay::kFaustParameterTime_l);
+            fBottom->addText("DYNAMICS");
+            fBottom->addKnobGroup<2>(delay::kFaustParameterDeess_amount);
+        }
     };
 
     class DelayP2 : public ReferenceContainerWidget<Reference::Stage, kVertical>
@@ -44,58 +125,26 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
             : BaseWidget(parent) {}
     };
 
-    class DelayP3 : public ReferenceContainerWidget<Reference::OpaqueStage, kVertical>
+    class ControlsColumnRight : public ControlsColumn
     {
-        using BaseWidget = ReferenceContainerWidget<Reference::OpaqueStage, kVertical>;
-
-        using KnobGroupWidget3 = KnobGroupWidget<SmallKnobWidget, 3>;
-
-        const std::vector<FaustParameter>& kParameters = getFaustParameters();
-
-        std::shared_ptr<PillToggleWidget> fPillToggle;
-        std::list<std::shared_ptr<LabWidget>> fSpacers;
-        std::list<std::shared_ptr<KnobGroupWidget3>> fKnobGroups;
-
     public:
-        explicit DelayP3(LabWidget* const parent)
-            : BaseWidget(parent)
+        explicit ControlsColumnRight(LabWidget* const parent)
+            : ControlsColumn(parent)
         {
-            {
-                fPillToggle.reset(new PillToggleWidget(this, kParameters[delay::kFaustParameterPingpong], delay::kFaustParameterPingpong));
-                widgets.push_back({ fPillToggle.get(), Fixed });
-            }
-
-            addSpacer();
-
-            {
-                std::shared_ptr<KnobGroupWidget3> widget { new KnobGroupWidget3(this, kParameters, kParametersMainStart, delay::kFaustParameterFeedback) };
-                widgets.push_back({ widget.get(), Fixed });
-                fKnobGroups.emplace_back(std::move(widget));
-            }
-
-            addSpacer();
-
-            {
-                std::shared_ptr<KnobGroupWidget3> widget { new KnobGroupWidget3(this, kParameters, kParametersMainStart, delay::kFaustParameterMod_rate) };
-                widgets.push_back({ widget.get(), Fixed });
-                fKnobGroups.emplace_back(std::move(widget));
-            }
-
-            addSpacer();
-        }
-
-        void addSpacer()
-        {
-            std::shared_ptr<LabWidget> spacer { new LabEmptyWidget(this) };
-            widgets.push_back({ spacer.get(), Expanding });
-            fSpacers.emplace_back(std::move(spacer));
+            fTop->addPillToggle(delay::kFaustParameterPingpong);
+            // fTop->addSpacer();
+            fTop->addKnobGroup<3>(delay::kFaustParameterFeedback);
+            // fTop->addSpacer();
+            fTop->addKnobGroup<3>(delay::kFaustParameterMod_rate);
+            fBottom->addText("OUTPUT");
+            fBottom->addKnobGroup<2>(delay::kFaustParameterWidth);
         }
     };
 
     std::array<std::shared_ptr<LabWidget>, 3> fWidgets {
-        addWidget<DelayP1, Expanding>(),
+        addWidget<ControlsColumnLeft, Expanding>(),
         addWidget<DelayP2, Expanding>(),
-        addWidget<DelayP3, Expanding>(),
+        addWidget<ControlsColumnRight, Expanding>(),
     };
 
 public:

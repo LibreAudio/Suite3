@@ -39,6 +39,10 @@ struct Reference {
     struct Zero {
         static constexpr const Color backgroundColor = Colors::transparent;
         static constexpr const Color borderColor = Colors::transparent;
+        static constexpr const Color color = Colors::transparent;
+        static constexpr const Color color〡deactivated = Colors::transparent;
+        static constexpr const float fontSize = 0.f;
+        static constexpr const float letterSpacing = 0.f;
         static constexpr const uint border = 0;
         static constexpr const uint borderRadius = 0;
         static constexpr const uint height = 0;
@@ -137,6 +141,12 @@ struct Reference {
 
     struct OpaqueStage : Stage {
         static constexpr const Color backgroundColor { 0x1a, 0x1b, 0x1f };
+    };
+
+    struct OpaqueSmallStage : OpaqueStage {
+        static constexpr const Color backgroundColor { 0x1a, 0x1b, 0x1f };
+        static constexpr const uint margin = OpaqueStage::margin / 2;
+        static constexpr const uint padding = 0;
     };
 
     struct Widgets {
