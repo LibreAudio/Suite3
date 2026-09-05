@@ -20,14 +20,14 @@ public:
 // --------------------------------------------------------------------------------------------------------------------
 
 template<class R, Orientation orientation>
-class RootReferenceTopLevelWidget : public ReferenceContainerTopLevelWidget<R, orientation>,
-                                    public RootWidgetInterface
+class ReferenceRootWidget : public ReferenceContainerTopLevelWidget<R, orientation>,
+                            public RootWidgetInterface
 {
     using BaseWidget = ReferenceContainerTopLevelWidget<R, orientation>;
     using ResizeEvent = typename BaseWidget::ResizeEvent;
 
 public:
-    RootReferenceTopLevelWidget(Window& window, LabUIWidgetInterface* const iface)
+    ReferenceRootWidget(Window& window, LabUIWidgetInterface* const iface)
         : BaseWidget(window, iface) {}
 
     void updateScaleFactorAndSize() final

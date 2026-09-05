@@ -13,12 +13,12 @@ namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class RootBaseTopLevelWidget : public RootReferenceTopLevelWidget<Reference::Window, kVertical>
+class RootBaseWidget : public ReferenceRootWidget<Reference::Window, kVertical>
 {
-    using BaseWidget = RootReferenceTopLevelWidget<Reference::Window, kVertical>;
+    using BaseWidget = ReferenceRootWidget<Reference::Window, kVertical>;
 
 public:
-    RootBaseTopLevelWidget(Window& window, LabUIWidgetInterface* const iface)
+    RootBaseWidget(Window& window, LabUIWidgetInterface* const iface)
         : BaseWidget(window, iface)
     {
         createFontFromMemory("regular",
@@ -33,15 +33,15 @@ public:
 };
 
 template <class TopBar, class MainArea>
-class RootTopLevelWidget : public RootBaseTopLevelWidget
+class RootWidget : public RootBaseWidget
 {
 protected:
     std::shared_ptr<TopBar> fTopBar = addWidget<TopBar>();
     std::shared_ptr<MainArea> fMainArea = addWidget<MainArea, Expanding>();
 
 public:
-    RootTopLevelWidget(Window& window, LabUIWidgetInterface* const iface)
-        : RootBaseTopLevelWidget(window, iface) {}
+    RootWidget(Window& window, LabUIWidgetInterface* const iface)
+        : RootBaseWidget(window, iface) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------
