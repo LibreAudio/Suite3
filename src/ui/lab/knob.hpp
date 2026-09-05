@@ -61,8 +61,11 @@ private:
         fInterface->parameterControlModified(widget->getId(), value);
     }
 
-    void knobDoubleClicked(SubWidget*) final
+    void knobDoubleClicked(SubWidget* const widget) final
     {
+        fInterface->parameterControlPressed(widget->getId());
+        fInterface->parameterControlModified(widget->getId(), getDefault());
+        fInterface->parameterControlReleased(widget->getId());
     }
 
     bool onMouse(const Widget::MouseEvent& ev) final

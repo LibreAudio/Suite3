@@ -49,10 +49,12 @@ static float* createParameterValues(const uint32_t paramCount)
 LibreAudioBaseUI::LibreAudioBaseUI()
     : UI(),
       kParameterCount(kParametersMainStart  + kFaustParameters.size()),
+      fParameterPressed(new bool[kParameterCount]),
       fParameterValues(createParameterValues(kParameterCount)),
       fParameterValuesWhenActivated(new float[kParameterCount]),
       fSnapshots(kNumSnapshots, kParameterCount, fParameterValues, this)
 {
+    std::memset(fParameterPressed, 0, sizeof(bool) * kParameterCount);
     std::memcpy(fParameterValuesWhenActivated, fParameterValues, sizeof(float) * kParameterCount);
 
     // set minimum size
@@ -65,6 +67,7 @@ LibreAudioBaseUI::LibreAudioBaseUI()
 
 LibreAudioBaseUI::~LibreAudioBaseUI()
 {
+    delete[] fParameterPressed;
     delete[] fParameterValues;
     delete[] fParameterValuesWhenActivated;
 }
@@ -419,6 +422,9 @@ void LibreAudioBaseUI::onResize(const ResizeEvent& ev)
 
 void LibreAudioBaseUI::parameterControlPressed(const uint32_t index)
 {
+    DISTRHO_SAFE_ASSERT_RETURN(! fParameterPressed[index],);
+    fParameterPressed[index] = true;
+
     switch (index)
     {
     case kCommonParameterReset:
@@ -435,6 +441,9 @@ void LibreAudioBaseUI::parameterControlPressed(const uint32_t index)
 
 void LibreAudioBaseUI::parameterControlReleased(const uint32_t index)
 {
+    DISTRHO_SAFE_ASSERT_RETURN(fParameterPressed[index],);
+    fParameterPressed[index] = false;
+
     switch (index)
     {
     case kCommonParameterReset:
@@ -451,6 +460,8 @@ void LibreAudioBaseUI::parameterControlReleased(const uint32_t index)
 
 void LibreAudioBaseUI::parameterControlModified(const uint32_t index, const float value)
 {
+    DISTRHO_SAFE_ASSERT(fParameterPressed[index]);
+
     fParameterValues[index] = value;
     setParameterValue(index, value);
 }

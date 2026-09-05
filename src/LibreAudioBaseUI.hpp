@@ -65,6 +65,7 @@ private:
 
     const uint32_t kParameterCount;
 
+    bool* const fParameterPressed;
     float* const fParameterValues;
     float* const fParameterValuesWhenActivated;
 
