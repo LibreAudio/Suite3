@@ -1,6 +1,6 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
@@ -11,7 +11,7 @@
 #include <memory>
 #include <type_traits>
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
 // widget container, with an horizontal or vertical layout for child widgets
@@ -23,17 +23,17 @@ class ContainerBaseWidgetOf : public BaseWidget,
 public:
     using Layout = std::conditional_t<orientation == kHorizontal, HorizontalLayout, VerticalLayout>;
 
-    explicit ContainerBaseWidgetOf(Widget* const parent)
+    explicit ContainerBaseWidgetOf(LabWidget* const parent)
         : BaseWidget(parent) {}
 
-    explicit ContainerBaseWidgetOf(TopLevelWidget* const parent)
+    explicit ContainerBaseWidgetOf(LabTopLevelWidget* const parent)
         : BaseWidget(parent) {}
 
-    explicit ContainerBaseWidgetOf(Window& windowToMapTo, UIWidgetInterface* const iface)
+    explicit ContainerBaseWidgetOf(Window& windowToMapTo, LabUIWidgetInterface* const iface)
         : BaseWidget(windowToMapTo, iface) {}
 
 protected:
-    template<class W = EmptyWidget>
+    template<class W = LabEmptyWidget>
     std::shared_ptr<W> addSpacer()
     {
         std::shared_ptr<W> widget { new W(this) };
@@ -43,7 +43,7 @@ protected:
 
     template<class W,
              SizeHint sizeHint = Fixed,
-             typename = std::enable_if_t<std::is_base_of_v<Widget, W>>>
+             typename = std::enable_if_t<std::is_base_of_v<LabWidget, W>>>
     std::shared_ptr<W> addWidget()
     {
         std::shared_ptr<W> widget { new W(this) };
@@ -67,13 +67,13 @@ public:
     using Layout = typename BaseWidget::Layout;
     using ResizeEvent = typename BaseWidget::ResizeEvent;
 
-    explicit ReferenceContainerBaseWidgetOf(Widget* const parent)
+    explicit ReferenceContainerBaseWidgetOf(LabWidget* const parent)
         : BaseWidget(parent) {}
 
-    explicit ReferenceContainerBaseWidgetOf(TopLevelWidget* const parent)
+    explicit ReferenceContainerBaseWidgetOf(LabTopLevelWidget* const parent)
         : BaseWidget(parent) {}
 
-    explicit ReferenceContainerBaseWidgetOf(Window& windowToMapTo, UIWidgetInterface* const iface)
+    explicit ReferenceContainerBaseWidgetOf(Window& windowToMapTo, LabUIWidgetInterface* const iface)
         : BaseWidget(windowToMapTo, iface) {}
 
 protected:
@@ -93,7 +93,7 @@ protected:
 
         BaseWidget::updateSize(updateChildren);
 
-        if constexpr (std::is_same_v<W, TopLevelWidget>)
+        if constexpr (std::is_same_v<W, LabTopLevelWidget>)
         {
             Layout::align(0, 0, width, height, padding, border + margin);
         }
@@ -115,17 +115,17 @@ protected:
 // reference container (sub) widget class
 
 template<class R, Orientation orientation = kHorizontal>
-class ReferenceContainerWidget : public ReferenceContainerBaseWidgetOf<ReferenceWidget<R>, R, orientation>
+class ReferenceContainerWidget : public ReferenceContainerBaseWidgetOf<LabReferenceWidget<R>, R, orientation>
 {
 public:
-    using BaseWidget = ReferenceContainerBaseWidgetOf<ReferenceWidget<R>, R, orientation>;
+    using BaseWidget = ReferenceContainerBaseWidgetOf<LabReferenceWidget<R>, R, orientation>;
     using Layout = typename BaseWidget::Layout;
     using PositionChangedEvent = typename BaseWidget::PositionChangedEvent;
 
-    explicit ReferenceContainerWidget(Widget* const parent)
+    explicit ReferenceContainerWidget(LabWidget* const parent)
         : BaseWidget(parent) {}
 
-    explicit ReferenceContainerWidget(TopLevelWidget* const parent)
+    explicit ReferenceContainerWidget(LabTopLevelWidget* const parent)
         : BaseWidget(parent) {}
 
 // protected:
@@ -146,15 +146,15 @@ public:
 // reference container top-level widget class
 
 template<class R, Orientation orientation>
-class ReferenceContainerTopLevelWidget : public ReferenceContainerBaseWidgetOf<TopLevelWidget, R, orientation>
+class ReferenceContainerTopLevelWidget : public ReferenceContainerBaseWidgetOf<LabTopLevelWidget, R, orientation>
 {
 public:
-    using BaseWidget = ReferenceContainerBaseWidgetOf<TopLevelWidget, R, orientation>;
+    using BaseWidget = ReferenceContainerBaseWidgetOf<LabTopLevelWidget, R, orientation>;
 
-    explicit ReferenceContainerTopLevelWidget(Window& windowToMapTo, UIWidgetInterface* const iface)
+    explicit ReferenceContainerTopLevelWidget(Window& windowToMapTo, LabUIWidgetInterface* const iface)
         : BaseWidget(windowToMapTo, iface) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

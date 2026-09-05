@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../reference/interface.hpp"
+#include "../lab/interface.hpp"
 
 #include "Application.hpp"
 #include "SubWidget.hpp"
@@ -35,7 +35,7 @@ namespace LibreAudio {
 class ShaderBaseWidget : public SubWidget
 {
 public:
-    explicit ShaderBaseWidget(DGL_NAMESPACE::TopLevelWidget* const parent, UIWidgetInterface* const iface)
+    explicit ShaderBaseWidget(TopLevelWidget* const parent, LabUIWidgetInterface* const iface)
         : SubWidget(parent),
           fInterface(iface) {}
 
@@ -48,7 +48,7 @@ public:
     }
 
 protected:
-    UIWidgetInterface* const fInterface;
+    LabUIWidgetInterface* const fInterface;
     float fBorderRadius = 0.f;
 };
 
@@ -59,7 +59,7 @@ class BackgroundShaderWidget final : public ShaderBaseWidget,
                                      public IdleCallback
 {
 public:
-    explicit BackgroundShaderWidget(DGL_NAMESPACE::TopLevelWidget* const parent, UIWidgetInterface* const iface)
+    explicit BackgroundShaderWidget(TopLevelWidget* const parent, LabUIWidgetInterface* const iface)
         : ShaderBaseWidget(parent, iface),
           fParent(parent),
           fScaleFactor(parent->getScaleFactor()),
@@ -252,7 +252,7 @@ private:
 
     void onDisplay() final
     {
-        const DGL_NAMESPACE::TopLevelWidget* const tlw = getTopLevelWidget();
+        const TopLevelWidget* const tlw = getTopLevelWidget();
 
         const uint width = getWidth();
         const uint height = getHeight();
@@ -428,7 +428,7 @@ private:
     static constexpr const float kLevelTimeAttackSeconds  = 1.0f;
     static constexpr const float kLevelTimeReleaseSeconds = 2.0f;
 
-    DGL_NAMESPACE::TopLevelWidget* const fParent;
+    TopLevelWidget* const fParent;
 
     const float fScaleFactor;
     const double fStartTime;

@@ -5,8 +5,8 @@
 #pragma once
 
 #include "button.hpp"
-#include "../reference/container.hpp"
-#include "../reference/interface.hpp"
+#include "../lab/container.hpp"
+#include "../lab/interface.hpp"
 
 #include "LibreAudioParameters.hpp"
 #include "FaustParameters.hpp"
@@ -22,7 +22,7 @@ class BackgroundPillToggleCellWidget : public TextButtonWidget<kCornerBoth,
     using BaseWidget = TextButtonWidget<kCornerBoth, Reference::Widgets::PillToggle::Cell>;
 
 public:
-    explicit BackgroundPillToggleCellWidget(Widget* const parent, const uint id, const char* const label)
+    explicit BackgroundPillToggleCellWidget(LabWidget* const parent, const uint id, const char* const label)
         : BaseWidget(parent, label)
     {
         BaseWidget::setCheckable(true);
@@ -57,9 +57,9 @@ class PillToggleWidget : public ReferenceContainerWidget<Reference::Widgets::Pil
     std::list<std::unique_ptr<BackgroundPillToggleCellWidget>> fCells;
 
 public:
-    explicit PillToggleWidget(Widget* const parent,
-                                        const FaustParameter& parameter,
-                                        const uint32_t id)
+    explicit PillToggleWidget(LabWidget* const parent,
+                              const FaustParameter& parameter,
+                              const uint32_t id)
         : BaseWidget(parent)
     {
         addIdleCallback(this);
@@ -119,7 +119,7 @@ private:
         DISTRHO_SAFE_ASSERT(updateChildren);
 
         // update children size first
-        Widget::updateSize(true);
+        BaseWidget::updateSize(true);
 
         const uint border = d_roundToUnsignedInt(R::border * fScaleFactor);
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
@@ -151,7 +151,7 @@ private:
         else
             height += d_roundToUnsignedInt(fScaleFactor);
 
-        Widget::setSize(width, height);
+        LabWidget::setSize(width, height);
 
         // update everything else
         BaseWidget::updateSize(false);
@@ -171,7 +171,7 @@ class PillAreaWidget : public ReferenceContainerWidget<Reference::Widgets::PillA
     std::list<std::unique_ptr<Widget>> fSpacers;
 
 public:
-    explicit PillAreaWidget(Widget* const parent)
+    explicit PillAreaWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         const std::vector<FaustParameter>& parameters = getFaustParameters();
@@ -217,7 +217,7 @@ public:
 private:
     void addSpacer()
     {
-        std::unique_ptr<Widget> spacer { new EmptyWidget(this) };
+        std::unique_ptr<LabWidget> spacer { new LabEmptyWidget(this) };
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
     }
@@ -237,7 +237,7 @@ private:
         else
             pillHeight = d_roundToUnsignedInt(fScaleFactor);
 
-        Widget::setHeight((border + margin) * 2 + pillHeight);
+        LabWidget::setHeight((border + margin) * 2 + pillHeight);
 
         BaseWidget::updateSize(updateChildren);
     }

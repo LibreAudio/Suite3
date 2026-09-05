@@ -20,13 +20,13 @@ class ParameterDumpStageWidget final : public ReferenceContainerWidget<Reference
     using KnobGroupWidget10 = KnobGroupWidget<SmallKnobWidget, 10>;
 
     std::shared_ptr<PillAreaWidget> fTopArea = addWidget<PillAreaWidget>();
-    std::list<std::shared_ptr<Widget>> fSpacers;
+    std::list<std::shared_ptr<LabWidget>> fSpacers;
     std::list<std::shared_ptr<KnobGroupWidget10>> fKnobGroups;
 
     const std::vector<FaustParameter>& kParameters = getFaustParameters();
 
 public:
-    explicit ParameterDumpStageWidget(Widget* const parent)
+    explicit ParameterDumpStageWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         fTopArea->setHeight(30 * fScaleFactor);
@@ -57,7 +57,7 @@ private:
 
     void addSpacer()
     {
-        std::shared_ptr<EmptyWidget> spacer { new EmptyWidget(this) };
+        std::shared_ptr<LabWidget> spacer { new LabEmptyWidget(this) };
         // spacer->setId(id);
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
@@ -104,7 +104,7 @@ class ParameterDumpArea : public ReferenceContainerWidget<Reference::MainArea>
     std::shared_ptr<Widget> fMetersOut = addWidget<MeterWidget<Output>>();
 
 public:
-    ParameterDumpArea(TopLevelWidget* const parent)
+    ParameterDumpArea(LabTopLevelWidget* const parent)
         : ReferenceContainerWidget(parent)
     {
     }

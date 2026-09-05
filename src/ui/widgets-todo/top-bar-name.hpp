@@ -5,7 +5,7 @@
 #pragma once
 
 #include "../reference.hpp"
-#include "../reference/base.hpp"
+#include "../lab/base.hpp"
 
 #include "DistrhoPluginInfo.h"
 
@@ -15,15 +15,16 @@ namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class TopBarNameWidget final : public Widget
+class TopBarNameWidget final : public LabWidget
 {
     using R = Reference::TopBar::PluginName;
+    using BaseWidget = LabWidget;
 
     char fName[sizeof(DISTRHO_PLUGIN_NAME) - 3];
 
 public:
-    TopBarNameWidget(Widget* const parent)
-        : Widget(parent)
+    TopBarNameWidget(LabWidget* const parent)
+        : BaseWidget(parent)
     {
         std::memcpy(fName, _constexpr_DISTRHO_PLUGIN_NAME + 3, sizeof(DISTRHO_PLUGIN_NAME) - 3);
         fName[sizeof(DISTRHO_PLUGIN_NAME) - 4] = '\0';
@@ -53,7 +54,7 @@ private:
         textBounds(0, 0, fName, nullptr, bounds);
         setWidth(bounds.getWidth());
 
-        Widget::updateSize(updateChildren);
+        BaseWidget::updateSize(updateChildren);
     }
 };
 

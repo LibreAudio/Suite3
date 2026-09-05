@@ -1,19 +1,19 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
 #include "DistrhoUtils.hpp"
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class UIWidgetInterface
+class LabUIWidgetInterface
 {
 public:
-    virtual ~UIWidgetInterface() = default;
+    virtual ~LabUIWidgetInterface() = default;
 
     [[nodiscard]] virtual uint32_t getParameterCount() const noexcept = 0;
     [[nodiscard]] virtual const char* getParameterSymbol(uint32_t index) const noexcept = 0;
@@ -32,4 +32,4 @@ public:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

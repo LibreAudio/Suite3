@@ -1,21 +1,23 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
 #include "base.hpp"
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
 
 template<const uchar* imageData, uint imageDataSize, uint imageScale = 2>
-class ImageWidget final : public Widget
+class ImageWidget final : public LabWidget
 {
+    using BaseWidget = LabWidget;
+
 public:
-    explicit ImageWidget(Widget* const parent)
-        : Widget(parent)
+    explicit ImageWidget(LabWidget* const parent)
+        : LabWidget(parent)
     {
         updateSize(false);
     }
@@ -57,10 +59,10 @@ private:
         else
             setWidth(fImageWidth);
 
-        Widget::updateSize(updateChildren);
+        BaseWidget::updateSize(updateChildren);
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

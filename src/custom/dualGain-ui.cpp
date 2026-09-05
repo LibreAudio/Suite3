@@ -5,7 +5,7 @@
 #include "LibreAudioBaseUI.hpp"
 
 #include "ui/reference.hpp"
-#include "ui/reference/color.hpp"
+#include "ui/lab/color.hpp"
 #include "ui/widgets.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -29,17 +29,17 @@ class LibreAudioUI : public LibreAudioBaseUI
     //         : BaseWidget(parent) {}
     // };
 
-    class TopBarWidget : public LibreAudio::ReferenceContainerWidget<ReferenceTopBar>
+    class TopBarWidget : public ReferenceContainerWidget<ReferenceTopBar>
     {
-        using BaseWidget = LibreAudio::ReferenceContainerWidget<ReferenceTopBar>;
+        using BaseWidget = ReferenceContainerWidget<ReferenceTopBar>;
 
         static constexpr const float kColor1[] = { 0.3f, 0.1f, 0.05f, 1.f };
         static constexpr const float kColor2[] = { 0.1f, 0.3f, 0.05f, 1.f };
-        std::shared_ptr<LibreAudio::Widget> w1 = addWidget<LibreAudio::ColorWidget<kColor1>, Expanding>();
-        std::shared_ptr<LibreAudio::Widget> w2 = addWidget<LibreAudio::ColorWidget<kColor2>, Expanding>();
+        std::shared_ptr<LabWidget> w1 = addWidget<LabColorWidget<kColor1>, Expanding>();
+        std::shared_ptr<LabWidget> w2 = addWidget<LabColorWidget<kColor2>, Expanding>();
 
     public:
-        explicit TopBarWidget(LibreAudio::TopLevelWidget* const parent)
+        explicit TopBarWidget(LabTopLevelWidget* const parent)
             : BaseWidget(parent) {}
     };
     // using TopBarWidget = LibreAudio::ReferenceWidget<ReferenceTopBar>;
@@ -52,7 +52,7 @@ class LibreAudioUI : public LibreAudioBaseUI
     };
 
     // static constexpr const float kColor[] = { 0.3f, 0.1f, 0.05f, 1.f };
-    using MainAreaWidget = LibreAudio::ReferenceWidget<ReferenceMainArea>;
+    using MainAreaWidget = LabReferenceWidget<ReferenceMainArea>;
 
 public:
     LibreAudioUI()

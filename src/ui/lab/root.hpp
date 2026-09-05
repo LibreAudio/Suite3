@@ -1,12 +1,12 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
 #include "container.hpp"
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -27,7 +27,7 @@ class RootReferenceTopLevelWidget : public ReferenceContainerTopLevelWidget<R, o
     using ResizeEvent = typename BaseWidget::ResizeEvent;
 
 public:
-    RootReferenceTopLevelWidget(Window& window, UIWidgetInterface* const iface)
+    RootReferenceTopLevelWidget(Window& window, LabUIWidgetInterface* const iface)
         : BaseWidget(window, iface) {}
 
     void updateScaleFactorAndSize() final
@@ -46,4 +46,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

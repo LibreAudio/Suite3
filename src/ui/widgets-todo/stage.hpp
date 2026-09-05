@@ -22,7 +22,7 @@ class EasyStageWidget final : public ReferenceContainerWidget<Reference::Stage, 
     std::shared_ptr<Widget> fSpacer2 = addSpacer();
 
 public:
-    explicit EasyStageWidget(Widget* const parent)
+    explicit EasyStageWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
     }
@@ -66,7 +66,7 @@ class ExpertStageWidget final : public ReferenceContainerWidget<Reference::Stage
     std::shared_ptr<ExpertKnobsGroupWidget> fExpertKnobs = addWidget<ExpertKnobsGroupWidget>();
 
 public:
-    explicit ExpertStageWidget(Widget* const parent)
+    explicit ExpertStageWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         fTopArea->setHeight(30 * fScaleFactor);
@@ -108,20 +108,20 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class StageWidget final : public Widget,
-                                    private IdleCallback
+class StageWidget final : public LabWidget,
+                          private IdleCallback
 {
     using R = Reference::Stage;
-    using BaseWidget = Widget;
+    using BaseWidget = LabWidget;
 
-    std::shared_ptr<Widget> fEasy { new EasyStageWidget(this) };
-    std::shared_ptr<Widget> fExpert;
+    std::shared_ptr<LabWidget> fEasy { new EasyStageWidget(this) };
+    std::shared_ptr<LabWidget> fExpert;
     // = { new ExpertStageWidget(this) };
 
     Page fLastPage = kPageEasy;
 
 public:
-    StageWidget(Widget* const parent)
+    StageWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         fExpert.reset(new ExpertStageWidget(this));

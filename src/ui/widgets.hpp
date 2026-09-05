@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "reference/image.hpp"
-#include "reference/interface.hpp"
+#include "lab/image.hpp"
+#include "lab/interface.hpp"
 #include "widgets/base.hpp"
 #include "widgets/button-group.hpp"
 #include "widgets/root.hpp"
@@ -30,7 +30,7 @@ class TopBarUndoRedoGroupWidget : public ButtonGroupWidget
     std::shared_ptr<ButtonBaseWidget> fRedo = addButton<ImageButtonWidget<kCornerRight, IMAGES_REDO_PNG_DATA, IMAGES_REDO_PNG_LEN>>(kWidgetRedo);
 
 public:
-    explicit TopBarUndoRedoGroupWidget(Widget* const parent)
+    explicit TopBarUndoRedoGroupWidget(LabWidget* const parent)
         : ButtonGroupWidget(parent)
     {
         done();
@@ -53,7 +53,7 @@ class TopBarSnapshotsGroupWidget : public ButtonGroupWidget
     std::shared_ptr<ButtonBaseWidget> fD = addButton<StaticTextButtonWidget<kCornerRight, kTextD>>(kWidgetSnapshotSlotD);
 
 public:
-    explicit TopBarSnapshotsGroupWidget(Widget* const parent)
+    explicit TopBarSnapshotsGroupWidget(LabWidget* const parent)
         : ButtonGroupWidget(parent)
     {
         fA->setWidth(fCopy->getWidth());
@@ -74,7 +74,7 @@ class TopBarEasyExpertGroupWidget : public ButtonGroupWidget
     std::shared_ptr<ButtonBaseWidget> fExpert = addButton<StaticTextButtonWidget<kCornerRight, kTextExpert>>(kWidgetExpert);
 
 public:
-    explicit TopBarEasyExpertGroupWidget(Widget* const parent)
+    explicit TopBarEasyExpertGroupWidget(LabWidget* const parent)
         : ButtonGroupWidget(parent)
     {
         done();
@@ -89,7 +89,7 @@ class TopBarMenuPowerGroupWidget : public ButtonGroupWidget
     std::shared_ptr<ButtonBaseWidget> fPower = addButton<BypassButtonWidget<kCornerRight>>(kWidgetPower);
 
 public:
-    explicit TopBarMenuPowerGroupWidget(Widget* const parent)
+    explicit TopBarMenuPowerGroupWidget(LabWidget* const parent)
         : ButtonGroupWidget(parent)
     {
         done();
@@ -104,14 +104,14 @@ class TopBar : public ReferenceContainerWidget<Reference::TopBar>
 
     std::shared_ptr<TopBarLogoWidget> fLogo = addWidget<TopBarLogoWidget>();
     std::shared_ptr<TopBarNameWidget> fPluginName = addWidget<TopBarNameWidget>();
-    std::shared_ptr<Widget> fSpacer = addSpacer();
+    std::shared_ptr<LabWidget> fSpacer = addSpacer();
     std::shared_ptr<ButtonGroupWidget> fUndoRedoGroup = addWidget<TopBarUndoRedoGroupWidget>();
     std::shared_ptr<ButtonGroupWidget> fSnapshotsGroup = addWidget<TopBarSnapshotsGroupWidget>();
     std::shared_ptr<ButtonGroupWidget> fEasyExpertGroup = addWidget<TopBarEasyExpertGroupWidget>();
     std::shared_ptr<ButtonGroupWidget> fMenuPowerGroup = addWidget<TopBarMenuPowerGroupWidget>();
 
 public:
-    TopBar(TopLevelWidget* const parent)
+    TopBar(LabTopLevelWidget* const parent)
         : BaseWidget(parent)
     {
     }
@@ -123,12 +123,12 @@ class MainArea : public ReferenceContainerWidget<Reference::MainArea>
 {
     using BaseWidget = ReferenceContainerWidget<Reference::MainArea>;
 
-    std::shared_ptr<Widget> fMetersIn = addWidget<MeterWidget<Input>>();
+    std::shared_ptr<LabWidget> fMetersIn = addWidget<MeterWidget<Input>>();
     std::shared_ptr<StageWidget> fStage = addWidget<StageWidget, Expanding>();
-    std::shared_ptr<Widget> fMetersOut = addWidget<MeterWidget<Output>>();
+    std::shared_ptr<LabWidget> fMetersOut = addWidget<MeterWidget<Output>>();
 
 public:
-    MainArea(TopLevelWidget* const parent)
+    MainArea(LabTopLevelWidget* const parent)
         : BaseWidget(parent) {}
 
     [[nodiscard]] Point<int> getMainAreaAbsolutePos() const noexcept

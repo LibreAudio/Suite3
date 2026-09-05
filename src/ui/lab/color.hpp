@@ -1,26 +1,26 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
 #include "base.hpp"
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
 
 template<const float rgba[4]>
-class ColorWidget final : public Widget
+class LabColorWidget final : public LabWidget
 {
     static constexpr const Color kColor = { rgba[0], rgba[1], rgba[2], rgba[3] };
 
 public:
-    explicit ColorWidget(Widget* const parent)
-        : Widget(parent) {}
+    explicit LabColorWidget(LabWidget* const parent)
+        : LabWidget(parent) {}
 
-    explicit ColorWidget(TopLevelWidget* const parent)
-        : Widget(parent) {}
+    explicit LabColorWidget(LabTopLevelWidget* const parent)
+        : LabWidget(parent) {}
 
 protected:
     void onNanoDisplay() final
@@ -35,4 +35,4 @@ protected:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

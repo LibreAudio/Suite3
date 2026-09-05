@@ -1,24 +1,24 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
 #include "base.hpp"
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
 // empty widget class, useful for making space and alignment of other widgets
 
-class EmptyWidget final : public Widget
+class LabEmptyWidget final : public LabWidget
 {
 public:
-    explicit EmptyWidget(Widget* const parent)
-        : Widget(parent) {}
+    explicit LabEmptyWidget(LabWidget* const parent)
+        : LabWidget(parent) {}
 
-    explicit EmptyWidget(TopLevelWidget* const parent)
-        : Widget(parent) {}
+    explicit LabEmptyWidget(LabTopLevelWidget* const parent)
+        : LabWidget(parent) {}
 
 private:
     void onNanoDisplay() final
@@ -28,4 +28,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

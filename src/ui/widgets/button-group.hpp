@@ -5,8 +5,8 @@
 #pragma once
 
 #include "base.hpp"
+#include "../lab/button-group.hpp"
 #include "../reference.hpp"
-#include "../reference/button-group.hpp"
 
 namespace LibreAudio {
 
@@ -17,7 +17,7 @@ class ButtonGroupWidget : public ReferenceButtonGroupWidget<Reference::Widgets::
     using BaseWidget = ReferenceButtonGroupWidget<Reference::Widgets::ButtonGroup>;
 
 public:
-    explicit ButtonGroupWidget(Widget* const parent)
+    explicit ButtonGroupWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
     }

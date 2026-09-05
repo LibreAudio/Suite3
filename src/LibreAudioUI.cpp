@@ -5,7 +5,7 @@
 #include "LibreAudioBaseUI.hpp"
 
 #include "ui/reference.hpp"
-#include "ui/reference/container.hpp"
+#include "ui/lab/container.hpp"
 #include "ui/widgets/parameter-dump-area.hpp"
 #include "ui/widgets/root.hpp"
 #include "ui/widgets-todo/shader.hpp"
@@ -17,14 +17,14 @@
 
 namespace LibreAudio {
 
-class RootWidgetWithShaders final : public RootWidget<TopBar, MainArea>
+class RootWidgetWithShaders final : public RootTopLevelWidget<TopBar, MainArea>
 {
-    using BaseWidget = RootWidget<TopBar, MainArea>;
+    using BaseWidget = RootTopLevelWidget<TopBar, MainArea>;
 
     std::list<ShaderBaseWidget*> fShaders;
 
 public:
-    RootWidgetWithShaders(Window& window, UIWidgetInterface* const iface)
+    RootWidgetWithShaders(Window& window, LabUIWidgetInterface* const iface)
         : BaseWidget(window, iface)
     {
     }

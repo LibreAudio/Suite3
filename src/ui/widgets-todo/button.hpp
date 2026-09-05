@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../reference/button.hpp"
+#include "../lab/button.hpp"
 #include "../reference.hpp"
 
 #include "las-resources.h"
@@ -21,7 +21,7 @@ class ImageButtonWidget : public ReferenceButtonWidget<R, corner>
     static constexpr const int imageScale = 2;
 
 public:
-    explicit ImageButtonWidget(Widget* const parent)
+    explicit ImageButtonWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         updateSize(false);
@@ -93,7 +93,7 @@ class DualImageButtonWidget : public ReferenceButtonWidget<R, corner>
     static constexpr const int imageScale = 2;
 
 public:
-    explicit DualImageButtonWidget(Widget* const parent)
+    explicit DualImageButtonWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         BaseWidget::setCheckable(true);
@@ -164,7 +164,7 @@ class TextButtonWidget : public ReferenceButtonWidget<R, corner>
     using BaseWidget = ReferenceButtonWidget<R, corner>;
 
 public:
-    explicit TextButtonWidget(Widget* const parent, const char* const text)
+    explicit TextButtonWidget(LabWidget* const parent, const char* const text)
         : BaseWidget(parent),
           fText(text)
     {
@@ -211,7 +211,7 @@ class StaticTextButtonWidget : public TextButtonWidget<corner, R>
     using BaseWidget = TextButtonWidget<corner, R>;
 
 public:
-    explicit StaticTextButtonWidget(Widget* const parent)
+    explicit StaticTextButtonWidget(LabWidget* const parent)
         : BaseWidget(parent, _text) {}
 };
 
@@ -224,7 +224,7 @@ class BypassButtonWidget final : public ImageButtonWidget<corner, IMAGES_POWER_P
     using BaseWidget = ImageButtonWidget<corner, IMAGES_POWER_PNG_DATA, IMAGES_POWER_PNG_LEN, R>;
 
 public:
-    explicit BypassButtonWidget(Widget* const parent)
+    explicit BypassButtonWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         BaseWidget::setCheckable(true);

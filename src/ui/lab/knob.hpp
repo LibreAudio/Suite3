@@ -1,6 +1,6 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
@@ -11,20 +11,20 @@
 
 #include "FaustParameters.hpp"
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class KnobWidget : public Widget,
-                   public KnobEventHandler,
-                   protected IdleCallback,
-                   private KnobEventHandler::Callback
+class LabKnobWidget : public LabWidget,
+                      public KnobEventHandler,
+                      protected IdleCallback,
+                      private KnobEventHandler::Callback
 {
     static constexpr const float kMouseDeceleration = 500.f;
 
 public:
-    explicit KnobWidget(Widget* const parent, const FaustParameter& parameter, const uint32_t id)
-        : Widget(parent),
+    explicit LabKnobWidget(LabWidget* const parent, const FaustParameter& parameter, const uint32_t id)
+        : LabWidget(parent),
           KnobEventHandler(this),
           fParameter(parameter)
     {
@@ -100,4 +100,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

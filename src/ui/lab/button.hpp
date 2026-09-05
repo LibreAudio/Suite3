@@ -1,6 +1,6 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
@@ -8,16 +8,18 @@
 
 #include "EventHandlers.hpp"
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class ButtonBaseWidget : public Widget,
+class ButtonBaseWidget : public LabWidget,
                          public ButtonEventHandler
 {
+    using BaseWidget = LabWidget;
+
 public:
-    explicit ButtonBaseWidget(Widget* const parent)
-        : Widget(parent),
+    explicit ButtonBaseWidget(LabWidget* const parent)
+        : BaseWidget(parent),
           ButtonEventHandler(this) {}
 
     [[nodiscard]] virtual Corner getCorner() const noexcept = 0;
@@ -27,18 +29,18 @@ protected:
     [[nodiscard]] virtual const Color& getForegroundColor() const noexcept = 0; // TODO remove
 
 private:
-    bool onMouse(const Widget::MouseEvent& ev) final
+    bool onMouse(const MouseEvent& ev) final
     {
         if (mouseEvent(ev))
             return true;
-        return Widget::onMouse(ev);
+        return BaseWidget::onMouse(ev);
     }
 
-    bool onMotion(const Widget::MotionEvent& ev) final
+    bool onMotion(const MotionEvent& ev) final
     {
         if (motionEvent(ev))
             return true;
-        return Widget::onMotion(ev);
+        return BaseWidget::onMotion(ev);
     }
 };
 
@@ -51,7 +53,7 @@ class ReferenceButtonWidget : public ButtonBaseWidget
     using BaseWidget = ButtonBaseWidget;
 
 public:
-    explicit ReferenceButtonWidget(Widget* const parent)
+    explicit ReferenceButtonWidget(LabWidget* const parent)
         : BaseWidget(parent) {}
 
     [[nodiscard]] Corner getCorner() const noexcept final
@@ -140,4 +142,4 @@ protected:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

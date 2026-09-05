@@ -1,13 +1,13 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
 #include "button.hpp"
 #include "container.hpp"
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -19,7 +19,7 @@ class ReferenceButtonGroupWidget : public ReferenceContainerWidget<R>,
     using BaseWidget = ReferenceContainerWidget<R>;
 
 public:
-    explicit ReferenceButtonGroupWidget(Widget* const parent)
+    explicit ReferenceButtonGroupWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         BaseWidget::addIdleCallback(this);
@@ -109,7 +109,7 @@ private:
             }
         }
 
-        LibreAudio::Widget::setWidth(width);
+        LabWidget::setWidth(width);
 
         // update everything else
         BaseWidget::updateSize(false);
@@ -120,4 +120,4 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

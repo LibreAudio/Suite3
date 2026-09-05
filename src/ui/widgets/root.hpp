@@ -7,18 +7,18 @@
 #include "las-resources.h"
 
 #include "../reference.hpp"
-#include "../reference/root.hpp"
+#include "../lab/root.hpp"
 
 namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class RootBaseWidget : public RootReferenceTopLevelWidget<Reference::Window, kVertical>
+class RootBaseTopLevelWidget : public RootReferenceTopLevelWidget<Reference::Window, kVertical>
 {
     using BaseWidget = RootReferenceTopLevelWidget<Reference::Window, kVertical>;
 
 public:
-    RootBaseWidget(Window& window, UIWidgetInterface* const iface)
+    RootBaseTopLevelWidget(Window& window, LabUIWidgetInterface* const iface)
         : BaseWidget(window, iface)
     {
         createFontFromMemory("regular",
@@ -33,15 +33,15 @@ public:
 };
 
 template <class TopBar, class MainArea>
-class RootWidget : public RootBaseWidget
+class RootTopLevelWidget : public RootBaseTopLevelWidget
 {
 protected:
     std::shared_ptr<TopBar> fTopBar = addWidget<TopBar>();
     std::shared_ptr<MainArea> fMainArea = addWidget<MainArea, Expanding>();
 
 public:
-    RootWidget(Window& window, UIWidgetInterface* const iface)
-        : RootBaseWidget(window, iface) {}
+    RootTopLevelWidget(Window& window, LabUIWidgetInterface* const iface)
+        : RootBaseTopLevelWidget(window, iface) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------

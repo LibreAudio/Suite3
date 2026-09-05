@@ -32,8 +32,8 @@ static_assert(_constexpr_DISTRHO_PLUGIN_LABEL[0] != '\0', "Label must not be emp
 #define DISTRHO_UI_FILE_BROWSER   0
 #define DISTRHO_UI_USER_RESIZABLE 1
 #define DISTRHO_UI_USE_CUSTOM 1
-#define DISTRHO_UI_CUSTOM_INCLUDE_PATH "ui/ui.hpp"
-#define DISTRHO_UI_CUSTOM_WIDGET_TYPE DISTRHO_NAMESPACE::LibreAudioUIWidget
+#define DISTRHO_UI_CUSTOM_INCLUDE_PATH "ui/lab/ui.hpp"
+#define DISTRHO_UI_CUSTOM_WIDGET_TYPE LabUIWidget
 #endif
 
 #define DISTRHO_PLUGIN_IS_RT_SAFE  1

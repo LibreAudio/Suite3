@@ -1,15 +1,15 @@
-// Libre Audio Suite
+// lab: Libre Audio Base-Widgets
 // Copyright (C) 2026 Filipe Coelho <falktx@falktx.com>
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: ISC
 
 #pragma once
 
 #include "Application.hpp"
 #include "NanoVG.hpp"
 
-namespace LibreAudio {
+START_NAMESPACE_DGL
 
-class UIWidgetInterface;
+class LabUIWidgetInterface;
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ public:
           fInterface(parent->fInterface),
           fScaleFactor(parent->fScaleFactor) {}
 
-    explicit BaseWidgetOf(Window& windowToMapTo, UIWidgetInterface* const iface)
+    explicit BaseWidgetOf(Window& windowToMapTo, LabUIWidgetInterface* const iface)
         : BaseWidget(windowToMapTo),
           fInterface(iface),
           fScaleFactor(windowToMapTo.getScaleFactor()) {}
@@ -94,7 +94,7 @@ public:
     }
 
 protected:
-    UIWidgetInterface* const fInterface;
+    LabUIWidgetInterface* const fInterface;
     float fScaleFactor;
 
     template <class R>
@@ -203,12 +203,12 @@ private:
 // --------------------------------------------------------------------------------------------------------------------
 // top-level widget class
 
-class TopLevelWidget : public BaseWidgetOf<NanoTopLevelWidget>
+class LabTopLevelWidget : public BaseWidgetOf<NanoTopLevelWidget>
 {
     using BaseWidget = BaseWidgetOf<NanoTopLevelWidget>;
 
 public:
-    explicit TopLevelWidget(Window& windowToMapTo, UIWidgetInterface* const iface)
+    explicit LabTopLevelWidget(Window& windowToMapTo, LabUIWidgetInterface* const iface)
         : BaseWidget(windowToMapTo, iface) {}
 
     void setWidth() = delete;
@@ -224,35 +224,44 @@ protected:
 // --------------------------------------------------------------------------------------------------------------------
 // (sub) widget class
 
-class Widget : public BaseWidgetOf<NanoSubWidget>
+class LabWidget : public BaseWidgetOf<NanoSubWidget>
 {
     using BaseWidget = BaseWidgetOf<NanoSubWidget>;
 
 public:
-    explicit Widget(TopLevelWidget* const parent)
+    explicit LabWidget(LabTopLevelWidget* const parent)
         : BaseWidget(parent) {}
 
-    explicit Widget(Widget* const parent)
+    explicit LabWidget(LabWidget* const parent)
         : BaseWidget(parent) {}
 };
+
+// --------------------------------------------------------------------------------------------------------------------
+// do not allow using `BaseWidgetOf` after this point
+
+#ifdef __GNUC__
+#pragma GCC poison BaseWidgetOf
+#endif
 
 // --------------------------------------------------------------------------------------------------------------------
 // reference (sub) widget class
 
 template<class R>
-class ReferenceWidget : public Widget
+class LabReferenceWidget : public LabWidget
 {
+    using BaseWidget = LabWidget;
+
 public:
-    explicit ReferenceWidget(TopLevelWidget* const parent)
-        : Widget(parent)
+    explicit LabReferenceWidget(LabTopLevelWidget* const parent)
+        : BaseWidget(parent)
     {
-        updateSize(false);
+        updateReferenceSize<R>();
     }
 
-    explicit ReferenceWidget(Widget* const parent)
-        : Widget(parent)
+    explicit LabReferenceWidget(LabWidget* const parent)
+        : BaseWidget(parent)
     {
-        updateSize(false);
+        updateReferenceSize<R>();
     }
 
 protected:
@@ -264,10 +273,10 @@ protected:
     void updateSize(const bool updateChildren) override
     {
         updateReferenceSize<R>();
-        Widget::updateSize(updateChildren);
+        BaseWidget::updateSize(updateChildren);
     }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-} /* namespace LibreAudio */
+END_NAMESPACE_DGL

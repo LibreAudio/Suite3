@@ -7,10 +7,9 @@
 #include "DistrhoPluginInfo.h"
 
 #include "../reference.hpp"
-#include "../reference/color.hpp"
-#include "../reference/container.hpp"
-#include "../reference/image.hpp"
-#include "DistrhoUtils.hpp"
+#include "../lab/color.hpp"
+#include "../lab/container.hpp"
+#include "../lab/image.hpp"
 #include "knob.hpp"
 
 #include "LibreAudioParameters.hpp"
@@ -33,7 +32,7 @@ class KnobGroupWidget : public ReferenceContainerWidget<Reference::Widgets::Knob
     using BaseWidget = ReferenceContainerWidget<R>;
 
     std::vector<std::shared_ptr<KnobWidget>> fKnobs;
-    std::vector<std::shared_ptr<Widget>> fSpacers;
+    std::vector<std::shared_ptr<LabWidget>> fSpacers;
 
     struct Bracket {
         uint start;
@@ -45,10 +44,10 @@ class KnobGroupWidget : public ReferenceContainerWidget<Reference::Widgets::Knob
     static constexpr const std::string_view kLabel = DISTRHO_PLUGIN_LABEL;
 
 public:
-    explicit KnobGroupWidget(Widget* const parent,
-                                       const std::vector<FaustParameter>& parameters,
-                                       const uint32_t idOffset = 0,
-                                       const uint32_t parameterStart = 0)
+    explicit KnobGroupWidget(LabWidget* const parent,
+                             const std::vector<FaustParameter>& parameters,
+                             const uint32_t idOffset = 0,
+                             const uint32_t parameterStart = 0)
         : BaseWidget(parent),
           fParameters(parameters),
           fParametersOffset(idOffset)
@@ -137,9 +136,9 @@ private:
 
     void addSpacer(const uint id)
     {
-        std::shared_ptr<EmptyWidget> spacer { new EmptyWidget(this) };
+        std::shared_ptr<LabWidget> spacer { new LabEmptyWidget(this) };
         // static constexpr const float c[4] = { 0.9f, 0.11f, 0.11f, 1.f };
-        // std::shared_ptr<LibreAudi::oWidget> spacer { new ColorWidget<c>(this) };
+        // std::shared_ptr<LabWidget> spacer { new LabColorWidget<c>(this) };
         spacer->setId(id);
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
@@ -175,9 +174,9 @@ private:
             }
         }
 
-        for (const std::shared_ptr<Widget>& spacer : fSpacers)
+        for (const std::shared_ptr<LabWidget>& spacer : fSpacers)
         {
-            if (Widget* const spacerPtr = spacer.get(); spacerPtr->getId() == id)
+            if (LabWidget* const spacerPtr = spacer.get(); spacerPtr->getId() == id)
             {
                 spacerPtr->setVisible(visible);
                 break;
@@ -428,7 +427,7 @@ class EasyKnobsGroupWidget final : public ReferenceContainerWidget<Reference::Wi
     using BaseWidget = ReferenceContainerWidget<R>;
 
 public:
-    explicit EasyKnobsGroupWidget(Widget* const parent)
+    explicit EasyKnobsGroupWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         addSpacer();
@@ -441,7 +440,7 @@ public:
             if (! parameter.isEasy) {
                 continue;
             }
-            std::shared_ptr<KnobWidget> widget { new EasyKnobWidget(this, parameter, kParametersMainStart + i) };
+            std::shared_ptr<LabKnobWidget> widget { new EasyKnobWidget(this, parameter, kParametersMainStart + i) };
             widgets.push_back({ widget.get(), Fixed });
             fKnobs.emplace_back(std::move(widget));
         }
@@ -454,8 +453,8 @@ public:
     void addWidget() = delete;
 
 private:
-    std::vector<std::shared_ptr<KnobWidget>> fKnobs;
-    std::vector<std::shared_ptr<Widget>> fSpacers;
+    std::vector<std::shared_ptr<LabKnobWidget>> fKnobs;
+    std::vector<std::shared_ptr<LabWidget>> fSpacers;
 
     void updateSize(const bool updateChildren) final
     {
@@ -476,7 +475,7 @@ private:
 
     void addSpacer()
     {
-        std::shared_ptr<EmptyWidget> spacer { new EmptyWidget(this) };
+        std::shared_ptr<LabWidget> spacer { new LabEmptyWidget(this) };
         widgets.push_back({ spacer.get(), Expanding });
         fSpacers.emplace_back(std::move(spacer));
     }
@@ -490,7 +489,7 @@ class ExpertKnobsGroupWidget final : public ReferenceContainerWidget<Reference::
     using BaseWidget = ReferenceContainerWidget<R>;
 
 public:
-    explicit ExpertKnobsGroupWidget(Widget* const parent)
+    explicit ExpertKnobsGroupWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         const std::vector<FaustParameter>& parameters = getFaustParameters();
@@ -511,7 +510,7 @@ public:
 
 private:
     std::shared_ptr<KnobGroupWidget<>> fKnobsLeft;
-    std::shared_ptr<Widget> fLogo;
+    std::shared_ptr<LabWidget> fLogo;
     std::shared_ptr<KnobGroupWidget<>> fKnobsRight;
 
     void updateSize(const bool updateChildren) final

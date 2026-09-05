@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../reference/knob.hpp"
+#include "../lab/knob.hpp"
 #include "../reference.hpp"
 
 namespace LibreAudio {
@@ -12,15 +12,15 @@ namespace LibreAudio {
 // --------------------------------------------------------------------------------------------------------------------
 
 template <class R>
-class DrawableKnobWidget final : public KnobWidget
+class DrawableKnobWidget final : public LabKnobWidget
 {
-    using BaseWidget = KnobWidget;
+    using BaseWidget = LabKnobWidget;
 
     static constexpr const double kTimeForShowingHostParameterChanges = 1;
     static constexpr const double kTimeForValueFadeout = 0.1;
 
 public:
-    DrawableKnobWidget(Widget* const parent, const FaustParameter& parameter, const uint32_t id)
+    DrawableKnobWidget(LabWidget* const parent, const FaustParameter& parameter, const uint32_t id)
         : BaseWidget(parent, parameter, id)
     {
         fKnobStyle.bipolar = d_isZero(parameter.init) && parameter.min < 0 && parameter.max > 0;
@@ -201,7 +201,7 @@ private:
 
     void idleCallback() final
     {
-        KnobWidget::idleCallback();
+        BaseWidget::idleCallback();
 
         if (timeEllapsed(fLastParameterChangedByHostTime, kTimeForShowingHostParameterChanges))
         {

@@ -41,7 +41,7 @@ public:
     // protected data
 
 protected:
-    std::shared_ptr<LibreAudio::RootBaseWidget> fRootWidget;
+    std::shared_ptr<LibreAudio::RootBaseTopLevelWidget> fRootWidget;
 
     template <class RootWidget>
     void createRootWidget()
@@ -53,7 +53,7 @@ protected:
     template <class TopBar, class MainArea>
     void createRootWidget()
     {
-        fRootWidget.reset(new LibreAudio::RootWidget<TopBar, MainArea>(getWindow(), this));
+        fRootWidget.reset(new LibreAudio::RootTopLevelWidget<TopBar, MainArea>(getWindow(), this));
         fRootWidget->updateScaleFactorAndSize();
     }
 

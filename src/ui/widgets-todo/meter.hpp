@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../reference/knob.hpp"
+#include "../lab/knob.hpp"
 #include "../reference.hpp"
 
 #include "LibreAudioParameters.hpp"
@@ -19,10 +19,10 @@ enum MeterWidgetType : bool {
 };
 
 template<MeterWidgetType type>
-class MeterWidget final : public KnobWidget
+class MeterWidget final : public LabKnobWidget
 {
     using R = Reference::Meter;
-    using BaseWidget = KnobWidget;
+    using BaseWidget = LabKnobWidget;
 
     static constexpr const uint kParameterL = type == Input
         ? kParametersInputStart + common_input::kFaustParameterInput_peak_l
@@ -43,7 +43,7 @@ class MeterWidget final : public KnobWidget
     }
 
 public:
-    MeterWidget(Widget* const parent)
+    MeterWidget(LabWidget* const parent)
         : BaseWidget(parent, getFaustParameter(), kParameterMeter)
     {
         updateSize(false);
