@@ -48,8 +48,8 @@ protected:
 // --------------------------------------------------------------------------------------------------------------------
 
 class PillToggleWidget : public ReferenceContainerWidget<Reference::Widgets::PillToggle>,
-                                   private ButtonEventHandler::Callback,
-                                   private IdleCallback
+                         private ButtonEventHandler::Callback,
+                         private IdleCallback
 {
     using R = Reference::Widgets::PillToggle;
     using BaseWidget = ReferenceContainerWidget<R>;

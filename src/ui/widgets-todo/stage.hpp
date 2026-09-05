@@ -23,9 +23,7 @@ class EasyStageWidget final : public ReferenceContainerWidget<Reference::Stage, 
 
 public:
     explicit EasyStageWidget(LabWidget* const parent)
-        : BaseWidget(parent)
-    {
-    }
+        : BaseWidget(parent) {}
 
 private:
     void onNanoDisplay() final
@@ -62,13 +60,14 @@ class ExpertStageWidget final : public ReferenceContainerWidget<Reference::Stage
     using BaseWidget = ReferenceContainerWidget<R, kVertical>;
 
     std::shared_ptr<PillAreaWidget> fTopArea = addWidget<PillAreaWidget>();
-    std::shared_ptr<Widget> fSpacer = addSpacer();
+    std::shared_ptr<LabWidget> fSpacer = addSpacer();
     std::shared_ptr<ExpertKnobsGroupWidget> fExpertKnobs = addWidget<ExpertKnobsGroupWidget>();
 
 public:
     explicit ExpertStageWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
+        // FIXME
         fTopArea->setHeight(30 * fScaleFactor);
     }
 
@@ -108,15 +107,15 @@ private:
 
 // --------------------------------------------------------------------------------------------------------------------
 
+template<class EasyPageWidget = EasyStageWidget, class ExpertPageWidget = ExpertStageWidget>
 class StageWidget final : public LabWidget,
                           private IdleCallback
 {
     using R = Reference::Stage;
     using BaseWidget = LabWidget;
 
-    std::shared_ptr<LabWidget> fEasy { new EasyStageWidget(this) };
-    std::shared_ptr<LabWidget> fExpert;
-    // = { new ExpertStageWidget(this) };
+    std::shared_ptr<EasyPageWidget> fEasy { new EasyPageWidget(this) };
+    std::shared_ptr<ExpertPageWidget> fExpert { new ExpertPageWidget(this) };
 
     Page fLastPage = kPageEasy;
 
@@ -124,10 +123,19 @@ public:
     StageWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
-        fExpert.reset(new ExpertStageWidget(this));
         fExpert->hide();
 
         addIdleCallback(this);
+    }
+
+    [[nodiscard]] const EasyPageWidget* getEasyWidget() const noexcept
+    {
+        return fEasy.get();
+    }
+
+    [[nodiscard]] const ExpertPageWidget* getExpertWidget() const noexcept
+    {
+        return fExpert.get();
     }
 
     [[nodiscard]] float getBorderRadius() const noexcept
@@ -169,8 +177,8 @@ private:
     {
         BaseWidget::onPositionChanged(ev);
 
-        fEasy->setAbsolutePos(ev.pos);
-        fExpert->setAbsolutePos(ev.pos);
+        static_cast<LabWidget*>(fEasy.get())->setAbsolutePos(ev.pos);
+        static_cast<LabWidget*>(fExpert.get())->setAbsolutePos(ev.pos);
     }
 
     // void onResize(const ResizeEvent& ev) override
@@ -183,8 +191,8 @@ private:
 
     void updateSize(const bool updateChildren) override
     {
-        fEasy->setSize(getSize());
-        fExpert->setSize(getSize());
+        static_cast<LabWidget*>(fEasy.get())->setSize(getSize());
+        static_cast<LabWidget*>(fExpert.get())->setSize(getSize());
 
         BaseWidget::updateSize(updateChildren);
     }

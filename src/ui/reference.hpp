@@ -131,6 +131,14 @@ struct Reference {
         static constexpr const uint padding = Common::margin;
     };
 
+    struct TransparentStage : Zero {
+        static constexpr const uint padding = Common::margin;
+    };
+
+    struct OpaqueStage : Stage {
+        static constexpr const Color backgroundColor { 0x1a, 0x1b, 0x1f };
+    };
+
     struct Widgets {
         struct Button : Zero {
             static constexpr const Color backgroundColor = { 0x42, 0x42, 0x5a };

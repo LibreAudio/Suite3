@@ -17,9 +17,9 @@
 
 namespace LibreAudio {
 
-class RootWidgetWithShaders final : public RootWidget<TopBar, MainArea>
+class RootWidgetWithShaders final : public RootWidget<TopBar, MainArea<>>
 {
-    using BaseWidget = RootWidget<TopBar, MainArea>;
+    using BaseWidget = RootWidget<TopBar, MainArea<>>;
 
     std::list<ShaderBaseWidget*> fShaders;
 

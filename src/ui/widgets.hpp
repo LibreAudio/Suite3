@@ -119,6 +119,7 @@ public:
 
 // --------------------------------------------------------------------------------------------------------------------
 
+template<class StageWidget = StageWidget<>>
 class MainArea : public ReferenceContainerWidget<Reference::MainArea>
 {
     using BaseWidget = ReferenceContainerWidget<Reference::MainArea>;
