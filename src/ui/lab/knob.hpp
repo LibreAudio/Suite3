@@ -64,7 +64,7 @@ private:
     void knobDoubleClicked(SubWidget* const widget) final
     {
         fInterface->parameterControlPressed(widget->getId());
-        fInterface->parameterControlModified(widget->getId(), getDefault());
+        setValue(getDefault(), true);
         fInterface->parameterControlReleased(widget->getId());
     }
 
