@@ -47,8 +47,8 @@
 #ifndef LIBREAUDIO_HOSTED
 #define KNOB  (sin(iTime * 0.35))  /* filter knob, -1 .. 1 -- swept so it moves */
 #define RES   0.5                  /* resonance, 0 .. 1 */
-#define GLOWW 4.0                  /* glow radius, pixels */
-#define THICK 3.0                  /* line thickness, pixels */
+#define GLOWW 2.0                  /* glow radius, pixels */
+#define THICK 1.5                  /* line thickness, pixels */
 #else
 /* adjustable plugin parameters */
 uniform float u_knob;

@@ -127,8 +127,8 @@
 #define LSN4   0.0
 #define LSN5   0.0
 #define FLOORDB (-18.0)
-#define GLOWW  4.0    /* glow radius, pixels */
-#define THICK  3.0    /* line thickness, pixels */
+#define GLOWW  2.0    /* glow radius, pixels */
+#define THICK  1.5    /* line thickness, pixels */
 #define DPX    1.0    /* dash pattern scale */
 #else
 /* adjustable plugin parameters and meters (u_ + the Faust [symbol:] of each) */

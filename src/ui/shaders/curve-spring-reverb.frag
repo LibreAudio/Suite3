@@ -55,8 +55,8 @@
 #define GAINL   0.0   /* Spring L, dB, -60 .. 0 */
 #define GAINC  -6.0   /* Spring C, dB */
 #define GAINR   0.0   /* Spring R, dB */
-#define GLOWW   4.0   /* glow radius, pixels */
-#define THICK   3.0   /* line thickness, pixels */
+#define GLOWW   2.0   /* glow radius, pixels */
+#define THICK   1.5   /* line thickness, pixels */
 #else
 /* adjustable plugin parameters (u_ + the Faust [symbol:] of each control) */
 uniform float u_dwell;

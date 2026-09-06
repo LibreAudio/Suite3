@@ -61,8 +61,7 @@ class BackgroundShaderWidget final : public ShaderBaseWidget,
 public:
     explicit BackgroundShaderWidget(TopLevelWidget* const parent, LabUIWidgetInterface* const iface)
         : ShaderBaseWidget(parent, iface),
-          fParent(parent),
-          fScaleFactor(parent->getScaleFactor())
+          fParent(parent)
     {
         // 8ms was 125 Hz: on a 60 Hz display more than half of those frames were rendered
         // and then thrown away. The shader widgets all cover the same area, so the window
@@ -267,7 +266,7 @@ private:
 
         glUniform1f(gl3.dpfBorderRadius, fBorderRadius);
         glUniform2f(gl3.dpfPosition, getAbsoluteX(), tlw->getHeight() - height - getAbsoluteY());
-        glUniform1f(gl3.dpfScaleFactor, fScaleFactor);
+        glUniform1f(gl3.dpfScaleFactor, fInterface->getScaleFactor());
 
         glUniform3f(gl3.iMouse, fMouseX.next(), fMouseY.next(), fMouseZ);
         glUniform3f(gl3.iResolution, width, height, 0.f);
@@ -430,7 +429,6 @@ private:
 
     TopLevelWidget* const fParent;
 
-    const float fScaleFactor;
     const double fStartTime = getApp().getTime();
     double fLastTime = fStartTime;
 

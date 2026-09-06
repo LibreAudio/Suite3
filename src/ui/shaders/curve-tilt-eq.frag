@@ -64,8 +64,8 @@
 #define RES    0.707                           /* mode 1 Q, 0.4 .. 8 */
 #define SPREAD 2.0                             /* mode 2 spread, 1 .. 20 */
 #define DSRES  0.0                             /* mode 2 bell gain, dB, 0 .. 12 */
-#define GLOWW  4.0                             /* glow radius, pixels */
-#define THICK  3.0                             /* line thickness, pixels */
+#define GLOWW  2.0                             /* glow radius, pixels */
+#define THICK  1.5                             /* line thickness, pixels */
 #else
 /* adjustable plugin parameters (u_ + the Faust [symbol:] of each control) */
 uniform float u_mode;

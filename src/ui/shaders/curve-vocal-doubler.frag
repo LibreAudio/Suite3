@@ -25,9 +25,7 @@
 #define DBMAX 18.0   /* top of the dB window */
 #define DBMIN -42.0  /* bottom of the dB window */
 #define WIN  2.0     /* time window shown, seconds */
-#define THICK 3.0    /* line thickness, pixels */
 #define GLOW 0.60    /* glow strength (0 .. 1) */
-#define GLOWW 4.0    /* glow radius, pixels */
 #define FILL 0.35    /* fill opacity between the two voices (0 .. 1) */
 #define FMIN 20.0    /* frequency axis min, Hz (left edge) */
 #define FMAX 10000.0 /* frequency axis max, Hz (right edge) */
@@ -38,14 +36,16 @@
 
 /* standalone defaults (Shadertoy editor has no custom uniforms) */
 #ifndef LIBREAUDIO_HOSTED
-#define R1       0.55   /* voice 1 trace rate, Hz */
-#define R2       0.85   /* voice 2 trace rate, Hz */
-#define DEPTH    0.35    /* trace amplitude / wet depth (0 .. 1) */
-#define SHOWB    1.0     /* draw the 2nd voice? (0 or 1) - on in 1/3 Doubler & 2-voice ADT */
-#define LPHZ     7000.0   /* wet-EQ low-pass corner, Hz */
-#define HPHZ     20.0     /* wet-EQ high-pass corner, Hz */
-#define PRESENCE 0.62    /* presence bell (0 .. 1, 0.5 = flat), +-12 dB at 2 kHz */
-#define DEESS    0.6     /* De-Ess amount (0 .. 1) */
+#define R1       0.55 /* voice 1 trace rate, Hz */
+#define R2       0.85 /* voice 2 trace rate, Hz */
+#define DEPTH    0.35 /* trace amplitude / wet depth (0 .. 1) */
+#define SHOWB    1.0  /* draw the 2nd voice? (0 or 1) - on in 1/3 Doubler & 2-voice ADT */
+#define LPHZ  7000.0  /* wet-EQ low-pass corner, Hz */
+#define HPHZ    20.0  /* wet-EQ high-pass corner, Hz */
+#define PRESENCE 0.62 /* presence bell (0 .. 1, 0.5 = flat), +-12 dB at 2 kHz */
+#define DEESS    0.6  /* De-Ess amount (0 .. 1) */
+#define THICK    1.5  /* line thickness, pixels */
+#define GLOWW    2.0  /* glow radius, pixels */
 #else
 /* adjustable plugin parameters */
 uniform float u_adt_2voice;
@@ -69,6 +69,8 @@ uniform float u_take_timing;
 #define HPHZ u_eq_hp
 #define PRESENCE ((u_presence + 12.0) / 24.0)
 #define DEESS (u_deess_amount * 0.01)
+#define THICK (1.5 * _dpf_scale_factor)
+#define GLOWW (2.0 * _dpf_scale_factor)
 #endif
 
 #define TAU 6.28318530718

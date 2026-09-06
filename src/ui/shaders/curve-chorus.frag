@@ -42,8 +42,8 @@
 #define R1       0.55 /* LFO 1 rate, Hz (0.05 .. 5) */
 #define R2       0.85 /* LFO 2 rate, Hz (0.05 .. 5) */
 #define SHOWB    1.0  /* draw the 2nd trace? (0 or 1) */
-#define GLOWW    4.0  /* glow radius, pixels */
-#define THICK    3.0  /* line thickness, pixels */
+#define GLOWW    2.0  /* glow radius, pixels */
+#define THICK    1.5  /* line thickness, pixels */
 #else
 /* adjustable plugin parameters */
 uniform float u_ddepth;
