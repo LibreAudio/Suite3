@@ -12,7 +12,10 @@
 #include "LibreAudioParameters.hpp"
 #include "LibreAudioStates.hpp"
 
-#ifndef _DARKGLASS_DEVICE_PABLITO
+#if LIBREAUDIO_WANT_COMMON_IO
+#if DISTRHO_PLUGIN_NUM_INPUTS != 2
+#error common IO can only be used for stereo plugins
+#endif
 // TODO convert common IO to C++
 #include "common_input-dsp.hpp"
 #include "common_output-dsp.hpp"
@@ -30,7 +33,7 @@ static constexpr const float kParameterSmoothingTime = 0.05f; // in seconds
 
 const std::vector<FaustParameter>& LibreAudioPlugin::kFaustParameters = getFaustParameters();
 
-#ifndef _DARKGLASS_DEVICE_PABLITO
+#if LIBREAUDIO_WANT_COMMON_IO
 // TODO convert common IO to C++
 const std::vector<FaustParameter>& LibreAudioPlugin::kFaustParametersIn = common_input::getFaustParameters();
 const std::vector<FaustParameter>& LibreAudioPlugin::kFaustParametersOut = common_output::getFaustParameters();
@@ -43,7 +46,7 @@ LibreAudioPlugin::LibreAudioPlugin()
       kParameterCount(kParametersMainStart  + kFaustParameters.size()),
       fCommonParameterValues(new float[kCommonParameterCount]),
       fMainDSP(createDSP())
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     , fInputDSP(common_input::createDSP())
     , fOutputDSP(common_output::createDSP())
    #endif
@@ -62,7 +65,7 @@ LibreAudioPlugin::LibreAudioPlugin()
     fGlobalWetValue.setTargetValue(1.f);
 
     fMainDSP->init(iSampleRate);
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     fInputDSP->init(iSampleRate);
     fOutputDSP->init(iSampleRate);
    #endif
@@ -76,7 +79,7 @@ LibreAudioPlugin::LibreAudioPlugin()
 LibreAudioPlugin::~LibreAudioPlugin()
 {
     delete fMainDSP;
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     delete fInputDSP;
     delete fOutputDSP;
    #endif
@@ -173,7 +176,7 @@ void LibreAudioPlugin::initParameter(uint32_t index, Parameter& parameter)
         parameter.ranges.max = 100.f;
         break;
    #endif
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     case kParametersInputStart ... kParametersInputEnd:
         parameter.groupId = kGroupInput;
         initParameterFromFaust(parameter, kFaustParametersIn[index - kParametersInputStart]);
@@ -185,7 +188,7 @@ void LibreAudioPlugin::initParameter(uint32_t index, Parameter& parameter)
    #endif
     default:
         DISTRHO_SAFE_ASSERT_RETURN(index < kParameterCount,);
-       #ifndef _DARKGLASS_DEVICE_PABLITO
+       #if LIBREAUDIO_WANT_COMMON_IO
         parameter.groupId = kGroupMain;
        #endif
         initParameterFromFaust(parameter, kFaustParameters[index - kParametersMainStart]);
@@ -254,7 +257,7 @@ float LibreAudioPlugin::getParameterValue(const uint32_t index) const
     {
     case kParametersCommonStart ... kParametersCommonEnd:
         return fCommonParameterValues[index - kParametersCommonStart];
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     case kParametersInputStart ... kParametersInputEnd:
         return fInputDSP->get(index - kParametersInputStart);
     case kParametersOutputStart ... kParametersOutputEnd:
@@ -274,7 +277,7 @@ void LibreAudioPlugin::setParameterValue(uint32_t index, const float value)
     case kParametersCommonStart ... kParametersCommonEnd:
         fCommonParameterValues[index - kParametersCommonStart] = value;
         break;
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     case kParametersInputStart ... kParametersInputEnd:
         fInputDSP->set(index - kParametersInputStart, value);
         break;
@@ -298,7 +301,7 @@ void LibreAudioPlugin::setParameterValue(uint32_t index, const float value)
         if (fMuting.load() == false)
             doUnmute();
         break;
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     case kParametersInputStart + common_input::kFaustParameterInput_ms_on:
         fOutputDSP->set(common_output::kFaustParameterInput_ms_on, value);
         break;
@@ -336,7 +339,7 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
         fGlobalDryValue.clearToTargetValue();
         fGlobalWetValue.clearToTargetValue();
         fMainDSP->instanceClear();
-       #ifndef _DARKGLASS_DEVICE_PABLITO
+       #if LIBREAUDIO_WANT_COMMON_IO
         fInputDSP->instanceClear();
         fOutputDSP->instanceClear();
        #endif
@@ -390,7 +393,7 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
         fMainDSP->setVAD(vad);
        #endif
 
-       #ifndef _DARKGLASS_DEVICE_PABLITO
+       #if LIBREAUDIO_WANT_COMMON_IO
         fInputDSP->compute(cycleFrames, fCycleBuffer1, fCycleBuffer2);
         fMainDSP->compute(cycleFrames, fCycleBuffer2, fCycleBuffer1);
         fOutputDSP->compute(cycleFrames, fCycleBuffer1, fCycleBuffer2);
@@ -442,7 +445,7 @@ void LibreAudioPlugin::sampleRateChanged(const double newSampleRate)
 
     const int sampleRate = d_roundToIntPositive(newSampleRate);
     fMainDSP->instanceConstants(sampleRate);
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     fInputDSP->instanceConstants(sampleRate);
     fOutputDSP->instanceConstants(sampleRate);
    #endif

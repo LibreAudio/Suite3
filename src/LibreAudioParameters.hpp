@@ -6,7 +6,7 @@
 
 #include "src/DistrhoDefines.h"
 
-#ifndef _DARKGLASS_DEVICE_PABLITO
+#if LIBREAUDIO_WANT_COMMON_IO
 #include "common_input-parameters.hpp"
 #include "common_output-parameters.hpp"
 #endif
@@ -37,7 +37,7 @@ enum Groups {
 enum Parameters {
     kParametersCommonStart,
     kParametersCommonEnd = kParametersCommonStart + kCommonParameterCount - 1,
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     kParametersInputStart,
     kParametersInputEnd = kParametersInputStart + common_input::kFaustParameterCount - 1,
     kParametersOutputStart,

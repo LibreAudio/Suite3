@@ -5,9 +5,11 @@
 #pragma once
 
 #include "../widgets/base.hpp"
-#include "../widgets/meter.hpp"
 #include "../widgets-todo/knob-group.hpp"
 #include "../widgets-todo/pill-toggle.hpp"
+#if LIBREAUDIO_WANT_COMMON_IO
+#include "../widgets/meter.hpp"
+#endif
 
 namespace LibreAudio {
 
@@ -99,15 +101,17 @@ private:
 
 class ParameterDumpArea : public ReferenceContainerWidget<Reference::MainArea>
 {
+   #if LIBREAUDIO_WANT_COMMON_IO
     std::shared_ptr<Widget> fMetersIn = addWidget<MeterWidget<Input>>();
+   #endif
     std::shared_ptr<ParameterDumpStageWidget> fStage = addWidget<ParameterDumpStageWidget, Expanding>();
+   #if LIBREAUDIO_WANT_COMMON_IO
     std::shared_ptr<Widget> fMetersOut = addWidget<MeterWidget<Output>>();
+   #endif
 
 public:
     ParameterDumpArea(LabTopLevelWidget* const parent)
-        : ReferenceContainerWidget(parent)
-    {
-    }
+        : ReferenceContainerWidget(parent) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------

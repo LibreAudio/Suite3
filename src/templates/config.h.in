@@ -40,6 +40,17 @@ enum FaustParameterList {
 #define DISTRHO_PLUGIN_UNIQUE_ID {{meta.unique_id}}
 #define DISTRHO_PLUGIN_URI "https://libreaudio.org/plugins/{{id}}"
 
+// optional common IO
+{% if id in ["adtDoubler_mono", "adtDoubler_stereo"] %}
+#define LIBREAUDIO_WANT_COMMON_IO 0
+{% endif %}
+#ifdef _DARKGLASS_DEVICE_PABLITO
+#define LIBREAUDIO_WANT_COMMON_IO 0
+#endif
+#ifndef LIBREAUDIO_WANT_COMMON_IO
+#define LIBREAUDIO_WANT_COMMON_IO 1
+#endif
+
 // optional time controls
 {% for w in active if w.symbol == "dpf_bpm" %}
 #define DISTRHO_PLUGIN_WANT_TIMEPOS 1
@@ -65,9 +76,6 @@ enum FaustParameterList {
 #ifndef DISTRHO_PLUGIN_WANT_LATENCY
 #define DISTRHO_PLUGIN_WANT_LATENCY 0
 #endif
-
-#define LIBREAUDIO_NUM_HIDDEN_PARAMS \
-    (LIBREAUDIO_WANT_TIMEPOS_BPM + LIBREAUDIO_WANT_SPEECH_DETECTION + DISTRHO_PLUGIN_WANT_LATENCY)
 
 #define LIBREAUDIO_WANT_DRYWET {{1 if meta.drywet == "true" else 0}}
 

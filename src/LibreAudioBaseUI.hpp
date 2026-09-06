@@ -31,8 +31,10 @@ public:
     // static metadata
 
     static const std::vector<FaustParameter>& kFaustParameters;
+   #if LIBREAUDIO_WANT_COMMON_IO
     static const std::vector<FaustParameter>& kFaustParametersIn;
     static const std::vector<FaustParameter>& kFaustParametersOut;
+   #endif
     static const std::vector<const char*>& kParameterSymbols;
 
     static bool isParameterOutputOrTrigger(uint32_t index);

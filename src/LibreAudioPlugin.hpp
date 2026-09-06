@@ -125,7 +125,7 @@ protected:
 private:
     static const std::vector<FaustParameter>& kFaustParameters;
 
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     // TODO convert common IO to C++
     static const std::vector<FaustParameter>& kFaustParametersIn;
     static const std::vector<FaustParameter>& kFaustParametersOut;
@@ -165,7 +165,7 @@ private:
     std::atomic<bool> fMuting { false };
 
     FaustDSP* const fMainDSP;
-   #ifndef _DARKGLASS_DEVICE_PABLITO
+   #if LIBREAUDIO_WANT_COMMON_IO
     FaustDSP* const fInputDSP;
     FaustDSP* const fOutputDSP;
    #endif
