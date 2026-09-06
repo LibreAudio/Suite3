@@ -41,7 +41,7 @@ enum FaustParameterList {
 #define DISTRHO_PLUGIN_URI "https://libreaudio.org/plugins/{{id}}"
 
 // optional common IO
-{% if id in ["adtDoubler_mono", "adtDoubler_stereo"] %}
+{% if id in ["adtDoubler", "adtDoubler_stereo"] %}
 #define LIBREAUDIO_WANT_COMMON_IO 0
 {% endif %}
 #ifdef _DARKGLASS_DEVICE_PABLITO

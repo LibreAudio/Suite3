@@ -1,8 +1,9 @@
 declare author "Klaus Scheuermann";
 declare description "Automatic Double Tracking";
 declare license "GPL-3.0-or-later";
-declare name "ADT Doubler";
-declare unique_id "LAad";
+declare name "ADT Doubler Stereo";
+declare unique_id "LAas";
+declare drywet "true";
 
 import("stdfaust.lib");
 
@@ -16,15 +17,8 @@ uiAdt(x) = hgroup("[0]Adt", x);
 // rate so the two never lock into one audible wobble.
 
 adt_delayMs = uiAdt(hslider("[1]Delay[style:knob][unit:ms][symbol:adt_delay]", 18, 5, 40, 0.1)) : si.smoo;
-adt_2voice  = 1;
 adt_rateHz  = uiAdt(hslider("[2]Rate[style:knob][unit:Hz][symbol:adt_wow_rate]", 0.6, 0.05, 5, 0.01));
 adt_depthMs = uiAdt(hslider("[4]Depth[style:knob][unit:ms][symbol:adt_wow_depth]", 2.5, 0, 10, 0.1)) :si.smoo;
-
-adt_width   = 1;
-
-// second machine, derived from the single-voice settings
-adt_delay2  = adt_delayMs * 1.6 + 4;
-adt_rate2   = adt_rateHz * 0.73;
 
 adt_voice(delayMs, rateHz, x) = x : de.fdelay(maxDel, delaySamp)
 with {
@@ -43,6 +37,10 @@ panNorm = sqrt(2);
 panL(p) = cos(p * ma.PI / 2) * panNorm;
 panR(p) = sin(p * ma.PI / 2) * panNorm;
 
+// second machine, derived from the single-voice settings
+adt_delay2  = adt_delayMs * 1.6 + 4;
+adt_rate2   = adt_rateHz * 0.73;
+
 // Stereo in, wet pair out — the dry never enters here, dryWet blends it back
 // in downstream. What each machine is fed depends on the Voices switch: one
 // voice runs off the mono sum (classic ADT off a single feed), two voices
@@ -51,7 +49,6 @@ panR(p) = sin(p * ma.PI / 2) * panNorm;
 // delays of the same signal.
 adt(l, r) = wetL, wetR
 with {
-
     srcA   = l;
     srcB   = r;
 
@@ -116,28 +113,7 @@ tape_saturation = hy.ja_processor_stereo(ms, a, alpha, k, c, drive, trim) with {
 };
 
 
-//======================= Dry-Wet =======================
-// Both legs sit at unity with the knob centred and each one attenuates as the
-// knob travels away from it, so centre is dry plus double rather than a
-// crossfade through a dip. At either end the far leg passes faderMinDb and
-// mutes outright.
 
-faderMinDb = -70;
-faderGain(db) = ba.db2linear(db) * (db > faderMinDb);
+// ==================== Main function ====================
 
-mix = uiAdt(hslider("[9]Dry-Wet[unit:%][style:knob][symbol:mix][label:Dry-Wet][accentcolor:01][easy]", 0, -100, 100, 0.1)) / 100 : si.smoo;
-
-mixAttenDb(amount) = ba.linear2db(max(0.000001, 1 - amount));
-
-mixDry = faderGain(mixAttenDb(max(0, mix)));
-mixWet = faderGain(mixAttenDb(max(0, 0 - mix)));
-
-// dry pair, then wet pair, in; blended pair out
-dryWet(dl, dr, wl, wr) = dl * mixDry + wl * mixWet,
-                         dr * mixDry + wr * mixWet;
-
-
-// Main function
-//process = _,_ <: (_,_, (adt : tape_saturation)) : dryWet;
 process = adt : tape_saturation;
-//process = adt;

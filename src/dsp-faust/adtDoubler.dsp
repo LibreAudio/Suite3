@@ -1,8 +1,9 @@
 declare author "Klaus Scheuermann";
 declare description "Automatic Double Tracking";
 declare license "GPL-3.0-or-later";
-declare name "ADT Doubler Mono";
-declare unique_id "LAam";
+declare name "ADT Doubler";
+declare unique_id "LAad";
+declare drywet "true";
 
 import("stdfaust.lib");
 
@@ -44,13 +45,10 @@ panR(p) = sin(p * ma.PI / 2) * panNorm;
 // delays of the same signal.
 adt(l) = wetL
 with {
-
     srcA   = l;
     voiceA = srcA : adt_voice(adt_delayMs, adt_rateHz);
     wetL = voiceA : wetEq;
-
 };
-
 
 wetEq = dualFilter;
 
@@ -105,29 +103,7 @@ tape_saturation = hy.ja_processor(ms, a, alpha, k, c, drive, trim) with {
 };
 
 
-//======================= Dry-Wet =======================
-// Both legs sit at unity with the knob centred and each one attenuates as the
-// knob travels away from it, so centre is dry plus double rather than a
-// crossfade through a dip. At either end the far leg passes faderMinDb and
-// mutes outright.
-
-faderMinDb = -70;
-faderGain(db) = ba.db2linear(db) * (db > faderMinDb);
-
-mix = uiAdt(hslider("[9]Dry-Wet[unit:%][style:knob][symbol:mix][label:Dry-Wet][accentcolor:01][easy]", 0, -100, 100, 0.1)) / 100 : si.smoo;
-
-mixAttenDb(amount) = ba.linear2db(max(0.000001, 1 - amount));
-
-mixDry = faderGain(mixAttenDb(max(0, mix)));
-mixWet = faderGain(mixAttenDb(max(0, 0 - mix)));
-
-
-dryWet(dl, wl) = dl * mixDry + wl * mixWet;
-                         
-
 
 // ==================== Main function ====================
 
-//process = _ <: (_,(adt : tape_saturation)) : dryWet;
 process = adt : tape_saturation;
-//process = adt;
