@@ -114,7 +114,7 @@ protected:
         const float sw_w = R::Switch::width * this->fScaleFactor;
         const float sw_h = R::Switch::height * this->fScaleFactor;
         const float sw_x = (w - sw_w) * 0.5f;
-        const float sw_y = (h - sw_h) * 0.5f;
+        const float sw_y = sw_w * 0.5f;
         const float sw_margin = (R::Switch::border + R::Switch::margin) * this->fScaleFactor;
 
         beginPath();
@@ -130,12 +130,12 @@ protected:
         // TODO border
         if constexpr (R::Switch::border != 0 && d_isNotZero(R::Switch::borderColor.alpha))
         {
-            strokeWidth(R::Switch::border);
+            strokeWidth(R::Switch::border * this->fScaleFactor);
             strokeColor(R::Switch::borderColor);
             stroke();
         }
 
-        const float cir_r = 8; // (R::Switch::height - R::Switch::margin * 2) * this->fScaleFactor * 0.5f;
+        const float cir_r = sw_h * 0.5f - sw_margin;
         const float cir_x1 = sw_x + sw_margin + cir_r;
         const float cir_x2 = w - cir_x1;
         const float cir_y = sw_y + sw_h * 0.5f;
@@ -150,7 +150,7 @@ protected:
         {
             if constexpr (R::Switch::Ball::border != 0)
             {
-                strokeWidth(R::Switch::Ball::border);
+                strokeWidth(R::Switch::Ball::border * this->fScaleFactor);
                 strokeColor(R::Switch::Ball::borderColor);
                 stroke();
             }
