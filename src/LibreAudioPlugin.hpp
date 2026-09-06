@@ -141,14 +141,10 @@ private:
     LibreAudioSpeechDetection<2> fSpeechDetection;
    #endif
 
-    float* const fInternalBuffer = new float[kInternalBlockSize * 4];
-    float* fCycleBuffer1[2] = {
+    float* const fInternalBuffer = new float[kInternalBlockSize * 2];
+    float* fCycleBuffer[2] = {
         fInternalBuffer + kInternalBlockSize * 0,
         fInternalBuffer + kInternalBlockSize * 1,
-    };
-    float* fCycleBuffer2[2] = {
-        fInternalBuffer + kInternalBlockSize * 2,
-        fInternalBuffer + kInternalBlockSize * 3,
     };
 
    #if DISTRHO_PLUGIN_WANT_LATENCY

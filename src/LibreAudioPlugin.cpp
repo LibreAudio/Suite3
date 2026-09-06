@@ -71,7 +71,7 @@ LibreAudioPlugin::LibreAudioPlugin()
    #endif
 
    #if DISTRHO_PLUGIN_WANT_LATENCY
-    fMainDSP->compute(0, fCycleBuffer1, fCycleBuffer2);
+    fMainDSP->compute(0, fCycleBuffer);
     updateLatencyIfNeeded();
    #endif
 }
@@ -375,7 +375,7 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
        #endif
 
         for (uint32_t c = 0; c < DISTRHO_PLUGIN_NUM_OUTPUTS; ++c)
-            std::memcpy(fCycleBuffer1[c], inputs[c] + i, sizeof(float) * cycleFrames);
+            std::memcpy(fCycleBuffer[c], inputs[c] + i, sizeof(float) * cycleFrames);
 
        #if DISTRHO_PLUGIN_WANT_LATENCY
         for (uint32_t j = 0; j < cycleFrames; ++j)
@@ -389,16 +389,16 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
        #endif
 
        #if LIBREAUDIO_WANT_SPEECH_DETECTION
-        const float vad = fSpeechDetection.process(fCycleBuffer1, cycleFrames);
+        const float vad = fSpeechDetection.process(fCycleBuffer, cycleFrames);
         fMainDSP->setVAD(vad);
        #endif
 
        #if LIBREAUDIO_WANT_COMMON_IO
-        fInputDSP->compute(cycleFrames, fCycleBuffer1, fCycleBuffer2);
-        fMainDSP->compute(cycleFrames, fCycleBuffer2, fCycleBuffer1);
-        fOutputDSP->compute(cycleFrames, fCycleBuffer1, fCycleBuffer2);
+        fInputDSP->compute(cycleFrames, fCycleBuffer);
+        fMainDSP->compute(cycleFrames);
+        fOutputDSP->compute(cycleFrames);
        #else
-        fMainDSP->compute(cycleFrames, fCycleBuffer1, fCycleBuffer2);
+        fMainDSP->compute(cycleFrames, fCycleBuffer);
        #endif
 
         for (uint32_t j = 0; j < cycleFrames; ++j)
@@ -410,9 +410,9 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
             {
                #if DISTRHO_PLUGIN_WANT_LATENCY
                 input = latencyReadPos >= 0 ? fLatencyBuffer[c][latencyReadPos] * dry : 0.f;
-                outputs[c][i + j] = fCycleBuffer2[c][j] * wet + input;
+                outputs[c][i + j] = fCycleBuffer[c][j] * wet + input;
                #else
-                outputs[c][i + j] = fCycleBuffer2[c][j] * wet + inputs[c][i + j] * dry;
+                outputs[c][i + j] = fCycleBuffer[c][j] * wet + inputs[c][i + j] * dry;
                #endif
             }
 
@@ -451,7 +451,7 @@ void LibreAudioPlugin::sampleRateChanged(const double newSampleRate)
    #endif
 
    #if DISTRHO_PLUGIN_WANT_LATENCY
-    fMainDSP->compute(0, fCycleBuffer1, fCycleBuffer2);
+    fMainDSP->compute(0, fCycleBuffer);
     updateLatencyIfNeeded();
    #endif
 }

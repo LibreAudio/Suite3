@@ -9,11 +9,6 @@
 function(las_generate_faust_cpp TARGET)
   string(REPLACE "/" "_" OUTPUT ${TARGET})
 
-  if(${LIBREAUDIO_BLOCK_SIZE})
-    set(VEC_ARGS "-X-vec -X-vs -X${LIBREAUDIO_BLOCK_SIZE}")
-    separate_arguments(VEC_ARGS)
-  endif()
-
   add_custom_command(
     OUTPUT
       ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT}-dsp.cpp
