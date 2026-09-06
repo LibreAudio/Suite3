@@ -24,6 +24,7 @@ function(las_generate_faust_cpp TARGET)
       -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT}-dsp.cpp
       -Did=${OUTPUT}
       ${VEC_ARGS}
+      -X--in-place
       -X--class-name -X${OUTPUT}
       -X--super-class-name -XFaustDSP
       ${CMAKE_SOURCE_DIR}/src/dsp-faust/${TARGET}.dsp
@@ -186,7 +187,7 @@ function(las_add_plugin LABEL)
     set(UI_FILE LibreAudioUI.cpp)
   endif()
 
-  if (TRUE)
+  if (${LIBREAUDIO_CUSTOM_UI})
     dpf_add_plugin(${TARGET}
       TARGETS
         au clap lv2 vst3 jack

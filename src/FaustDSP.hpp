@@ -53,7 +53,7 @@ struct FaustDSP
     [[nodiscard]] virtual int getNumOutputs() = 0;
     [[nodiscard]] virtual int getSampleRate() = 0;
     virtual void buildUserInterface(FaustUI* ui_interface) = 0;
-    virtual void compute(int count, const float* const* RESTRICT inputs, float** RESTRICT outputs) = 0;
+    virtual void compute(int count, const float* const* /*RESTRICT*/ inputs, float** /*RESTRICT*/ outputs) = 0;
     virtual void init(int sample_rate) = 0;
     virtual void instanceClear() = 0;
     virtual void instanceConstants(int sample_rate) = 0;
