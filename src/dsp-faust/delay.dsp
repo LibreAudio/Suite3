@@ -191,7 +191,7 @@ uiMeters(x)  = hgroup("[9]", x);
 
 // --- Mode pills ---
 
-mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol:mode][bracket:MODE][integer]", 0, 0, 2, 1)) : int;
+mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol:mode][bracket:MODE]", 0, 0, 2, 1)) : int;
 
 // Three states, and the letter names which side the first repeat lands on:
 // Ping-Pong L bounces L, R, L, R and Ping-Pong R is its mirror image, R first.
@@ -211,7 +211,7 @@ mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol
 // wrong topology for the whole length of its tail. Measured before the fix: an
 // impulse at sample 0 with Ping-Pong selected came out of both channels at
 // once, which is precisely the thing ping-pong is not.
-ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping-Pong L':1;'Ping-Pong R':2}][symbol:pingpong][bracket:MODE][integer]", 0, 0, 2, 1)) : int;
+ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping':1;'Pong':2}][symbol:pingpong][bracket:MODE][integer]", 0, 0, 2, 1)) : int;
 
 // One coefficient per handed topology, and their sum is how ping-pong the
 // engine is at all.
@@ -268,7 +268,7 @@ timeRms = uiTime(hslider("[14]Time R[style:knob][unit:ms][scale:log][symbol:time
 // glide, so the glide is what removes the steps -- smoothing here would put a
 // second one-pole in series with it and make the same knob's response depend
 // on which of Free or Tempo produced the number.
-bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:dpf_bpm][label:BPM][accentcolor:02][bracket:TIME][requires:sync:1]
+bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:bpm][label:BPM][accentcolor:02][bracket:TIME][requires:sync:1]
       [tooltip: Tempo for the note divisions. Set by hand -- the host tempo is not read yet]",
       120, 20, 300, 0.01)) : meter_bpm;
 
