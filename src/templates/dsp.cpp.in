@@ -58,12 +58,6 @@
     | replace(' = inputs[', ' = outputs[')
 }}
 
-/*
-    | replace(', FAUSTFLOAT** RESTRICT inputs,', ', const FAUSTFLOAT* const* RESTRICT inputs,')
-    | replace('  FAUSTFLOAT* input', '  const FAUSTFLOAT* RESTRICT input')
-    | replace('  FAUSTFLOAT* output', '  FAUSTFLOAT* RESTRICT output')
-*/
-
 {% endblock %}
 
 FAUSTDR_BEGIN_NAMESPACE

@@ -6,12 +6,6 @@
 
 #include "DistrhoUtils.hpp"
 
-#ifdef _WIN32
-#define RESTRICT __restrict
-#else
-#define RESTRICT __restrict__
-#endif
-
 // --------------------------------------------------------------------------------------------------------------------
 // dummy declarations just to get code to compile
 
@@ -62,8 +56,8 @@ struct FaustDSP
     virtual void set(uint32_t index, float value) = 0;
     // optional
     [[nodiscard]] virtual float latency() const { return 0.f; }
-    virtual void setBPM(float value) {}
-    virtual void setVAD(float value) {}
+    virtual void setBPM(float) {}
+    virtual void setVAD(float) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -75,5 +69,3 @@ FaustDSP* createDSP();
 END_NAMESPACE_DISTRHO
 
 // --------------------------------------------------------------------------------------------------------------------
-
-#undef RESTRICT

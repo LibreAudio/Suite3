@@ -46,7 +46,7 @@ protected:
    /**
       Get the plugin version, in hexadecimal.
     */
-    uint32_t getVersion() const noexcept final
+    [[nodiscard]] uint32_t getVersion() const noexcept final
     {
         return d_version(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
     }
@@ -82,7 +82,7 @@ protected:
       Get the current value of a parameter.
       The host may call this function from any context, including realtime processing.
     */
-    float getParameterValue(uint32_t index) const final;
+    [[nodiscard]] float getParameterValue(uint32_t index) const final;
 
    /**
       Change a parameter value.
@@ -120,7 +120,7 @@ protected:
       Optional callback to inform the plugin about a sample rate change.
       This function will only be called when the plugin is deactivated.
     */
-    void sampleRateChanged(const double newSampleRate) final;
+    void sampleRateChanged(double newSampleRate) final;
 
 private:
     static const std::vector<FaustParameter>& kFaustParameters;
@@ -143,8 +143,8 @@ private:
 
     float* const fInternalBuffer = new float[kInternalBlockSize * 2];
     float* fCycleBuffer[2] = {
-        fInternalBuffer + kInternalBlockSize * 0,
-        fInternalBuffer + kInternalBlockSize * 1,
+        fInternalBuffer + (kInternalBlockSize * 0),
+        fInternalBuffer + (kInternalBlockSize * 1),
     };
 
    #if DISTRHO_PLUGIN_WANT_LATENCY

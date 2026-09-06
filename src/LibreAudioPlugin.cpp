@@ -298,7 +298,7 @@ void LibreAudioPlugin::setParameterValue(uint32_t index, const float value)
    #if LIBREAUDIO_WANT_DRYWET
     case kCommonParameterDryWet:
    #endif
-        if (fMuting.load() == false)
+        if (! fMuting.load())
             doUnmute();
         break;
    #if LIBREAUDIO_WANT_COMMON_IO
@@ -395,8 +395,8 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
 
        #if LIBREAUDIO_WANT_COMMON_IO
         fInputDSP->compute(cycleFrames, fCycleBuffer);
-        fMainDSP->compute(cycleFrames);
-        fOutputDSP->compute(cycleFrames);
+        fMainDSP->compute(cycleFrames, fCycleBuffer);
+        fOutputDSP->compute(cycleFrames, fCycleBuffer);
        #else
         fMainDSP->compute(cycleFrames, fCycleBuffer);
        #endif
