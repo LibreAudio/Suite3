@@ -357,6 +357,12 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
     int32_t latencyReadPos = fLatencyReadPos;
     int32_t latencyWritePos = fLatencyWritePos;
    #endif
+   #if DISTRHO_PLUGIN_WANT_TIMEPOS
+    {
+        const TimePosition& timePos = getTimePosition();
+        fMainDSP->setBPM(timePos.bpm);
+    }
+   #endif
 
     for (uint32_t i = 0, cycleFrames; i < frames; i += kInternalBlockSize)
     {
@@ -376,13 +382,6 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
 
             if (++latencyWritePos == LIBREAUDIO_MAX_LATENCY_SAMPLES)
                 latencyWritePos = 0;
-        }
-       #endif
-
-       #if DISTRHO_PLUGIN_WANT_TIMEPOS
-        {
-            const TimePosition& timePos = getTimePosition();
-            fMainDSP->setBPM(timePos.bpm);
         }
        #endif
 

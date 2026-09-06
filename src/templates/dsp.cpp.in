@@ -94,14 +94,12 @@ inline void {{id}}::setBPM(float value)
     {{w.varname}} = value;
 }
 {% endfor %}
-
 {% for w in active if w.symbol == "dpf_vad" %}
 inline void {{id}}::setVAD(float value)
 {
     {{w.varname}} = value;
 }
 {% endfor %}
-
 {% for w in passive if w.symbol == "latency_samples" %}
 inline float {{id}}::latency() const
 {
