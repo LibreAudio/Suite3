@@ -113,7 +113,22 @@ static void initParameterFromFaust(Parameter& parameter, const FaustParameter& f
     parameter.ranges.min = faustParameter.min;
     parameter.ranges.max = faustParameter.max;
 
-    if (std::strcmp(faustParameter.symbol, "input_ms_on") == 0)
+    if (faustParameter.isEnumerator)
+    {
+        DISTRHO_SAFE_ASSERT_RETURN(faustParameter.scalePointCount != 0,);
+        ParameterEnumerationValue* const values = new ParameterEnumerationValue[faustParameter.scalePointCount];
+
+        for (uint i = 0; i < faustParameter.scalePointCount; ++i)
+        {
+            values[i].label = faustParameter.scalePoints[i].label;
+            values[i].value = faustParameter.scalePoints[i].value;
+        }
+
+        parameter.enumValues.restrictedMode = true;
+        parameter.enumValues.count = faustParameter.scalePointCount;
+        parameter.enumValues.values = values;
+    }
+    else if (std::strcmp(faustParameter.symbol, "input_ms_on") == 0)
     {
         ParameterEnumerationValue* const values = new ParameterEnumerationValue[2];
         values[0].label = "L/R";
