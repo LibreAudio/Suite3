@@ -138,4 +138,6 @@ dryWet(dl, dr, wl, wr) = dl * mixDry + wl * mixWet,
 
 
 // Main function
-process = _,_ <: (_,_, (adt : tape_saturation)) : dryWet;
+//process = _,_ <: (_,_, (adt : tape_saturation)) : dryWet;
+process = adt : tape_saturation;
+//process = adt;
