@@ -211,7 +211,7 @@ mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol
 // wrong topology for the whole length of its tail. Measured before the fix: an
 // impulse at sample 0 with Ping-Pong selected came out of both channels at
 // once, which is precisely the thing ping-pong is not.
-ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping':1;'Pong':2}][symbol:pingpong][bracket:MODE]", 0, 0, 2, 1)) : int;
+ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping-Pong L':1;'Ping-Pong R':2}][symbol:pingpong][bracket:MODE]", 0, 0, 2, 1)) : int;
 
 // One coefficient per handed topology, and their sum is how ping-pong the
 // engine is at all.
@@ -268,9 +268,11 @@ timeRms = uiTime(hslider("[14]Time R[style:knob][unit:ms][scale:log][symbol:time
 // glide, so the glide is what removes the steps -- smoothing here would put a
 // second one-pole in series with it and make the same knob's response depend
 // on which of Free or Tempo produced the number.
-bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:dpf_bpm][label:BPM][accentcolor:02][bracket:TIME][requires:sync:1]
+bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:bpm][label:BPM][accentcolor:02][bracket:TIME][requires:sync:1]
       [tooltip: Tempo for the note divisions. Set by hand -- the host tempo is not read yet]",
-      120, 20, 300, 0.01));
+      120, 20, 300, 0.01)) : meter_bpm;
+
+meter_bpm = _ <: attach(_, hbargraph("meter bpm",50,300));
 
 // Eleven divisions relative to a quarter note, ordered long to short with the
 // dotted value ahead of its straight partner and the triplet behind it, so
@@ -426,36 +428,12 @@ feedback = uiRepeats(hslider("[21]Feedback[style:knob][unit:%][symbol:feedback][
 // 50% the side comes back with its sign flipped every pass -- which is the
 // alternation that makes ping-pong sound like ping-pong.
 //
-// How this differs from Ping-Pong, stated carefully, because the easy version
-// of the sentence is wrong. At Cross 100 the feedback matrix is [[0, g],
-// [g, 0]] -- the same *shape* as Ping-Pong's, purely off-diagonal, but not the
-// same matrix. Ping-Pong's is [[0, g], [1, 0]], asymmetric, because its
-// hand-off runs at unity and only the return is metered by Feedback. The
-// eigenvalues are +/-g here and +/-sqrt(g) there, so at the same Feedback the
-// Ping-Pong tail lasts exactly twice as many passes. Measured at Feedback 70
-// and 250 ms: Normal decays 6.2 dB per half second, Ping-Pong 3.1.
-//
-// The other difference is the input routing, which Cross does not touch, so a
-// stereo source keeps its stereo on the first repeat and only then starts
-// bouncing. Ping-Pong mono-sums the input into one line and throws that away.
-//
-// Two reasons this is a Normal-mode control rather than a live one everywhere.
-//
-// The first is that it would not be a new axis. Doing it *safely* inside the
-// ring means scaling the ring down as self-feedback comes up, and that walks
-// the matrix from Ping-Pong's back to Normal's -- which is precisely what
-// ppAmt already interpolates. It would be a second knob for one thing.
-//
-// The second is that doing it the obvious way is not safe. Add self-feedback a
-// to the ring without touching the ring and the matrix is [[a, g], [1, a]],
-// whose eigenvalues are a +/- sqrt(g*1), so the spectral radius is |a| +
-// sqrt(g). Ping-Pong already spends sqrt(g) of the unity budget -- 0.837 at
-// Feedback 70 -- so almost any self-feedback tips it over. Wired that way and
-// measured, Feedback 70 with Cross at 50 ran the RMS from 0.044 to 1.42 and
-// pinned the peak at 3.44 against softRail's 4.0 ceiling; at Feedback 100,
-// Cross 25 was already railed. That is the knob quietly turning into a
-// distortion pedal, and it is why the requires is a safety rail and not
-// merely tidiness.
+// Which is the honest way to describe the difference between this and
+// Ping-Pong: at Cross 100 the *feedback* is exactly Ping-Pong's, but the input
+// routing is untouched, so a stereo source keeps its stereo on the first
+// repeat and only then starts bouncing. Ping-Pong mono-sums the input into one
+// line and throws that away. Inside Ping-Pong the channels are already fully
+// crossed and this knob has nothing left to do, hence the requires.
 crossFb = uiRepeats(hslider("[22]Cross[style:knob][unit:%][symbol:cross][label:Cross][accentcolor:01][bracket:REPEATS][requires:pingpong:0]
       [tooltip: How much of each repeat is fed back into the opposite channel. 0 = two independent delays, 50 = the tail collapses to the centre, 100 = it alternates sides. Ping-Pong is already fully crossed, so this is a Normal-mode control]",
       0, 0, 100, 0.1)) / 100 : smooInit;
