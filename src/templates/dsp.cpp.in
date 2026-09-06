@@ -31,11 +31,24 @@
 
 {% block ImplementationFaustCode %}
 
+#define LIBREAUDIO_EXTRA_METHODS \
+    float get(uint32_t) const; \
+    void set(uint32_t, float); \
+{% for w in active if w.symbol == "dpf_bpm" %}
+    void setBPM(float); \
+{% endfor %}
+{% for w in active if w.symbol == "dpf_vad" %}
+    void setVAD(float); \
+{% endfor %}
+{% for w in passive if w.symbol == "latency_samples" %}
+    float latency() const; \
+{% endfor %}
+
 {{ classcode
     | replace('#include <math.h>\n', '')
     | replace('\n\t\n', '\n\n')
     | replace(' \n', '\n')
-    | replace('\t' + id + '() {', '\tfloat latency() const;\n\tfloat get(uint32_t) const;\n\tvoid set(uint32_t, float);\n\n\t' + id + '(){')
+    | replace('\t' + id + '() {\n\t}', '\tLIBREAUDIO_EXTRA_METHODS\n\n\t' + id + '() = default;')
     | replace('\t', '    ')
     | replace(' FAUSTDR_PRIVATE', 'private')
     | replace(' FAUSTDR_PROTECTED', 'protected')
@@ -55,7 +68,7 @@ FAUSTDR_BEGIN_NAMESPACE
 inline float {{id}}::get(uint32_t index) const
 {
     switch (index) {
-    {% for w in (active + passive) if w.symbol not in ["latency_samples"] %}
+    {% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] %}
     case {{loop.index0}}:
         return {{w.varname}};
     {% endfor %}
@@ -75,22 +88,26 @@ inline void {{id}}::set(uint32_t index, float value)
     }
 }
 
+{% for w in active if w.symbol == "dpf_bpm" %}
+inline void {{id}}::setBPM(float value)
+{
+    {{w.varname}} = value;
+}
+{% endfor %}
+
+{% for w in active if w.symbol == "dpf_vad" %}
+inline void {{id}}::setVAD(float value)
+{
+    {{w.varname}} = value;
+}
+{% endfor %}
+
 {% for w in passive if w.symbol == "latency_samples" %}
-#define FIXME_LATENCY_CALL_DEFINED
 inline float {{id}}::latency() const
 {
     return {{w.varname}};
 }
 {% endfor %}
-
-#ifndef FIXME_LATENCY_CALL_DEFINED
-inline float {{id}}::latency() const
-{
-    return 0.f;
-}
-#endif
-
-#undef FIXME_LATENCY_CALL_DEFINED
 
 // --------------------------------------------------------------------------------------------------------------------
 

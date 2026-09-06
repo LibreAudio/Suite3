@@ -48,7 +48,6 @@ struct FaustDSP
 {
     virtual ~FaustDSP() = default;
     [[nodiscard]] virtual FaustDSP* clone() = 0;
-    [[nodiscard]] virtual float latency() const = 0;
     [[nodiscard]] virtual float get(uint32_t index) const = 0;
     [[nodiscard]] virtual int getNumInputs() = 0;
     [[nodiscard]] virtual int getNumOutputs() = 0;
@@ -61,6 +60,10 @@ struct FaustDSP
     virtual void instanceInit(int sample_rate) = 0;
     virtual void instanceResetUserInterface() = 0;
     virtual void set(uint32_t index, float value) = 0;
+    // optional
+    [[nodiscard]] virtual float latency() const { return 0.f; }
+    virtual void setBPM(float value) {}
+    virtual void setVAD(float value) {}
 };
 
 // --------------------------------------------------------------------------------------------------------------------

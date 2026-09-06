@@ -104,10 +104,6 @@ static void initParameterFromFaust(Parameter& parameter, const FaustParameter& f
         parameter.hints |= kParameterIsOutput;
     if (faustParameter.isTrigger)
         parameter.hints |= kParameterIsTrigger;
-   #if LIBREAUDIO_WANT_SPEECH_DETECTION
-    if (std::strcmp(faustParameter.symbol, "vad_ext") == 0)
-        parameter.hints = kParameterIsOutput | kParameterIsHidden;
-   #endif
 
     parameter.name = faustParameter.name;
     parameter.symbol = faustParameter.symbol;
@@ -368,9 +364,16 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
         }
        #endif
 
+       #if DISTRHO_PLUGIN_WANT_TIMEPOS
+        {
+            const TimePosition& timePos = getTimePosition();
+            fMainDSP->setBPM(timePos.bpm);
+        }
+       #endif
+
        #if LIBREAUDIO_WANT_SPEECH_DETECTION
         const float vad = fSpeechDetection.process(fCycleBuffer1, cycleFrames);
-        fMainDSP->set(leveler::kFaustParameterVad_ext, vad);
+        fMainDSP->setVAD(vad);
        #endif
 
        #ifndef _DARKGLASS_DEVICE_PABLITO

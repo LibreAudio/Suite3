@@ -31,7 +31,7 @@ namespace {{id}} {
 
 const std::vector<FaustParameter>& getFaustParameters()
 {
-    {% for w in (active + passive) if w.symbol not in ["latency_samples"] and w.entries %}
+    {% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] and w.entries %}
     static constexpr const FaustParameterEnumerationValue kFaustScalePoints_{{w.varname}}[{{w.entries|length}} + 1] = {
         {% for label, value in w.entries %}
         { {{cstr(label)}}, {{value|int}} },
@@ -41,7 +41,7 @@ const std::vector<FaustParameter>& getFaustParameters()
     {% endfor %}
     static constexpr const std::array<FaustParameter, kFaustParameterCount> kFaustParameters = {
     {
-        {% for w in (active + passive) if w.symbol not in ["latency_samples"] %}
+        {% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] %}
         {
             .bracket = "{{w.meta.bracket}}",
             .label = "{{w.meta.label}}",

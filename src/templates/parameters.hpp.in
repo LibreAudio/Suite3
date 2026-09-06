@@ -29,27 +29,17 @@
 namespace {{id}} {
 
 enum FaustParameterList {
-    {% for w in (active + passive) if w.symbol not in ["latency_samples"] %}
+    {% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] %}
     kFaustParameter{{ w.symbol | title() }},
     {% endfor %}
     kFaustParameterCount
 };
 
-// FIXME this is too messy!
-{% for w in passive if w.symbol == "latency_samples" %}
-#define HIDDEN_PARAMS 1
-{% endfor %}
-#ifndef HIDDEN_PARAMS
-#define HIDDEN_PARAMS 0
-#endif
-
 inline constexpr const uint32_t kNumInputs = {{inputs}};
 inline constexpr const uint32_t kNumOutputs = {{outputs}};
-inline constexpr const uint32_t kNumFaustParametersActive = {{active|length}};
-inline constexpr const uint32_t kNumFaustParametersPassive = {{passive|length}} - HIDDEN_PARAMS;
-static_assert(kNumFaustParametersActive + kNumFaustParametersPassive == kFaustParameterCount, "mismatch parameter count");
-
-#undef HIDDEN_PARAMS
+// inline constexpr const uint32_t kNumFaustParametersActive = {{active|length}};
+// inline constexpr const uint32_t kNumFaustParametersPassive = {{passive|length}} - LIBREAUDIO_NUM_HIDDEN_PARAMS;
+// static_assert(kNumFaustParametersActive + kNumFaustParametersPassive == kFaustParameterCount, "mismatch parameter count");
 
 const std::vector<FaustParameter>& getFaustParameters();
 

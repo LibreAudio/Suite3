@@ -62,7 +62,7 @@ struct Reference {
 
     struct TopBar : Zero {
         static constexpr const uint height = 28;
-        static constexpr const uint padding = 20;
+        static constexpr const uint padding = Common::margin;
     };
 
     struct PluginName : Zero {

@@ -111,6 +111,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
             fTop->addKnobGroup<2>(delay::kFaustParameterSync);
             // fTop->addSpacer();
             fTop->addKnobGroup<2>(delay::kFaustParameterTime_l);
+
             fBottom->addText("DYNAMICS");
             fBottom->addKnobGroup<2>(delay::kFaustParameterDeess_amount);
         }
@@ -136,6 +137,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
             fTop->addKnobGroup<3>(delay::kFaustParameterFeedback);
             // fTop->addSpacer();
             fTop->addKnobGroup<3>(delay::kFaustParameterMod_rate);
+
             fBottom->addText("OUTPUT");
             fBottom->addKnobGroup<2>(delay::kFaustParameterWidth);
         }
@@ -259,7 +261,8 @@ public:
     LibreAudioUI()
         : LibreAudioBaseUI()
     {
-        fShaderBackground.reset(new LibreAudio::BackgroundShaderWidget<SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_DATA, SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_LEN>(this, this));
+        fShaderBackground.reset(new LibreAudio::BackgroundShaderWidget<SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_DATA,
+                                                                       SHADERS_SHADERTOY_CLOUDSTARFIELD_FRAG_LEN>(this, this));
         createRootWidget<LibreAudio::DelayRootWidget>();
         static_cast<LibreAudio::DelayRootWidget*>(fRootWidget.get())->setup(fShaderBackground.get());
     }

@@ -23,7 +23,7 @@
 namespace {{id}} {
 
 enum FaustParameterList {
-    {% for w in (active + passive) if w.symbol not in ["latency_samples"] %}
+    {% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] %}
     kFaustParameter{{ w.symbol | title() }},
     {% endfor %}
     kFaustParameterCount
@@ -39,20 +39,40 @@ enum FaustParameterList {
 #define DISTRHO_PLUGIN_NUM_OUTPUTS {{outputs}}
 #define DISTRHO_PLUGIN_UNIQUE_ID {{meta.unique_id}}
 #define DISTRHO_PLUGIN_URI "https://libreaudio.org/plugins/{{id}}"
-{% for w in passive if w.symbol == "latency_samples" %}
-#define DISTRHO_PLUGIN_WANT_LATENCY 1
-#define LIBREAUDIO_MAX_LATENCY_SAMPLES {{w.max|int}}
+
+// optional time controls
+{% for w in passive if w.symbol == "dpf_bpm" %}
+#define DISTRHO_PLUGIN_WANT_TIMEPOS 1
+#define LIBREAUDIO_WANT_TIMEPOS_BPM 1
 {% endfor %}
 
-#define LIBREAUDIO_WANT_DRYWET {{1 if meta.drywet == "true" else 0}}
+#ifndef LIBREAUDIO_WANT_TIMEPOS_BPM
+#define LIBREAUDIO_WANT_TIMEPOS_BPM 0
+#endif
 
-{% for w in active if w.symbol == "vad_ext" %}
+// optional speech/voice-activity detection control
+{% for w in active if w.symbol == "dpf_vad" %}
 #define LIBREAUDIO_WANT_SPEECH_DETECTION 1
 {% endfor %}
 
 #ifndef LIBREAUDIO_WANT_SPEECH_DETECTION
 #define LIBREAUDIO_WANT_SPEECH_DETECTION 0
 #endif
+
+// optional latency output
+{% for w in passive if w.symbol == "latency_samples" %}
+#define DISTRHO_PLUGIN_WANT_LATENCY 1
+#define LIBREAUDIO_MAX_LATENCY_SAMPLES {{w.max|int}}
+{% endfor %}
+
+#ifndef DISTRHO_PLUGIN_WANT_LATENCY
+#define DISTRHO_PLUGIN_WANT_LATENCY 0
+#endif
+
+#define LIBREAUDIO_NUM_HIDDEN_PARAMS \
+    (LIBREAUDIO_WANT_TIMEPOS_BPM + LIBREAUDIO_WANT_SPEECH_DETECTION + DISTRHO_PLUGIN_WANT_LATENCY)
+
+#define LIBREAUDIO_WANT_DRYWET {{1 if meta.drywet == "true" else 0}}
 
 #define LIBREAUDIO_PLUGIN__{{id}}
 
