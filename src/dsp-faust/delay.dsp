@@ -191,7 +191,7 @@ uiMeters(x)  = hgroup("[9]", x);
 
 // --- Mode pills ---
 
-mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol:mode][bracket:MODE]", 0, 0, 2, 1)) : int;
+mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol:mode][bracket:MODE][integer]", 0, 0, 2, 1)) : int;
 
 // Three states, and the letter names which side the first repeat lands on:
 // Ping-Pong L bounces L, R, L, R and Ping-Pong R is its mirror image, R first.
@@ -211,7 +211,7 @@ mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol
 // wrong topology for the whole length of its tail. Measured before the fix: an
 // impulse at sample 0 with Ping-Pong selected came out of both channels at
 // once, which is precisely the thing ping-pong is not.
-ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping-Pong L':1;'Ping-Pong R':2}][symbol:pingpong][bracket:MODE]", 0, 0, 2, 1)) : int;
+ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping-Pong L':1;'Ping-Pong R':2}][symbol:pingpong][bracket:MODE][integer]", 0, 0, 2, 1)) : int;
 
 // One coefficient per handed topology, and their sum is how ping-pong the
 // engine is at all.
@@ -246,8 +246,8 @@ ppAmt = min(1.0, ppL + ppR);
 // what they are: neither changes the character of the delay, they only change
 // how the five time controls beneath them are read. Mode and Ping-Pong stay at
 // the top, where they do change what the engine is.
-sync = uiTime(nentry("[11]sync[style:radio{'Free':0;'Tempo':1}][symbol:sync][bracket:TIME]", 0, 0, 1, 1)) : int;
-link = uiTime(nentry("[12]link[style:radio{'Linked':0;'Free':1}][symbol:link][bracket:TIME]", 0, 0, 1, 1)) : int;
+sync = uiTime(nentry("[11]sync[style:radio{'Free':0;'Tempo':1}][symbol:sync][bracket:TIME][integer]", 0, 0, 1, 1)) : int;
+link = uiTime(nentry("[12]link[style:radio{'Linked':0;'Free':1}][symbol:link][bracket:TIME][integer]", 0, 0, 1, 1)) : int;
 
 // --- Time ---
 
