@@ -80,7 +80,7 @@ inline float {{id}}::get(uint32_t index) const
 inline void {{id}}::set(uint32_t index, float value)
 {
     switch (index) {
-    {% for w in active %}
+    {% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] %}
     case {{loop.index0}}:
         {{w.varname}} = value;
         break;
