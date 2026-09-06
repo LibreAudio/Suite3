@@ -5,6 +5,7 @@
 #pragma once
 
 #include "../widgets/base.hpp"
+#include "../widgets/card.hpp"
 #include "knob-group.hpp"
 #include "pill-toggle.hpp"
 
@@ -17,15 +18,23 @@ class EasyStageWidget final : public ReferenceContainerWidget<Reference::Stage, 
     using R = Reference::Stage;
     using BaseWidget = ReferenceContainerWidget<R, kVertical>;
 
-    std::shared_ptr<Widget> fSpacer1 = addSpacer();
+    std::shared_ptr<LabWidget> fSpacer1 = addSpacer();
     std::shared_ptr<EasyKnobsGroupWidget> fEasyKnobs = addWidget<EasyKnobsGroupWidget>();
-    std::shared_ptr<Widget> fSpacer2 = addSpacer();
+    std::shared_ptr<LabWidget> fSpacer2 = addSpacer();
+    std::shared_ptr<LabWidget> fCard = addCard();
 
 public:
     explicit EasyStageWidget(LabWidget* const parent)
         : BaseWidget(parent) {}
 
 private:
+    std::shared_ptr<LabWidget> addCard()
+    {
+        std::shared_ptr<LabWidget> widget { new LabCardWidget<>(this, "This is a title", "And this is a subtitle with more extensive descriptive text") };
+        Layout::widgets.push_back({ widget.get(), Fixed });
+        return widget;
+    }
+
     void onNanoDisplay() final
     {
         drawReferenceBackground<R>();

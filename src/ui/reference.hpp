@@ -174,14 +174,17 @@ struct Reference {
         };
 
         struct Card : Zero {
-            static constexpr const Color backgroundColor = { 0xff, 0xbf, 0xcb };
+            static constexpr const Color backgroundColor = { Colors::acc, 0.3f };
+            static constexpr const Color borderColor = { Colors::accGlow, 0.3f };
             static constexpr const Color color = Colors::acc;
             static constexpr const Color color〡deactivated = Colors::ink3;
             static constexpr const MouseCursor cursor〡hover = kMouseCursorHand;
             static constexpr const float fontSize = Common::fontSize;
             static constexpr const float letterSpacing = Common::letterSpacing;
             static constexpr const uint borderRadius = 11;
-            static constexpr const uint margin = 9;
+            static constexpr const uint margin = Common::margin;
+            static constexpr const uint width = 0;
+            static constexpr const uint height = 80;
         };
 
         struct Knob : Zero {
