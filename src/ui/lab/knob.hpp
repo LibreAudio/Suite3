@@ -41,9 +41,7 @@ protected:
             parameterChangedByHost();
     }
 
-    virtual void parameterChangedByHost()
-    {
-    }
+    virtual void parameterChangedByHost() {}
 
 private:
     void knobDragStarted(SubWidget* const widget) final

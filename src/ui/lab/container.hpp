@@ -43,10 +43,11 @@ protected:
 
     template<class W,
              SizeHint sizeHint = Fixed,
+             typename... Args,
              typename = std::enable_if_t<std::is_base_of_v<LabWidget, W>>>
-    std::shared_ptr<W> addWidget()
+    std::shared_ptr<W> addWidget(Args... args)
     {
-        std::shared_ptr<W> widget { new W(this) };
+        std::shared_ptr<W> widget { new W(this, args...) };
         Layout::widgets.push_back({ widget.get(), sizeHint });
         if (sizeHint == Fixed && widget->getSize().isNull())
             d_stderr2("Error: addWidget called with Fixed sizeHint but widget %u: '%s' does not have a known size",

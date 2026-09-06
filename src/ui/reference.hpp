@@ -23,9 +23,19 @@ struct Reference {
         static constexpr const Color ink { 0xf6, 0xf6, 0xf8 };
         static constexpr const Color ink2 { 0xc8, 0xca, 0xd0 };
         static constexpr const Color ink3 { 0x8c, 0x8e, 0x96 };
-        static constexpr const Color acc { 0xc3, 0xd9, 0xff };
-        static constexpr const Color accGlow { 0xc3, 0xd9, 0xff, 0.45f };
-        static constexpr const Color orange { 0xff, 0x7e, 0x1c };
+        static constexpr const Color acc1 { 0xc3, 0xd9, 0xff };
+        static constexpr const Color acc2 { 0xbe, 0xf1, 0xff };
+        static constexpr const Color acc3 { 0xda, 0xc1, 0xf3 };
+        static constexpr const Color acc4 { 0xd2, 0xfd, 0xd3 };
+        static constexpr const Color acc5 { 0xff, 0xbf, 0xcb };
+        static constexpr const Color acc6 { 0xff, 0xdf, 0xad };
+        static constexpr const Color acc1Glow { acc1, 0.45f };
+        static constexpr const Color acc2Glow { acc2, 0.45f };
+        static constexpr const Color acc3Glow { acc3, 0.45f };
+        static constexpr const Color acc4Glow { acc4, 0.45f };
+        static constexpr const Color acc5Glow { acc5, 0.45f };
+        static constexpr const Color acc6Glow { acc6, 0.45f };
+        // static constexpr const Color orange { 0xff, 0x7e, 0x1c };
         static constexpr const Color bg0 { 0x16, 0x16, 0x18 };
         static constexpr const Color bg1 { 0x1c, 0x1c, 0x20 };
         static constexpr const Color bg2 { 0x26, 0x26, 0x2b };
@@ -66,14 +76,14 @@ struct Reference {
     };
 
     struct PluginName : Zero {
-        static constexpr const Color color = Colors::acc;
+        static constexpr const Color color = Colors::acc1;
         static constexpr const float fontSize = 20;
         static constexpr const float letterSpacing = fontSize * 0.05;
     };
 
     struct Line {
-        static constexpr const Color colorGradientStart = Colors::acc;
-        static constexpr const Color colorGradientStop = Colors::accGlow;
+        static constexpr const Color colorGradientStart = Colors::acc1;
+        static constexpr const Color colorGradientStop = Colors::acc1Glow;
     };
 
     struct MainArea : Zero {
@@ -91,9 +101,9 @@ struct Reference {
         static constexpr const uint width = 26;
 
         struct Slider {
-            static constexpr const Color color = Colors::acc;
-            static constexpr const Color colorGradientStart = Colors::accGlow;
-            static constexpr const Color colorGradientStop { Colors::accGlow, 0.f };
+            static constexpr const Color color = Colors::acc1;
+            static constexpr const Color colorGradientStart = Colors::acc1Glow;
+            static constexpr const Color colorGradientStop { Colors::acc1Glow, 0.f };
             static constexpr const uint height = 3;
         };
 
@@ -105,8 +115,8 @@ struct Reference {
         };
 
         struct Track {
-            static constexpr const Color colorGradientStart = Colors::acc;
-            static constexpr const Color colorGradientStop = Colors::accGlow;
+            static constexpr const Color colorGradientStart = Colors::acc1;
+            static constexpr const Color colorGradientStop = Colors::acc1Glow;
             static constexpr const uint width = 9;
         };
 
@@ -152,7 +162,7 @@ struct Reference {
     struct Widgets {
         struct Button : Zero {
             static constexpr const Color backgroundColor = { 0x42, 0x42, 0x5a };
-            static constexpr const Color color = Colors::acc;
+            static constexpr const Color color = Colors::acc1;
             static constexpr const Color color〡deactivated = Colors::ink3;
             static constexpr const MouseCursor cursor〡hover = kMouseCursorHand;
             static constexpr const float fontSize = Common::fontSize;
@@ -174,9 +184,9 @@ struct Reference {
         };
 
         struct Card : Zero {
-            static constexpr const Color backgroundColor = { Colors::acc, 0.3f };
-            static constexpr const Color borderColor = { Colors::accGlow, 0.3f };
-            static constexpr const Color color = Colors::acc;
+            static constexpr const Color backgroundColor = { Colors::acc1, 0.3f };
+            static constexpr const Color borderColor = { Colors::acc1Glow, 0.3f };
+            static constexpr const Color color = Colors::acc1;
             static constexpr const Color color〡deactivated = Colors::ink3;
             static constexpr const MouseCursor cursor〡hover = kMouseCursorHand;
             static constexpr const float fontSize = Common::fontSize;
@@ -194,7 +204,7 @@ struct Reference {
             static constexpr const uint height = 58 + 20;
             static constexpr const uint width = 58;
             struct Name {
-                static constexpr const Color color = Colors::acc;
+                static constexpr const Color color = Colors::acc1;
                 static constexpr const float fontSize = 17;
                 static constexpr const float letterSpacing = Common::letterSpacing;
                 // text-shadow
@@ -219,7 +229,7 @@ struct Reference {
             static constexpr const uint height = (68 + 20) * 2;
             static constexpr const uint width = 68 * 2;
             struct Name {
-                static constexpr const Color color = Colors::acc;
+                static constexpr const Color color = Colors::acc1;
                 static constexpr const float fontSize = 23;
                 static constexpr const float letterSpacing = Common::letterSpacing;
                 // text-shadow
@@ -264,12 +274,38 @@ struct Reference {
                 static constexpr const Color backgroundColor〡selected = { 0xff, 0xff, 0xff, 0.12 };
                 static constexpr const Color color = Colors::ink2;
                 static constexpr const Color color〡deactivated = Colors::ink3;
-                static constexpr const Color color〡selected = Colors::acc;
+                static constexpr const Color color〡selected = Colors::acc1;
                 static constexpr const float fontSize = 17;
                 static constexpr const float letterSpacing = Common::letterSpacing;
                 static constexpr const uint borderRadius = 6;
                 static constexpr const uint height = 26;
                 static constexpr const uint margin = 3;
+            };
+        };
+
+        template <uint8_t accent>
+        struct ToggleSwitch : Knob {
+            static constexpr const Color color = Colors::acc2;
+            static constexpr const uint margin = 4;
+            static constexpr const float fontSize = 17;
+            static constexpr const float letterSpacing = Common::letterSpacing;
+
+            struct Switch {
+                static constexpr const Color backgroundColor = Colors::bg2;
+                static constexpr const Color backgroundColor〡selected = ToggleSwitch::color;
+                static constexpr const Color borderColor = Colors::bg0;
+                static constexpr const uint border = 1;
+                static constexpr const uint borderRadius = 10;
+                static constexpr const uint width = 36;
+                static constexpr const uint height = 20;
+                static constexpr const uint margin = 1;
+
+                struct Ball {
+                    static constexpr const Color backgroundColor = Colors::ink3;
+                    static constexpr const Color borderColor =  { Colors::bg0, 0.4f };
+                    static constexpr const uint border = 1;
+                    static constexpr const uint dotSize = 2;
+                };
             };
         };
     };

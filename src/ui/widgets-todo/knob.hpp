@@ -37,24 +37,12 @@ public:
         switch (parameter.accentcolor)
         {
         default:
-        case 1:
-            fKnobStyle.colorAccent = {0xc3, 0xd9, 0xff};
-            break;
-        case 2:
-            fKnobStyle.colorAccent = {0xbe, 0xf1, 0xff};
-            break;
-        case 3:
-            fKnobStyle.colorAccent = {0xda, 0xc1, 0xf3};
-            break;
-        case 4:
-            fKnobStyle.colorAccent = {0xd2, 0xfd, 0xd3};
-            break;
-        case 5:
-            fKnobStyle.colorAccent = {0xff, 0xbf, 0xcb};
-            break;
-        case 6:
-            fKnobStyle.colorAccent = {0xff, 0xdf, 0xad};
-            break;
+        case 1: fKnobStyle.colorAccent = Reference::Colors::acc1; break;
+        case 2: fKnobStyle.colorAccent = Reference::Colors::acc2; break;
+        case 3: fKnobStyle.colorAccent = Reference::Colors::acc3; break;
+        case 4: fKnobStyle.colorAccent = Reference::Colors::acc4; break;
+        case 5: fKnobStyle.colorAccent = Reference::Colors::acc5; break;
+        case 6: fKnobStyle.colorAccent = Reference::Colors::acc6; break;
         }
 
         fKnobStyle.colorDisabled = {0x5d, 0x5d, 0x66};

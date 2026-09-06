@@ -55,7 +55,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         void addKnobGroup(const uint32_t parameterStart)
         {
             std::shared_ptr<LabWidget> widget {
-                new KnobGroupWidget<SmallKnobWidget, maxNumParameters>(this, kParameters, kParametersMainStart, parameterStart)
+                new KnobGroupWidget<SmallKnobWidget, maxNumParameters>(this, kParameters, kParametersMainStart, parameterStart, maxNumParameters <= 2)
             };
             Layout::widgets.push_back({ widget.get(), Fixed });
             fWidgets.emplace_back(std::move(widget));

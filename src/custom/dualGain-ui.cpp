@@ -7,6 +7,7 @@
 #include "ui/reference.hpp"
 #include "ui/lab/color.hpp"
 #include "ui/widgets.hpp"
+#include "ui/widgets/toggle-switch.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -18,6 +19,7 @@ class LibreAudioUI : public LibreAudioBaseUI
 {
     struct ReferenceTopBar : LibreAudio::Reference::TopBar {
         static constexpr const Color backgroundColor = LibreAudio::Reference::Colors::ink3;
+        static constexpr const uint height = 88;
     };
 
     // class TopBarSubWidget : public LibreAudio::ReferenceContainerWidget<ReferenceTopBar>
@@ -37,6 +39,7 @@ class LibreAudioUI : public LibreAudioBaseUI
         static constexpr const float kColor2[] = { 0.1f, 0.3f, 0.05f, 1.f };
         std::shared_ptr<LabWidget> w1 = addWidget<LabColorWidget<kColor1>, Expanding>();
         std::shared_ptr<LabWidget> w2 = addWidget<LabColorWidget<kColor2>, Expanding>();
+        std::shared_ptr<LabWidget> w3 = addWidget<LibreAudio::ToggleSwitchWidget<1>, Expanding>(kCommonParameterBypass, "Bypass");
 
     public:
         explicit TopBarWidget(LabTopLevelWidget* const parent)

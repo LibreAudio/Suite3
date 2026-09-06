@@ -10,6 +10,7 @@
 #include "../lab/color.hpp"
 #include "../lab/container.hpp"
 #include "../lab/image.hpp"
+#include "../widgets/toggle-switch.hpp"
 #include "knob.hpp"
 
 #include "LibreAudioParameters.hpp"
@@ -32,6 +33,7 @@ class KnobGroupWidget : public ReferenceContainerWidget<Reference::Widgets::Knob
     using BaseWidget = ReferenceContainerWidget<R>;
 
     std::list<std::shared_ptr<KnobWidget>> fKnobs;
+    std::list<std::shared_ptr<ToggleSwitchBaseWidget>> fToggles;
     std::list<std::shared_ptr<LabWidget>> fSpacers;
 
     struct Bracket {
@@ -47,28 +49,44 @@ public:
     explicit KnobGroupWidget(LabWidget* const parent,
                              const std::vector<FaustParameter>& parameters,
                              const uint32_t idOffset = 0,
-                             const uint32_t parameterStart = 0)
+                             const uint32_t parameterStart = 0,
+                             const bool withSurroundingSpacers = false)
         : BaseWidget(parent),
           fParameters(parameters),
           fParametersOffset(idOffset)
     {
         DISTRHO_SAFE_ASSERT_RETURN(!parameters.empty(),);
 
+        if (withSurroundingSpacers)
+            addSpacer(0);
+
         for (uint32_t i = parameterStart, numVisibleWidgets = 0, count = parameters.size(); i < count && numVisibleWidgets < kMaxNumParameters; ++i)
         {
             const FaustParameter& parameter = parameters[i];
-            if (parameter.isEnumerator || parameter.isOutput) {
+            if ((parameter.isEnumerator && parameter.scalePointCount != 2) || parameter.isOutput) {
                 d_stdout("knob-group skipped parameter %s", parameter.name);
                 continue;
             }
 
-            if (! fKnobs.empty())
+            if (! fKnobs.empty() || ! fToggles.empty())
                 addSpacer(idOffset + i);
 
-            std::unique_ptr<KnobWidget> widget { new KnobWidget(this, parameter, idOffset + i) };
-            widgets.push_back({ widget.get(), Fixed });
-            if (widget->getSize().isNull())
-                d_stderr2("Error: addKnob called but widget '%s' does not have a known size", widget->getName());
+            if (parameter.isEnumerator && parameter.scalePointCount == 2)
+            {
+                std::unique_ptr<ToggleSwitchBaseWidget> widget { new ToggleSwitchWidget<4>(this, idOffset + i, parameter) };
+                widgets.push_back({ widget.get(), Fixed });
+                if (widget->getSize().isNull())
+                    d_stderr2("Error: addToggle called but widget '%s' does not have a known size", widget->getName());
+                fToggles.emplace_back(std::move(widget));
+            }
+            else
+            {
+                std::unique_ptr<KnobWidget> widget { new KnobWidget(this, parameter, idOffset + i) };
+                widgets.push_back({ widget.get(), Fixed });
+                if (widget->getSize().isNull())
+                    d_stderr2("Error: addKnob called but widget '%s' does not have a known size", widget->getName());
+                fKnobs.emplace_back(std::move(widget));
+            }
 
             if constexpr (kLabel == "chorus")
             {
@@ -95,7 +113,6 @@ public:
                     // std::strcmp(parameter.symbol, "take_width") == 0
                 )
                 {
-                    // widget->hide();
                 }
                 else
                 {
@@ -106,9 +123,10 @@ public:
             {
                 ++numVisibleWidgets;
             }
-
-            fKnobs.emplace_back(std::move(widget));
         }
+
+        if (withSurroundingSpacers)
+            addSpacer(0);
 
         if (update())
             addIdleCallback(this);
@@ -158,6 +176,15 @@ private:
                 break;
             }
         }
+
+        for (const std::shared_ptr<ToggleSwitchBaseWidget>& toggle : fToggles)
+        {
+            if (ToggleSwitchBaseWidget* const togglePtr = toggle.get(); togglePtr->getId() == id)
+            {
+                togglePtr->setEnabled(enabled, false);
+                break;
+            }
+        }
     }
 
     void updateVisibilityById(const uint32_t id, const bool visible)
@@ -167,6 +194,15 @@ private:
             if (KnobWidget* const knobPtr = knob.get(); knobPtr->getId() == id)
             {
                 knobPtr->setVisible(visible);
+                break;
+            }
+        }
+
+        for (const std::shared_ptr<ToggleSwitchBaseWidget>& toggle : fToggles)
+        {
+            if (ToggleSwitchBaseWidget* const togglePtr = toggle.get(); togglePtr->getId() == id)
+            {
+                togglePtr->setVisible(visible);
                 break;
             }
         }
@@ -255,24 +291,32 @@ private:
             updateVisibilityById(kParametersMainStart + kFaustParameterAdt_width, mode == 0 && d_isEqual(f2voices, 2.f));
         }
 
-        // 1st widget must be a knob, not a spacer
-        uint firstVisibleKnobId = UINT_MAX;
+        // 1st widget must not be a spacer
+        uint firstVisibleId = UINT_MAX;
         for (const std::shared_ptr<KnobWidget>& knob : fKnobs)
         {
             if (KnobWidget* const knobPtr = knob.get(); knobPtr->isVisible())
             {
-                firstVisibleKnobId = knobPtr->getId();
+                firstVisibleId = knobPtr->getId();
+                break;
+            }
+        }
+        for (const std::shared_ptr<ToggleSwitchBaseWidget>& toggle : fToggles)
+        {
+            if (ToggleSwitchBaseWidget* const togglePtr = toggle.get(); togglePtr->isVisible())
+            {
+                firstVisibleId = togglePtr->getId();
                 break;
             }
         }
 
-        if (firstVisibleKnobId != UINT_MAX)
+        if (firstVisibleId != UINT_MAX)
         {
             for (const std::shared_ptr<Widget>& spacer : fSpacers)
             {
                 if (Widget* const spacerPtr = spacer.get(); spacerPtr->isVisible())
                 {
-                    if (spacerPtr->getId() <= firstVisibleKnobId)
+                    if (spacerPtr->getId() <= firstVisibleId)
                         spacerPtr->hide();
                     break;
                 }
@@ -384,6 +428,8 @@ private:
             knobHeight = R::height * fScaleFactor;
         else if (! fKnobs.empty())
             knobHeight = fKnobs.front()->getHeight();
+        else if (! fToggles.empty())
+            knobHeight = fToggles.front()->getHeight();
         else
             knobHeight = d_roundToUnsignedInt(fScaleFactor);
 
@@ -426,8 +472,8 @@ public:
     void addWidget() = delete;
 
 private:
-    std::vector<std::shared_ptr<LabKnobWidget>> fKnobs;
-    std::vector<std::shared_ptr<LabWidget>> fSpacers;
+    std::list<std::shared_ptr<LabKnobWidget>> fKnobs;
+    std::list<std::shared_ptr<LabWidget>> fSpacers;
 
     void updateSize(const bool updateChildren) final
     {
@@ -465,15 +511,8 @@ public:
     explicit ExpertKnobsGroupWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
-        const std::vector<FaustParameter>& parameters = getFaustParameters();
-
-        fKnobsLeft.reset(new KnobGroupWidget<>(this, parameters, kParametersMainStart, 0));
         widgets.push_back({ fKnobsLeft.get(), Expanding });
-
-        fLogo.reset(new LabImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>(this));
         widgets.push_back({ fLogo.get(), Fixed });
-
-        fKnobsRight.reset(new KnobGroupWidget<>(this, parameters, kParametersMainStart, fKnobsLeft->getLastKnobId() + 1 - kParametersMainStart));
         widgets.push_back({ fKnobsRight.get(), Expanding });
 
         updateSize(true);
@@ -482,9 +521,11 @@ public:
     void addWidget() = delete;
 
 private:
-    std::shared_ptr<KnobGroupWidget<>> fKnobsLeft;
-    std::shared_ptr<LabWidget> fLogo;
-    std::shared_ptr<KnobGroupWidget<>> fKnobsRight;
+    const std::vector<FaustParameter>& fParameters = getFaustParameters();
+
+    std::shared_ptr<KnobGroupWidget<>> fKnobsLeft { new KnobGroupWidget<>(this, fParameters, kParametersMainStart, 0) };
+    std::shared_ptr<LabWidget> fLogo { new LabImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>(this) };
+    std::shared_ptr<KnobGroupWidget<>> fKnobsRight { new KnobGroupWidget<>(this, fParameters, kParametersMainStart, fKnobsLeft->getLastKnobId() + 1 - kParametersMainStart) };
 
     void updateSize(const bool updateChildren) final
     {
