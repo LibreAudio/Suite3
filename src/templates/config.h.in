@@ -41,11 +41,10 @@ enum FaustParameterList {
 #define DISTRHO_PLUGIN_URI "https://libreaudio.org/plugins/{{id}}"
 
 // optional time controls
-{% for w in passive if w.symbol == "dpf_bpm" %}
+{% for w in active if w.symbol == "dpf_bpm" %}
 #define DISTRHO_PLUGIN_WANT_TIMEPOS 1
 #define LIBREAUDIO_WANT_TIMEPOS_BPM 1
 {% endfor %}
-
 #ifndef LIBREAUDIO_WANT_TIMEPOS_BPM
 #define LIBREAUDIO_WANT_TIMEPOS_BPM 0
 #endif
@@ -54,7 +53,6 @@ enum FaustParameterList {
 {% for w in active if w.symbol == "dpf_vad" %}
 #define LIBREAUDIO_WANT_SPEECH_DETECTION 1
 {% endfor %}
-
 #ifndef LIBREAUDIO_WANT_SPEECH_DETECTION
 #define LIBREAUDIO_WANT_SPEECH_DETECTION 0
 #endif
@@ -64,7 +62,6 @@ enum FaustParameterList {
 #define DISTRHO_PLUGIN_WANT_LATENCY 1
 #define LIBREAUDIO_MAX_LATENCY_SAMPLES {{w.max|int}}
 {% endfor %}
-
 #ifndef DISTRHO_PLUGIN_WANT_LATENCY
 #define DISTRHO_PLUGIN_WANT_LATENCY 0
 #endif

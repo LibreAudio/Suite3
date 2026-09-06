@@ -360,7 +360,7 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
    #if DISTRHO_PLUGIN_WANT_TIMEPOS
     {
         const TimePosition& timePos = getTimePosition();
-        fMainDSP->setBPM(timePos.bpm);
+        fMainDSP->setBPM(timePos.bbt.beatsPerMinute);
     }
    #endif
 
