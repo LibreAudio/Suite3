@@ -268,7 +268,7 @@ timeRms = uiTime(hslider("[14]Time R[style:knob][unit:ms][scale:log][symbol:time
 // glide, so the glide is what removes the steps -- smoothing here would put a
 // second one-pole in series with it and make the same knob's response depend
 // on which of Free or Tempo produced the number.
-bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:bpm][label:BPM][accentcolor:02][bracket:TIME][requires:sync:1]
+bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:dpf_bpm][label:BPM][accentcolor:02][bracket:TIME][requires:sync:1]
       [tooltip: Tempo for the note divisions. Set by hand -- the host tempo is not read yet]",
       120, 20, 300, 0.01));
 
