@@ -4,13 +4,14 @@
 
 #pragma once
 
+#include "../_lab/knob.hpp"
+
 #include "DistrhoPluginInfo.h"
 
 #if ! LIBREAUDIO_WANT_COMMON_IO
 #error Cannot include this file for plugins without common IO
 #endif
 
-#include "../lab/knob.hpp"
 #include "../reference.hpp"
 
 #include "LibreAudioParameters.hpp"

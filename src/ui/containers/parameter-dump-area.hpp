@@ -5,8 +5,8 @@
 #pragma once
 
 #include "../widgets/base.hpp"
-#include "../widgets-todo/knob-group.hpp"
-#include "../widgets-todo/pill-toggle.hpp"
+#include "../containers/knob-group.hpp"
+#include "../containers/pill-toggle.hpp"
 #if LIBREAUDIO_WANT_COMMON_IO
 #include "../widgets/meter.hpp"
 #endif

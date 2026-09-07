@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "../lab/button.hpp"
+#include "../_lab/button.hpp"
+
 #include "../reference.hpp"
 
 #include "las-resources.h"

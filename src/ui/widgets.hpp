@@ -4,14 +4,15 @@
 
 #pragma once
 
-#include "lab/image.hpp"
-#include "lab/interface.hpp"
+#include "_lab/image.hpp"
+#include "_lab/interface.hpp"
+
+#include "containers/button-group.hpp"
+#include "containers/root.hpp"
 #include "widgets/base.hpp"
-#include "widgets/button-group.hpp"
+#include "widgets/button.hpp"
 #include "widgets/plugin-name.hpp"
-#include "widgets/root.hpp"
-#include "widgets-todo/button.hpp"
-#include "widgets-todo/stage.hpp"
+#include "containers/stage.hpp"
 #if LIBREAUDIO_WANT_COMMON_IO
 #include "widgets/meter.hpp"
 #endif

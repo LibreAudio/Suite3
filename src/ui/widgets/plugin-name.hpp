@@ -4,8 +4,9 @@
 
 #pragma once
 
+#include "../_lab/base.hpp"
+
 #include "../reference.hpp"
-#include "../lab/base.hpp"
 
 #include "DistrhoPluginInfo.h"
 

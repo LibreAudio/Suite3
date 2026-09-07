@@ -4,9 +4,10 @@
 
 #include "LibreAudioBaseUI.hpp"
 
+#include "ui/_lab/color.hpp"
+
 #include "ui/reference.hpp"
-#include "ui/lab/color.hpp"
-#include "ui/widgets-todo/shader.hpp"
+#include "ui/widgets/shader.hpp"
 #include "ui/widgets.hpp"
 
 // #include "delay-parameters.hpp"

@@ -6,12 +6,13 @@
 
 #include "DistrhoPluginInfo.h"
 
+#include "../_lab/color.hpp"
+#include "../_lab/container.hpp"
+#include "../_lab/image.hpp"
+
 #include "../reference.hpp"
-#include "../lab/color.hpp"
-#include "../lab/container.hpp"
-#include "../lab/image.hpp"
+#include "../widgets/knob.hpp"
 #include "../widgets/toggle-switch.hpp"
-#include "knob.hpp"
 
 #include "LibreAudioParameters.hpp"
 

@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "button.hpp"
-#include "../lab/container.hpp"
-#include "../lab/interface.hpp"
+#include "../_lab/container.hpp"
+#include "../_lab/interface.hpp"
+
+#include "../widgets/button.hpp"
 
 #include "LibreAudioParameters.hpp"
 #include "FaustParameters.hpp"

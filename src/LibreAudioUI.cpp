@@ -5,10 +5,10 @@
 #include "LibreAudioBaseUI.hpp"
 
 #include "ui/reference.hpp"
-#include "ui/lab/container.hpp"
-#include "ui/widgets/parameter-dump-area.hpp"
-#include "ui/widgets/root.hpp"
-#include "ui/widgets-todo/shader.hpp"
+#include "ui/_lab/container.hpp"
+#include "ui/containers/parameter-dump-area.hpp"
+#include "ui/containers/root.hpp"
+#include "ui/widgets/shader.hpp"
 #include "ui/widgets.hpp"
 
 #include <list>

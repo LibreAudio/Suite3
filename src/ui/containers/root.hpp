@@ -7,7 +7,7 @@
 #include "las-resources.h"
 
 #include "../reference.hpp"
-#include "../lab/root.hpp"
+#include "../_lab/root.hpp"
 
 START_NAMESPACE_DISTRHO
 class LibreAudioBaseUI;

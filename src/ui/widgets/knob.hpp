@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "../lab/knob.hpp"
+#include "../_lab/knob.hpp"
+
 #include "../reference.hpp"
 
 namespace LibreAudio {

@@ -5,7 +5,7 @@
 #include "LibreAudioBaseUI.hpp"
 
 #include "ui/reference.hpp"
-#include "ui/lab/color.hpp"
+#include "ui/_lab/color.hpp"
 #include "ui/widgets.hpp"
 #include "ui/widgets/toggle-switch.hpp"
 

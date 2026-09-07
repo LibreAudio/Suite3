@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../lab/interface.hpp"
+#include "../_lab/interface.hpp"
 
 namespace LibreAudio {
 

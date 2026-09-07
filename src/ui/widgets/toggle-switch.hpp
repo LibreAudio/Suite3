@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "../lab/toggle-switch.hpp"
+#include "../_lab/toggle-switch.hpp"
+
 #include "../reference.hpp"
 
 #include "FaustParameters.hpp"

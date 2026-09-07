@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "base.hpp"
-#include "../lab/button-group.hpp"
+#include "../_lab/button-group.hpp"
+
+#include "../widgets/base.hpp"
 #include "../reference.hpp"
 
 namespace LibreAudio {
