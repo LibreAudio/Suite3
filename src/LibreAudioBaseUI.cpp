@@ -149,6 +149,17 @@ const char* LibreAudioBaseUI::getParameterSymbol(const uint32_t index) const noe
 // --------------------------------------------------------------------------------------------------------------------
 // protected data
 
+void LibreAudioBaseUI::uiCrossing(const bool enter, CrossingMode)
+{
+    if (enter)
+        return;
+
+    // simulate moving mouse out of bounds when losing focus
+    MotionEvent ev;
+    ev.pos = ev.absolutePos = Point<double>(-1, -1);
+    fRootWidget->onMotion(ev);
+}
+
 void LibreAudioBaseUI::uiIdle()
 {
     fSnapshots.idle();

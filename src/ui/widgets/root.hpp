@@ -9,6 +9,10 @@
 #include "../reference.hpp"
 #include "../lab/root.hpp"
 
+START_NAMESPACE_DISTRHO
+class LibreAudioBaseUI;
+END_NAMESPACE_DISTRHO
+
 namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -30,6 +34,8 @@ public:
                              FONTS_SPLINESANSMONO_REGULAR_TTF_LEN,
                              false);
     }
+
+    friend class DISTRHO_NAMESPACE::LibreAudioBaseUI;
 };
 
 template <class TopBar, class MainArea>

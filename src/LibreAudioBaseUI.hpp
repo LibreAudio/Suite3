@@ -59,6 +59,7 @@ protected:
         fRootWidget->updateScaleFactorAndSize();
     }
 
+    void uiCrossing(bool enter, CrossingMode) override;
     void uiIdle() override;
 
 private:
