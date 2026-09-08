@@ -7,10 +7,10 @@
 #include "_lab/image.hpp"
 #include "_lab/interface.hpp"
 
+#include "base.hpp"
 #include "containers/root.hpp"
 #include "containers/stage.hpp"
 #include "widgets/button-group.hpp"
-#include "widgets/base.hpp"
 #include "widgets/button.hpp"
 #include "widgets/plugin-name.hpp"
 #if LIBREAUDIO_WANT_COMMON_IO

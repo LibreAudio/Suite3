@@ -10,7 +10,7 @@
 #include "common_output-parameters.hpp"
 
 #include "nlohmann/json.hpp"
-#include "ui/widgets/base.hpp"
+#include "ui/base.hpp"
 
 #if defined(__GNUC__) && !defined(__clang__)
 #define constexprstr constexpr

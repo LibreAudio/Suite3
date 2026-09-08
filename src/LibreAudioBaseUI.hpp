@@ -8,8 +8,8 @@
 #include "FaustParameters.hpp"
 #include "LibreAudioSnapshots.hpp"
 
+#include "ui/base.hpp"
 #include "ui/reference.hpp"
-#include "ui/widgets/base.hpp"
 #include "ui/containers/root.hpp"
 
 // --------------------------------------------------------------------------------------------------------------------

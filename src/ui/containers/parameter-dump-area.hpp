@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../widgets/base.hpp"
+#include "../base.hpp"
 #include "../containers/knob-group.hpp"
 #include "../widgets/pill-toggle.hpp"
 #if LIBREAUDIO_WANT_COMMON_IO

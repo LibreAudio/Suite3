@@ -6,7 +6,7 @@
 
 #include "../_lab/button-group.hpp"
 
-#include "../widgets/base.hpp"
+#include "../base.hpp"
 #include "../reference.hpp"
 
 namespace LibreAudio {

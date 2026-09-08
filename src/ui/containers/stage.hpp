@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../widgets/base.hpp"
+#include "../base.hpp"
 #include "../widgets/card.hpp"
 #include "../widgets/pill-toggle.hpp"
 #include "knob-group.hpp"
