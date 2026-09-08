@@ -78,6 +78,8 @@ private:
     LibreAudioSnapshots fSnapshots;
     bool fCopyingSnapshot = false;
 
+    uint32_t fCurrentPreset = 0; // TODO
+
     float fScaleFactor = 1.f;
 
     [[nodiscard]] float getScaleFactor() const noexcept final { return fScaleFactor; }

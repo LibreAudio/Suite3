@@ -511,6 +511,12 @@ void LibreAudioBaseUI::buttonClicked(const uint32_t id)
                                  d_isZero(fParameterValues[kCommonParameterBypass]) ? 1.f : 0.f);
         parameterControlReleased(kCommonParameterBypass);
         break;
+    case kWidgetPresetA:
+    case kWidgetPresetB:
+    case kWidgetPresetC:
+    case kWidgetPresetD:
+        fCurrentPreset = id - kWidgetPresetA; // TODO
+        break;
     case kWidgetRedo:
         fSnapshots.redo();
         break;
@@ -541,6 +547,11 @@ bool LibreAudioBaseUI::isButtonEnabled(const uint32_t id) const noexcept
     case kWidgetMenu:
         return true;
     case kWidgetPower:
+        return true;
+    case kWidgetPresetA:
+    case kWidgetPresetB:
+    case kWidgetPresetC:
+    case kWidgetPresetD:
         return true;
     case kWidgetRedo:
         return fSnapshots.canRedo();
@@ -574,6 +585,11 @@ bool LibreAudioBaseUI::isButtonChecked(const uint32_t id) const noexcept
         return fPage == kPageSettings;
     case kWidgetPower:
         return d_isNotZero(fParameterValues[kCommonParameterBypass]);
+    case kWidgetPresetA:
+    case kWidgetPresetB:
+    case kWidgetPresetC:
+    case kWidgetPresetD:
+        return fCurrentPreset == id - kWidgetPresetA; // TODO
     case kWidgetRedo:
         return false;
     case kWidgetSnapshotCopy:

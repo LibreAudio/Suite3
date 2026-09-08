@@ -32,15 +32,18 @@ public:
     }
 
 protected:
-    template<class B, typename = std::enable_if_t<std::is_base_of_v<ButtonBaseWidget, B>>>
-    std::shared_ptr<ButtonBaseWidget> addButton(const uint id, const char* const name)
+    template<class B,
+             SizeHint sizeHint = Fixed,
+             typename... Args,
+             typename = std::enable_if_t<std::is_base_of_v<ButtonBaseWidget, B>>>
+    std::shared_ptr<B> addButton(const uint id, const char* const name, Args... args)
     {
-        std::shared_ptr<ButtonBaseWidget> widget { new B(this) };
+        std::shared_ptr<B> widget { new B(this, args...) };
         widget->setCallback(this);
         widget->setCheckable(true);
         widget->setId(id);
         widget->setName(name);
-        this->widgets.push_back({ widget.get(), Fixed });
+        this->widgets.push_back({ widget.get(), sizeHint });
         fWidgets.push_back(widget);
         if (widget->getSize().isNull())
             d_stderr2("Error: addButton called but widget %u: '%s' does not have a known size", id, name);
@@ -50,28 +53,8 @@ protected:
     void addSpacer() = delete;
     void addWidget() = delete;
 
-private:
-    void onNanoDisplay() final
-    {
-        // TODO divider??
-    }
-
-    void buttonClicked(SubWidget* const widget, int) final
-    {
-        this->fInterface->buttonClicked(widget->getId());
-        idleCallback();
-    }
-
-    void idleCallback() final
-    {
-        for (const std::shared_ptr<ButtonBaseWidget>& widget : fWidgets)
-        {
-            widget->setChecked(this->fInterface->isButtonChecked(widget->getId()), false);
-            widget->setEnabled(this->fInterface->isButtonEnabled(widget->getId()));
-        }
-    }
-
-    void updateSize(const bool updateChildren) final
+protected:
+    void updateSize(const bool updateChildren) override
     {
         DISTRHO_SAFE_ASSERT(updateChildren);
 
@@ -102,10 +85,10 @@ private:
             {
                 DISTRHO_CUSTOM_SAFE_ASSERT(
                     "First button must have corner = left",
-                    fWidgets.front()->getCorner() == kCornerLeft);
+                    fWidgets.front()->getCorner() == kCornerLeft || fWidgets.front()->getCorner() == kCornerBoth);
                 DISTRHO_CUSTOM_SAFE_ASSERT(
                     "First button must have corner = right",
-                    fWidgets.back()->getCorner() == kCornerRight);
+                    fWidgets.back()->getCorner() == kCornerRight || fWidgets.back()->getCorner() == kCornerBoth);
             }
         }
 
@@ -116,6 +99,27 @@ private:
     }
 
     std::list<std::shared_ptr<ButtonBaseWidget>> fWidgets;
+
+private:
+    void onNanoDisplay() final
+    {
+        // TODO divider??
+    }
+
+    void buttonClicked(SubWidget* const widget, int) final
+    {
+        this->fInterface->buttonClicked(widget->getId());
+        idleCallback();
+    }
+
+    void idleCallback() final
+    {
+        for (const std::shared_ptr<ButtonBaseWidget>& widget : fWidgets)
+        {
+            widget->setChecked(this->fInterface->isButtonChecked(widget->getId()), false);
+            widget->setEnabled(this->fInterface->isButtonEnabled(widget->getId()));
+        }
+    }
 };
 
 // --------------------------------------------------------------------------------------------------------------------

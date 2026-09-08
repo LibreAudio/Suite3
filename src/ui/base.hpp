@@ -23,6 +23,10 @@ enum WidgetIds : uint16_t {
     kWidgetExpert,
     kWidgetMenu,
     kWidgetPower,
+    kWidgetPresetA,
+    kWidgetPresetB,
+    kWidgetPresetC,
+    kWidgetPresetD,
     kWidgetRedo,
     kWidgetSnapshotCopy,
     kWidgetSnapshotSlotA,
@@ -46,6 +50,14 @@ constexpr const char* WidgetIds2Str(const WidgetIds id) noexcept
         return "menu";
     case kWidgetPower:
         return "power";
+    case kWidgetPresetA:
+        return "preset-a";
+    case kWidgetPresetB:
+        return "preset-b";
+    case kWidgetPresetC:
+        return "preset-c";
+    case kWidgetPresetD:
+        return "preset-d";
     case kWidgetRedo:
         return "redo";
     case kWidgetSnapshotCopy:

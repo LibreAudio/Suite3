@@ -51,8 +51,8 @@ struct Reference {
         static constexpr const Color borderColor = Colors::transparent;
         static constexpr const Color color = Colors::transparent;
         static constexpr const Color color〡deactivated = Colors::transparent;
-        static constexpr const float fontSize = 0.f;
-        static constexpr const float letterSpacing = 0.f;
+        static constexpr const float fontSize = Common::fontSize;
+        static constexpr const float letterSpacing = Common::letterSpacing;
         static constexpr const uint border = 0;
         static constexpr const uint borderRadius = 0;
         static constexpr const uint height = 0;
@@ -165,8 +165,6 @@ struct Reference {
             static constexpr const Color color = Colors::acc1;
             static constexpr const Color color〡deactivated = Colors::ink3;
             static constexpr const MouseCursor cursor〡hover = kMouseCursorHand;
-            static constexpr const float fontSize = Common::fontSize;
-            static constexpr const float letterSpacing = Common::letterSpacing;
             static constexpr const uint borderRadius = 11;
             static constexpr const uint margin = 9;
         };
@@ -184,17 +182,32 @@ struct Reference {
         };
 
         struct Card : Zero {
-            static constexpr const Color backgroundColor = { Colors::acc1, 0.3f };
-            static constexpr const Color borderColor = { Colors::acc1Glow, 0.3f };
-            static constexpr const Color color = Colors::acc1;
-            static constexpr const Color color〡deactivated = Colors::ink3;
+            static constexpr const Color backgroundColor = { Colors::ink3, 0.3f };
+            static constexpr const Color backgroundColor〡selected = { Colors::acc1, 0.3f };
+            static constexpr const Color borderColor = Colors::ink3;
+            static constexpr const Color borderColor〡selected = Colors::acc1;
             static constexpr const MouseCursor cursor〡hover = kMouseCursorHand;
-            static constexpr const float fontSize = Common::fontSize;
-            static constexpr const float letterSpacing = Common::letterSpacing;
+            static constexpr const uint border = 1;
             static constexpr const uint borderRadius = 11;
             static constexpr const uint margin = Common::margin;
-            static constexpr const uint width = 0;
             static constexpr const uint height = 80;
+            struct Title {
+                static constexpr const Color color = Colors::ink;
+                static constexpr const Color color〡selected = Colors::acc1;
+                static constexpr const float fontSize = Common::fontSize;
+                static constexpr const float letterSpacing = Common::letterSpacing;
+            };
+            struct Subtitle {
+                static constexpr const Color color = Colors::ink2;
+                static constexpr const float fontSize = Common::fontSize;
+                static constexpr const float letterSpacing = Common::letterSpacing;
+            };
+        };
+
+        struct CardGroup : Zero {
+            // static constexpr const uint margin = Common::margin;
+            static constexpr const uint padding = Common::margin;
+            static constexpr const uint height = 80; // FIXME
         };
 
         struct Knob : Zero {

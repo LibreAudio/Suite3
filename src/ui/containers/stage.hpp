@@ -21,16 +21,23 @@ class EasyStageWidget final : public ReferenceContainerWidget<Reference::Stage, 
     std::shared_ptr<LabWidget> fSpacer1 = addSpacer();
     std::shared_ptr<EasyKnobsGroupWidget> fEasyKnobs = addWidget<EasyKnobsGroupWidget>();
     std::shared_ptr<LabWidget> fSpacer2 = addSpacer();
-    std::shared_ptr<LabWidget> fCard = addCard();
+    std::shared_ptr<LabWidget> fCards = addCards();
 
 public:
     explicit EasyStageWidget(LabWidget* const parent)
         : BaseWidget(parent) {}
 
 private:
-    std::shared_ptr<LabWidget> addCard()
+    std::shared_ptr<LabWidget> addCards()
     {
-        std::shared_ptr<LabWidget> widget { new LabCardWidget<>(this, "This is a title", "And this is a subtitle with more extensive descriptive text") };
+        std::shared_ptr<CardGroupWidget> widget { new CardGroupWidget(this) };
+
+        widget->addCard(kWidgetPresetA, "NATURAL DOUBLE", "Subtle ADT thickening");
+        widget->addCard(kWidgetPresetB, "TIGHT SLAP", "Short doubled slap");
+        widget->addCard(kWidgetPresetC, "WIDE TRIPLE", "Three-voice spread");
+        widget->addCard(kWidgetPresetD, "LUSH STACK", "Full ensemble stack");
+        widget->done();
+
         Layout::widgets.push_back({ widget.get(), Fixed });
         return widget;
     }

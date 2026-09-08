@@ -58,11 +58,6 @@ public:
     explicit ReferenceButtonWidget(LabWidget* const parent)
         : BaseWidget(parent) {}
 
-    [[nodiscard]] Corner getCorner() const noexcept final
-    {
-        return corner;
-    }
-
 protected:
     [[nodiscard]] const Color& getBackgroundColor() const noexcept override
     {
@@ -70,6 +65,11 @@ protected:
             return isChecked() ? R::color : R::backgroundColor;
 
         return R::backgroundColor;
+    }
+
+    [[nodiscard]] const Color& getBorderColor() const noexcept override
+    {
+        return R::borderColor;
     }
 
     [[nodiscard]] const Color& getForegroundColor() const noexcept override
@@ -81,6 +81,11 @@ protected:
             return isChecked() ? R::backgroundColor : R::color;
 
         return R::color;
+    }
+
+    [[nodiscard]] Corner getCorner() const noexcept override
+    {
+        return corner;
     }
 
     void onNanoDisplay() override
