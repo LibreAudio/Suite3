@@ -6,8 +6,8 @@
 
 #include "../widgets/base.hpp"
 #include "../widgets/card.hpp"
+#include "../widgets/pill-toggle.hpp"
 #include "knob-group.hpp"
-#include "pill-toggle.hpp"
 
 namespace LibreAudio {
 

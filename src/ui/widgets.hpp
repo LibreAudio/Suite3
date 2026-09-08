@@ -7,12 +7,12 @@
 #include "_lab/image.hpp"
 #include "_lab/interface.hpp"
 
-#include "containers/button-group.hpp"
 #include "containers/root.hpp"
+#include "containers/stage.hpp"
+#include "widgets/button-group.hpp"
 #include "widgets/base.hpp"
 #include "widgets/button.hpp"
 #include "widgets/plugin-name.hpp"
-#include "containers/stage.hpp"
 #if LIBREAUDIO_WANT_COMMON_IO
 #include "widgets/meter.hpp"
 #endif

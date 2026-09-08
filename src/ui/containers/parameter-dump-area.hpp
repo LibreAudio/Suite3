@@ -6,7 +6,7 @@
 
 #include "../widgets/base.hpp"
 #include "../containers/knob-group.hpp"
-#include "../containers/pill-toggle.hpp"
+#include "../widgets/pill-toggle.hpp"
 #if LIBREAUDIO_WANT_COMMON_IO
 #include "../widgets/meter.hpp"
 #endif
