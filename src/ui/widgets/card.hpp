@@ -75,7 +75,7 @@ private:
                                                           h + f,
                                                           R::borderRadius * fScaleFactor * 2.f,
                                                           f2,
-                                                          Color(R::glowColor, 0.125f),
+                                                          Color(R::glowColor, 0.2f),
                                                           Reference::Colors::transparent));
             BaseWidget::fill();
         }
