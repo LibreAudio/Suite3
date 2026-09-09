@@ -21,8 +21,8 @@ declare unique_id "LAsb";
 //      (RMS with independent attack/release). The band levels are K-weighted -
 //      see weightDb, which folds the shelf in as a constant per band.
 //
-//   2. NORMALISED CURVE. Every band level is expressed relative to the
-//      fullrange level: specRaw(i) = bandDb(i) - fullDb. That makes the curve
+//   2. NORMALISED CURVE. Every band level is expressed relative to a fullrange
+//      envelope built with that band's own time constants. That makes the curve
 //      independent of how loud the programme is - it is the *shape* of the
 //      spectrum, not its level. The bands are constant-Q (equal width on a log
 //      axis), so before weighting a pink spectrum reads flat; with the
@@ -42,13 +42,17 @@ declare unique_id "LAsb";
 //   5. GATING. Two gates keep the correction out of silence and out of empty
 //      parts of the spectrum:
 //        - Threshold: fullrange level below it -> correction fades to nothing.
+//          It scales the gains after the ballistics, so it does not have to
+//          wait for Release to be heard.
 //        - Band Range: a band sitting more than that far below the average
 //          band carries no usable programme (a band-limited source, air above
 //          16 kHz on an MP3). It is neither corrected nor counted in the mean,
 //          which stops the balancer from boosting hiss into existence.
 //
-//   6. CORRECTION. One fi.svf.bell per band, in series, on each channel. Bell
-//      gains follow the deviation through the Attack/Release ballistics, scaled
+//   6. CORRECTION. One svf bell per band, in series, on each channel. Bell
+//      gains follow the deviation through the Attack/Release ballistics - tilted
+//      across the spectrum by Band Speed, so the top tracks faster than the
+//      bottom, which needs the long window its cycles ask for - scaled
 //      by Strength and clipped to +-Range. Because neighbouring bells overlap,
 //      the wanted curve is first run through the inverse of the bank's overlap
 //      (see kern), so a correction lands at the size it was asked for instead of
@@ -97,18 +101,21 @@ qBell     = qOct(octSpacing*bellWidth);
 //   w = lambda d: 1/math.sqrt(1 + (Q*(r**abs(d) - r**-abs(d)))**2)
 //   print(np.linalg.inv([[w(i-j) for j in range(N)] for i in range(N)])[N//2])
 //
-// Regenerate them if Nbands, fLo, fHi or bellWidth change. With these five taps
-// a local correction - the usual case, a band or three out of line - lands
-// within about 10% of what was asked. A curve that ramps across the whole range
-// (a full-scale Tilt) is the hard case for any finite bank: it comes out at
-// roughly 70% in the middle bands and half that at the outermost ones, which
-// have nothing beyond the ends of the bank to lean on.
-kTaps    = 4;                 // kernel half-width, in bands
+// Regenerate them if Nbands, fLo, fHi or bellWidth change - the shape barely
+// moves (the bank is self-similar on a log axis) but the tails need more taps
+// the closer the bands sit. With these six a single band out of line lands
+// within 0.1%, a one-octave feature within 0.2%, a three-octave one within 1%.
+// A curve that ramps across the whole range (a full-scale Tilt) is the hard
+// case for any finite bank: it comes out at about two thirds, the shortfall
+// sitting at the outermost bands, which have nothing beyond the ends to lean
+// on.
+kTaps    = 5;                 // kernel half-width, in bands
 kern(0)  =  1.4719;
 kern(1)  = -0.5128;
 kern(2)  = -0.0162;
 kern(3)  = -0.0249;
 kern(4)  = -0.0119;
+kern(5)  = -0.0070;
 bandIdx(k) = max(0, min(Nbands - 1, k));   // edge bands repeat, folded at compile time
 
 // Nyquist warping compensation. The bilinear map squeezes a constant-Q band as
@@ -161,25 +168,45 @@ with {
     den = (kwA - x2)*(kwA - x2) + im2;
 };
 
+// One-pole coefficient for a tau in seconds. ba.tau2pole is exp(-1/(tau*SR)),
+// and this graph would ask for about a hundred of those per sample - two per
+// detector plus one per gain smoother. Over the range these knobs cover
+// 1/(tau*SR) never exceeds ~0.02, where the first term of the series is within
+// 1% on tau, so a divide does the job the exponential was doing.
+pole(tau) = 1.0 - 1.0/max(1.0, tau*ma.SR);
+
 gateKnee   = 6.0;   // dB, soft knee of both gates
 
 maxLookaheadSamples = 9600;   // 50 ms at 192 kHz; also sizes the host's
                               // latency buffer (see src/templates/config.h.in)
 
 //----------------------------------------------------------------- UI groups
-uiTop(x)          = hgroup("[0]Stage Top", x);
-uiTarget(x)       = uiTop(hgroup("[0]Target", x));
-uiSpectrum(x)     = uiTop(hgroup("[1]Spectrum", x));
-uiGain(x)         = uiTop(hgroup("[2]Correction", x));
-uiLatency(x)      = uiTop(hgroup("[3]Info", x));
-uiBottom(x)       = hgroup("[8]Stage Bottom", x);
-uiBottomLeft(x)   = uiBottom(hgroup("[1]Stage Bottom Left", x));
-uiBottomCenter(x) = uiBottom(hgroup("[2]Stage Bottom Center", x));
-uiBottomRight(x)  = uiBottom(hgroup("[3]Stage Bottom Right", x));
+// Two rows.
+//
+// CONTROLS is three knob groups side by side, reading left to right in the
+// order the signal is thought about: how it is measured, how much to act on
+// it, how the acting moves.
+//
+// BANDS underneath is the per-band display: three strips of Nbands stacked so
+// the columns line up under each other - what you asked for, what the balancer
+// measured, what it did about it.
+//
+// Faust orders a group's children by comparing the [n] prefix as text rather
+// than as a number, so every index here stays a single digit and each group
+// counts from 0.
+uiControls(x)   = hgroup("[0]CONTROLS", x);
+uiAnalysis(x)   = uiControls(hgroup("[0]ANALYSIS", x));
+uiAmount(x)     = uiControls(hgroup("[1]AMOUNT", x));
+uiCorrection(x) = uiControls(hgroup("[2]CORRECTION", x));
+
+uiBands(x)    = vgroup("[1]BANDS", x);
+uiTarget(x)   = uiBands(hgroup("[0]Target", x));
+uiSpectrum(x) = uiBands(hgroup("[1]Spectrum", x));
+uiGain(x)     = uiBands(hgroup("[2]Gain", x));
 
 //----------------------------------------------------------------- controls
 // Amount of the measured deviation that is actually corrected.
-strength = uiBottomCenter(hslider("[0]Strength[unit:%][style:knob][symbol:strength]
+strength = uiAmount(hslider("[0]Strength[unit:%][style:knob][symbol:strength]
       [label:Strength][accentcolor:01][easy]
       [tooltip: How much of the difference between the measured spectrum and
        the target curve is corrected. 0% = analysis only, 100% = the balancer
@@ -187,13 +214,13 @@ strength = uiBottomCenter(hslider("[0]Strength[unit:%][style:knob][symbol:streng
                                   50, 0, 100, 1)) / 100;
 
 // Ceiling on any single band's correction.
-range = uiBottomCenter(hslider("[1]Range[unit:dB][style:knob][symbol:range]
+range = uiAmount(hslider("[1]Range[unit:dB][style:knob][symbol:range]
       [label:Range][accentcolor:01][easy]
       [tooltip: Maximum boost or cut per band]",
                                12, 0, 24, 0.5));
 
 // Broad target shape on top of the sliders: dB per octave around fRef.
-tilt = uiBottomCenter(hslider("[2]Tilt[unit:dB/oct][style:knob][symbol:tilt]
+tilt = uiAmount(hslider("[2]Tilt[unit:dB/oct][style:knob][symbol:tilt]
       [label:Tilt][accentcolor:03][easy]
       [tooltip: Tilts the whole target curve. 0 = pink (equal energy per
        octave), negative = darker, positive = brighter]",
@@ -201,31 +228,85 @@ tilt = uiBottomCenter(hslider("[2]Tilt[unit:dB/oct][style:knob][symbol:tilt]
 
 // Deviations smaller than this are left alone - keeps the balancer from
 // chasing the last dB of a spectrum that is already close enough.
-tolerance = uiBottomCenter(hslider("[3]Tolerance[unit:dB][style:knob][symbol:tolerance]
+tolerance = uiAmount(hslider("[3]Tolerance[unit:dB][style:knob][symbol:tolerance]
       [label:Tolerance][accentcolor:04]
       [tooltip: Deadband. A band whose deviation from the target is smaller
        than this gets no correction at all]",
                                    1, 0, 6, 0.1));
 
-// Ballistics of the correction itself.
-attack = uiBottomLeft(hslider("[4]Attack[unit:ms][scale:log][style:knob][symbol:attack]
+//--- left: ANALYSIS - how the spectrum is measured, and when it counts at all.
+//    Faust orders a group's knobs by comparing the [n] prefix as text, not as a
+//    number, so each group counts from 0 rather than running 0..11 across all
+//    three - "[10]" would sort ahead of "[8]".
+envAttack = uiAnalysis(hslider("[0]Env Attack[unit:ms][scale:log][style:knob][symbol:env_attack]
+      [label:Env Att][accentcolor:06][bracket:ANALYSIS]
+      [tooltip: Integration time of the level detectors on the way up]",
+                                 20, 1, 500, 1)) / 1000;
+
+envRelease = uiAnalysis(hslider("[1]Env Release[unit:ms][scale:log][style:knob][symbol:env_release]
+      [label:Env Rel][accentcolor:06][bracket:ANALYSIS]
+      [tooltip: Integration time of the level detectors on the way down. Also
+       sets how quickly the Threshold gate notices that the programme stopped]",
+                                  200, 5, 2000, 1)) / 1000;
+
+threshold = uiAnalysis(hslider("[2]Threshold[unit:dB][style:knob][symbol:threshold]
+      [label:Threshold][accentcolor:05][bracket:ANALYSIS][easy]
+      [tooltip: Fullrange level below which nothing is corrected, so pauses and
+       fades are left alone. The measured curve freezes with it, so a pause is
+       held rather than re-learned]",
+                                 -50, -80, 0, 0.5));
+
+bandRange = uiAnalysis(hslider("[3]Band Range[unit:dB][style:knob][symbol:band_range]
+      [label:Band Rng][accentcolor:05][bracket:ANALYSIS]
+      [tooltip: How far a band may sit below the average band and still count.
+       Bands quieter than that hold no programme - a band-limited source, air
+       above 16 kHz on an MP3 - and are neither corrected nor averaged, which
+       stops the balancer boosting what is not there]",
+                                 18, 6, 48, 1));
+
+//--- right: CORRECTION - how the gains move once the deviation is known
+attack = uiCorrection(hslider("[0]Attack[unit:ms][scale:log][style:knob][symbol:attack]
       [label:Attack][accentcolor:02][bracket:CORRECTION]
       [tooltip: How fast a correction grows]",
-                              100, 5, 2000, 1)) / 1000;
+                               100, 5, 2000, 1)) / 1000;
 
-release = uiBottomLeft(hslider("[5]Release[unit:ms][scale:log][style:knob][symbol:release]
+release = uiCorrection(hslider("[1]Release[unit:ms][scale:log][style:knob][symbol:release]
       [label:Release][accentcolor:02][bracket:CORRECTION]
       [tooltip: How fast a correction falls back towards flat]",
-                               500, 20, 5000, 1)) / 1000;
+                                500, 20, 5000, 1)) / 1000;
+
+// Correction speed across the spectrum. Low bands need long windows - a 30 Hz
+// cycle is 33 ms on its own - while the top of the spectrum can be tracked in
+// a few milliseconds without the gain audibly moving.
+bandSpeed = uiCorrection(hslider("[2]Band Speed[style:knob][scale:log][symbol:band_speed]
+      [label:Speed][accentcolor:02][bracket:CORRECTION]
+      [tooltip: How much faster the top of the spectrum corrects than the
+       bottom. 1 = every band shares Attack and Release exactly. 8 = the
+       highest band is eight times faster than the lowest, the two spread
+       evenly around the middle band, so the overall pace stays put as this
+       knob is turned. It tilts the measurement windows with them]",
+                                  4, 1, 32, 0.1));
+
+// The times spread geometrically around the middle band: the bottom band is
+// sqrt(bandSpeed) slower than the knobs say, the top band that much faster.
+// Walked band to band as a running product, so the whole bank costs one pow
+// and one sqrt per sample rather than an exponential each. The min() is a
+// fence, not a limit: without it Faust's simplifier recognises the chain of
+// multiplies and folds each rung back into pow(step, i), handing back the 32
+// transcendentals the ladder exists to avoid. The bound is unreachable - the
+// factor never leaves [1/6, 6].
+speedStep  = pow(max(1.0, bandSpeed), 0.0 - 1.0/(Nbands - 1));
+speedOf(0) = sqrt(max(1.0, bandSpeed));
+speedOf(i) = min(1.0e30, speedOf(i - 1)*speedStep);
 
 // Delays the audio while the detector keeps reading the signal as it arrives,
 // so a correction is already in place by the time the sound reaches the bells.
-lookaheadMs = uiBottomLeft(hslider("[6]Lookahead[unit:ms][style:knob][symbol:lookahead]
+lookaheadMs = uiCorrection(hslider("[3]Lookahead[unit:ms][style:knob][symbol:lookahead]
       [label:Lookahead][accentcolor:02][bracket:CORRECTION]
       [tooltip: Delays the audio so the correction is already in place when the
        sound arrives, instead of following it by an envelope's worth of time.
        Reported to the host as latency and compensated. 0 = off]",
-                                   0, 0, 50, 0.1));
+                                    0, 0, 50, 0.1));
 
 lookaheadSamples = int(lookaheadMs * ma.SR / 1000);
 
@@ -234,34 +315,8 @@ lookaheadSamples = int(lookaheadMs * ma.SR / 1000);
 // src/templates/dsp.cpp.in), so the host delay-compensates Lookahead. There
 // must be exactly one of it, which is why it hangs off the detector below
 // rather than off either channel's delay line.
-latencyMeter = uiLatency(hbargraph("[0]latency_samples[symbol:latency_samples][label:Latency]",
+latencyMeter = uiCorrection(hbargraph("[4]latency_samples[symbol:latency_samples][label:Latency]",
                                    0, maxLookaheadSamples));
-
-// Ballistics of the measurement.
-envAttack = uiBottomRight(hslider("[7]Env Attack[unit:ms][scale:log][style:knob][symbol:env_attack]
-      [label:Env Att][accentcolor:06][bracket:ANALYSIS]
-      [tooltip: Integration time of the level detectors on the way up]",
-                                  20, 1, 500, 1)) / 1000;
-
-envRelease = uiBottomRight(hslider("[8]Env Release[unit:ms][scale:log][style:knob][symbol:env_release]
-      [label:Env Rel][accentcolor:06][bracket:ANALYSIS]
-      [tooltip: Integration time of the level detectors on the way down]",
-                                   200, 5, 2000, 1)) / 1000;
-
-// Gates.
-threshold = uiBottomRight(hslider("[9]Threshold[unit:dB][style:knob][symbol:threshold]
-      [label:Threshold][accentcolor:05][bracket:GATE][easy]
-      [tooltip: Fullrange level below which nothing is corrected, so pauses and
-       fades are left alone]",
-                                  -50, -80, 0, 0.5));
-
-bandRange = uiBottomRight(hslider("[10]Band Range[unit:dB][style:knob][symbol:band_range]
-      [label:Band Rng][accentcolor:05][bracket:GATE]
-      [tooltip: How far a band may sit below the average band and still count.
-       Bands quieter than that hold no programme - a band-limited source, air
-       above 16 kHz on an MP3 - and are neither corrected nor averaged, which
-       stops the balancer boosting what is not there]",
-                                  18, 6, 48, 1));
 
 // Target curve, one slider per band.
 targetSlider(i) = uiTarget(vslider("[%2i]Band %2i[unit:dB][symbol:target_%{i}]
@@ -283,63 +338,137 @@ with {
     detector(a, b) = 0.5*(a + b);
     lookahead      = de.delay(maxLookaheadSamples, lookaheadSamples);
 
-    // RMS with independent attack/release, in dB.
-    envDb = _ <: * : si.onePoleSwitching(envAttack, envRelease) : sqrt : ba.linear2db;
+    // Mean-square envelope with independent attack/release. It stays in the
+    // power domain: the curve only ever uses ratios of these, and 10*log10 of
+    // a power ratio is the same dB as 20*log10 of an amplitude ratio, so the
+    // square root would only be undone again.
+    envPow(att, rel) = _ <: * : loop ~ _
+    with {
+        loop(y, x) = x*(1.0 - p) + p*y
+        with { p = pole(select2(x > y, rel, att)); };
+    };
+    powDb = max(ma.MIN) : log10 : *(10.0);
 
     bandpass(i) = fi.svf.bp(fc(i), qAnalysis) : /(qAnalysis);  // unity at centre
 
-    // The band levels carry both constants: warpDb repairs what the bilinear
-    // map took away, weightDb is the K-weighting shelf. fullDb stays plain, so
-    // the Threshold gate keeps reading a broadband level.
-    fullDb    = m : envDb;
-    bandDb(i) = m : bandpass(i) : envDb : +(warpDb(i) + weightDb(i));
+    // Band Speed tilts the measurement windows along with the correction: a
+    // 30 Hz band cannot be measured through a 20 ms window - that is shorter
+    // than one cycle - while the top of the spectrum has nothing to gain from
+    // waiting.
+    //
+    // Which is why each band is normalised against a fullrange envelope built
+    // with that band's own time constants, rather than against one shared
+    // broadband reading. Compare a fast detector with a slow one and every
+    // change in level tilts the curve while the two catch up - and when the
+    // programme stops, the two free-fall at different rates and the curve
+    // drifts tens of dB out of a decaying tail. Like against like, a decay
+    // cancels exactly: both envelopes fall together and the ratio holds still.
+    //
+    // The plain fullrange envelope stays too, but only as the level watchdog
+    // for the Threshold gate, which must keep reading while everything else
+    // is frozen.
+    fullDb = m : envPow(envAttack, envRelease) : powDb;
+
+    bandPow(i)    = m : bandpass(i) : envPow(envAtt(i), envRel(i));
+    refPow(i) = m : envPow(envAtt(i), envRel(i));
+    envAtt(i)    = envAttack*speedOf(i);
+    envRel(i)    = envRelease*speedOf(i);
 
     //---------------------------------------------------------- the curve
-    // Level-normalised spectrum: each band relative to the fullrange level.
-    specRaw(i) = bandDb(i) - fullDb;
+    // Level-normalised spectrum: each band relative to the fullrange level -
+    // but only measured while there is programme to measure.
+    //
+    // On top of the matched references, the curve only updates while the level
+    // gate is wide open. Under the threshold there is nothing left to measure
+    // but the noise floor, so a pause holds the last confident reading and
+    // playback resumes with the correction where it left off, rather than
+    // re-learning it from whatever was decaying at the time.
+    analysing  = gateRaw >= 1.0;
+    specRaw(i) = 10.0*log10(max(ma.MIN, bandPow(i)) / max(ma.MIN, refPow(i)))
+               + warpDb(i) + weightDb(i)
+               : ba.sAndH(analysing);
 
     // Plain mean of the raw curve. It is the reference for "does this band
     // still carry programme", and it is deliberately unweighted: the gate must
     // not chase its own output. Note that normalising against fullDb cancels
     // here, so the gate reads pure spectral shape - no calibration constant.
-    specMean = sum(i, Nbands, specRaw(i)) / Nbands;
+    // From here the band values travel as a bus and every cross-band quantity
+    // is a route over it. Written the obvious way - each band reaching for the
+    // mean, the mean reaching for every band, all of it inside three more sums
+    // - the compiler expands that measurement chain some three thousand times
+    // and the build takes seven seconds instead of one. Same generated code.
+    curveBus = par(i, Nbands, specRaw(i));
 
-    // 0..1 per band: 1 while the band sits within bandRange of the average
-    // band, fading out below that. Bands that fall out hold no programme, so
-    // they are neither corrected nor counted in the level-neutrality mean.
-    bandWeight(i) = (specRaw(i) - specMean + bandRange) / gateKnee : clamp01;
+    // Lay a copy of one scalar beside every signal on an n-bus.
+    withScalar(n) = route(n + 1, 2*n, (par(i, n, (i + 1, 2*i + 1)),
+                                       par(i, n, (n + 1, 2*i + 2))));
 
-    // Global gate on the fullrange level.
-    levelGate = (fullDb - threshold) / gateKnee : clamp01;
+    // Interleave two n-buses into n pairs.
+    pairUp(n) = route(2*n, 2*n, par(i, n, ((i + 1, 2*i + 1), (n + i + 1, 2*i + 2))));
+
+    // Global gate on the fullrange level. It multiplies the gains *after* the
+    // ballistics, not the deviation before them: inside the smoother the gate
+    // could only take effect as fast as Release let it, which meant the
+    // correction carried on for seconds after the signal had dropped below the
+    // threshold - a threshold that visibly did nothing. Out here it means what
+    // it says. si.smoo keeps the transition itself from stepping.
+    gateRaw   = (fullDb - threshold) / gateKnee : clamp01;
+    levelGate = gateRaw : si.smoo;
 
     // Target curve: sliders plus the global tilt, in dB/octave around fRef.
     targetRaw(i) = targetSlider(i) + tilt*log(fc(i)/fRef)/log(2.0);
 
-    // Deviation from target, and the level-neutrality step: the weighted mean
-    // that will be taken out of it, so the bells never add up to a plain gain
-    // change. Weighted, so that a band which has dropped out of the gate cannot
-    // drag the reference with it.
-    devRaw(i) = targetRaw(i) - specRaw(i);
-    wTot      = max(ma.EPSILON, sum(i, Nbands, bandWeight(i)));
-    devMean   = sum(i, Nbands, bandWeight(i)*devRaw(i)) / wTot;
-    specWMean = sum(i, Nbands, bandWeight(i)*specRaw(i)) / wTot;
+    // curve bus -> weight bus. 1 while the band sits within bandRange of the
+    // average band, fading out below that: bands that fall out hold no
+    // programme, so they are neither corrected nor counted in the mean. The
+    // mean it is measured against is the plain one, deliberately unweighted -
+    // the gate must not chase its own output. Normalising against the
+    // fullrange level cancels here, so this reads pure spectral shape.
+    weights = si.bus(Nbands) <: (si.bus(Nbands), (si.bus(Nbands) :> _ : /(Nbands)))
+            : withScalar(Nbands)
+            : par(i, Nbands, weightOf)
+    with {
+        weightOf(c, mean) = (c - mean + bandRange) / gateKnee : clamp01;
+    };
 
-    //---------------------------------------------------------- to gain
-    // The correction curve we want the bank to produce, band by band.
-    want(i) = (devRaw(i) - devMean)
-            : deadband(tolerance)
-            : *(strength)
-            : clip(range)
-            : *(bandWeight(i)*levelGate);
+    // (curve bus, weight bus) -> the two cross-band scalars the bands need:
+    // the weighted mean of the deviation, which is taken out of every band so
+    // the bells can never add up to a plain gain change, and the weighted mean
+    // of the curve, which is what the spectrum meters are drawn against.
+    stats = si.bus(2*Nbands) : pairUp(Nbands) <: (wSum, cSum, tSum) <: (devMean, specWMean)
+    with {
+        wSum = par(i, Nbands, (!, _))                              :> _ : max(ma.EPSILON);
+        cSum = par(i, Nbands, *)                                   :> _;
+        tSum = par(i, Nbands, ((!, _) : *(targetRaw(i))))          :> _;
+        devMean(w, c, t)   = (t - c) / w;
+        specWMean(w, c, t) = c / w;
+    };
 
-    // The bell gains that actually produce it. want is built as a bus and the
-    // de-overlap kernel is a route across it rather than a per-band expression
-    // reaching at its neighbours: each band is then written once instead of
-    // once per tap, which is the difference between a one-second compile and a
-    // forty-second one. Same generated code either way.
-    gains = par(i, Nbands, want(i))
+    // (curve bus, weight bus) -> want bus: the correction curve we want the
+    // bank to produce, band by band.
+    toWant = si.bus(2*Nbands) <: (si.bus(2*Nbands), stats) : spread : par(i, Nbands, wantOf(i))
+    with {
+        spread = route(2*Nbands + 2, 4*Nbands,
+                   par(i, Nbands, ((i + 1,          4*i + 1),
+                                   (Nbands + i + 1, 4*i + 2),
+                                   (2*Nbands + 1,   4*i + 3),
+                                   (2*Nbands + 2,   4*i + 4))));
+
+        wantOf(i, c, w, dMean, sMean) = ((targetRaw(i) - c) - dMean)
+                                      : deadband(tolerance)
+                                      : *(strength)
+                                      : clip(range)
+                                      : *(w)
+                                      : specMeter(i, c - sMean);
+    };
+
+    // The bell gains that produce it, once the overlap between neighbouring
+    // bells is taken out (see kern).
+    gains = curveBus <: (si.bus(Nbands), weights)
+          : toWant
           : deconvolve
-          : par(i, Nbands, ballistics(attack, release) : gainMeter(i) : specMeter(i));
+          : par(i, Nbands, ballistics(attack*speedOf(i), release*speedOf(i))
+                          : *(levelGate) : gainMeter(i));
 
     // Fan each band out to the taps that need it, then sum each band's taps.
     deconvolve = route(Nbands, Nbands*taps,
@@ -355,15 +484,34 @@ with {
         bc(0) = _;
         bc(n) = (si.bus(n - 1), bellAt(n - 1)) : bc(n - 1);
     };
-    bellAt(i, g, x) = x : fi.svf.bell(fc(i), qBellOf(i), g);
+    bellAt(i, g, x) = x : bell(fc(i), qBellOf(i), g);
+
+    // fi.svf.bell, transcribed with two changes: the dB gain is taken to linear
+    // with an exp rather than a pow (10^(g/40) = e^(g*ln10/40)), and the tick's
+    // divisor is formed once as a reciprocal. Both channels are handed the same
+    // gain, so all of this coefficient work is shared between them - 32 of each
+    // per sample rather than 64. Verified against fi.svf.bell to 1e-15.
+    bell(f, q, gDb) = tick ~ (_,_) : !,!,si.dot(3, mix)
+    with {
+        a   = exp(gDb*(log(10.0)/40.0));
+        g   = tan(ma.PI*f/ma.SR);        // f is constant, so this is init-time
+        k   = 1.0/(q*a);
+        d   = 1.0/(1.0 + g*(g + k));
+        mix = 1.0, k*(a*a - 1.0), 0.0;
+        tick(ic1eq, ic2eq, v0) = 2.0*v1 - ic1eq, 2.0*v2 - ic2eq, v0, v1, v2
+        with {
+            v1 = (ic1eq + g*(v0 - ic2eq))*d;
+            v2 = ic2eq + g*v1;
+        };
+    };
 
     //---------------------------------------------------------- meters
     // The level-normalised spectrum, mean removed: what the balancer sees.
-    specMeter(i, x) = attach(x, specRaw(i) - specWMean
+    specMeter(i, v, x) = attach(x, v
         : uiSpectrum(vbargraph("[%2i]Spectrum %2i[unit:dB][symbol:spec_%{i}][label:%{i}]", -30, 30)));
 
     // The gain this band's bell is applying right now.
-    gainMeter(i) = _ <: attach(_, uiGain(vbargraph("[%2i]Gain %2i[unit:dB][symbol:gain_%{i}][label:%{i}]", -24, 24)));
+    gainMeter(i) = _ <: attach(_, uiGain(vbargraph("[%2i]Gain %2i[unit:dB][symbol:gain_%{i}][label:%{i}]", -6, 6)));
 
     //---------------------------------------------------------- helpers
     clamp01      = max(0.0) : min(1.0);
@@ -375,6 +523,6 @@ with {
     ballistics(att, rel) = loop ~ _
     with {
         loop(prev, x) = prev*p + x*(1.0 - p)
-        with { p = ba.tau2pole(select2(abs(x) > abs(prev), rel, att)); };
+        with { p = pole(select2(abs(x) > abs(prev), rel, att)); };
     };
 };
