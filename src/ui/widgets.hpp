@@ -14,7 +14,7 @@
 #include "widgets/button.hpp"
 #include "widgets/plugin-name.hpp"
 #if LIBREAUDIO_WANT_COMMON_IO
-#include "widgets/meter.hpp"
+#include "widgets/gain-meter.hpp"
 #endif
 
 #include "las-resources.h"
@@ -128,11 +128,11 @@ class MainArea : public ReferenceContainerWidget<Reference::MainArea>
     using BaseWidget = ReferenceContainerWidget<Reference::MainArea>;
 
    #if LIBREAUDIO_WANT_COMMON_IO
-    std::shared_ptr<LabWidget> fMetersIn = addWidget<MeterWidget<Input>>();
+    std::shared_ptr<LabWidget> fMetersIn = addWidget<GainMeterWidget<Input>>();
    #endif
     std::shared_ptr<StageWidget> fStage = addWidget<StageWidget, Expanding>();
    #if LIBREAUDIO_WANT_COMMON_IO
-    std::shared_ptr<LabWidget> fMetersOut = addWidget<MeterWidget<Output>>();
+    std::shared_ptr<LabWidget> fMetersOut = addWidget<GainMeterWidget<Output>>();
    #endif
 
 public:

@@ -172,9 +172,9 @@ class DelayMainArea : public ReferenceContainerWidget<Reference::MainArea>
     using BaseWidget = ReferenceContainerWidget<Reference::MainArea>;
     using DelayStageWidget = StageWidget<EasyStageWidget, DelayExpertPageWidget>;
 
-    std::shared_ptr<LabWidget> fMetersIn = addWidget<MeterWidget<Input>>();
+    std::shared_ptr<LabWidget> fMetersIn = addWidget<GainMeterWidget<Input>>();
     std::shared_ptr<DelayStageWidget> fStage = addWidget<DelayStageWidget, Expanding>();
-    std::shared_ptr<LabWidget> fMetersOut = addWidget<MeterWidget<Output>>();
+    std::shared_ptr<LabWidget> fMetersOut = addWidget<GainMeterWidget<Output>>();
 
 public:
     DelayMainArea(LabTopLevelWidget* const parent)

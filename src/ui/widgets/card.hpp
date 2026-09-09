@@ -46,16 +46,65 @@ private:
 
     [[nodiscard]] const Color& getBorderColor() const noexcept final
     {
-        return BaseWidget::isCheckable() && BaseWidget::isChecked() ? R::borderColor〡selected : R::borderColor;
+        return BaseWidget::isCheckable() && BaseWidget::isChecked() ? R::borderColor〡selected :
+            BaseWidget::isHovered() ? R::glowColor : R::borderColor;
     }
 
     void onNanoDisplay() final
     {
-        BaseWidget::onNanoDisplay();
-
         const float w = BaseWidget::getWidth();
         const float h = BaseWidget::getHeight();
         const bool isChecked = BaseWidget::isChecked();
+
+        if (isChecked)
+        {
+            const float f = std::min(w, h) * 0.125f;
+            const float f2 = f * 2;
+            const float f4 = f * 4;
+
+            BaseWidget::beginPath();
+
+            if constexpr (R::borderRadius != 0)
+                BaseWidget::roundedRect(-f2, -f2, w + f4, h + f4, R::borderRadius * fScaleFactor);
+            else
+                BaseWidget::rect(-f2, -f2, w + f4, h + f4);
+
+            BaseWidget::fillPaint(BaseWidget::boxGradient(-f * 0.5f,
+                                                          -f * 0.5f,
+                                                          w + f,
+                                                          h + f,
+                                                          R::borderRadius * fScaleFactor * 2.f,
+                                                          f2,
+                                                          Color(R::glowColor, 0.125f),
+                                                          Reference::Colors::transparent));
+            BaseWidget::fill();
+        }
+
+        BaseWidget::onNanoDisplay();
+
+        if (BaseWidget::isHovered())
+        {
+            BaseWidget::beginPath();
+
+            if constexpr (R::borderRadius != 0)
+                BaseWidget::roundedRect(0, 0, w, h, R::borderRadius * fScaleFactor);
+            else
+                BaseWidget::rect(0, 0, w, h);
+
+            // BaseWidget::fillPaint(BaseWidget::boxGradient(0,
+            //                                               0,
+            //                                               w + std::min(w, h) * 0.25f,
+            //                                               h + std::min(w, h) * 0.25f,
+            //                                               R::borderRadius * fScaleFactor,
+            //                                               std::min(w, h),
+            //                                               Reference::Colors::transparent,
+            //                                               R::glowColor));
+
+            BaseWidget::fillPaint(BaseWidget::radialGradient(w, w, std::min(w, h), std::max(w, h) * 2.5f,
+                                                             Reference::Colors::transparent, R::glowColor));
+
+            BaseWidget::fill();
+        }
 
         const uint margin = d_roundToUnsignedInt(R::margin * this->fScaleFactor);
 

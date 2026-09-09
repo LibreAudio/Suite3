@@ -26,9 +26,9 @@ enum MeterWidgetType : bool {
 };
 
 template<MeterWidgetType type>
-class MeterWidget final : public LabKnobWidget
+class GainMeterWidget final : public LabKnobWidget
 {
-    using R = Reference::Meter;
+    using R = Reference::GainMeter;
     using BaseWidget = LabKnobWidget;
 
     static constexpr const uint kParameterL = type == Input
@@ -48,7 +48,7 @@ class MeterWidget final : public LabKnobWidget
     static constexpr const float ticks[] = { +12, +6, -12, -24, -36, -48 };
 
 public:
-    MeterWidget(LabWidget* const parent)
+    GainMeterWidget(LabWidget* const parent)
         : BaseWidget(parent, kParameterMeter)
     {
         updateReferenceSize<R>();

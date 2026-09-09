@@ -92,7 +92,7 @@ struct Reference {
         static constexpr const uint padding = Common::margin;
     };
 
-    struct Meter : Zero {
+    struct GainMeter : Zero {
         static constexpr const Color backgroundColor = Colors::track;
         static constexpr const Color borderColor { 0, 0, 0, 0.22f };
         static constexpr const uint border = 1;
@@ -133,6 +133,9 @@ struct Reference {
             // static constexpr const float letterSpacing = fontSize * 0.02f;
             // font-ui
         };
+    };
+
+    struct ThresholdMeter : Zero {
     };
 
     struct Stage : Zero {
@@ -183,9 +186,10 @@ struct Reference {
 
         struct Card : Zero {
             static constexpr const Color backgroundColor = { Colors::ink3, 0.3f };
-            static constexpr const Color backgroundColor〡selected = { Colors::acc1, 0.3f };
+            static constexpr const Color backgroundColor〡selected = { Colors::acc5, 0.3f };
             static constexpr const Color borderColor = Colors::ink3;
-            static constexpr const Color borderColor〡selected = Colors::acc1;
+            static constexpr const Color borderColor〡selected = Colors::acc5;
+            static constexpr const Color glowColor = Colors::acc5Glow;
             static constexpr const MouseCursor cursor〡hover = kMouseCursorHand;
             static constexpr const uint border = 1;
             static constexpr const uint borderRadius = 11;
@@ -193,7 +197,7 @@ struct Reference {
             static constexpr const uint height = 80;
             struct Title {
                 static constexpr const Color color = Colors::ink;
-                static constexpr const Color color〡selected = Colors::acc1;
+                static constexpr const Color color〡selected = Colors::acc5;
                 static constexpr const float fontSize = Common::fontSize;
                 static constexpr const float letterSpacing = Common::letterSpacing;
             };
@@ -324,12 +328,13 @@ struct Reference {
     };
 };
 
-static_assert(Reference::Meter::width == (Reference::Meter::border +
-                                          Reference::Meter::margin +
-                                          Reference::Meter::Track::width) * 2, "incorrect meter size");
+static_assert(Reference::GainMeter::width == (
+    Reference::GainMeter::border +
+    Reference::GainMeter::margin +
+    Reference::GainMeter::Track::width) * 2, "incorrect meter size");
 
-static_assert(Reference::Meter::Tick::width == (
-        Reference::Meter::width - (Reference::Meter::border + Reference::Meter::margin) * 2
+static_assert(Reference::GainMeter::Tick::width == (
+        Reference::GainMeter::width - (Reference::GainMeter::border + Reference::GainMeter::margin) * 2
     ), "incorrect meter tick size");
 
 // --------------------------------------------------------------------------------------------------------------------
