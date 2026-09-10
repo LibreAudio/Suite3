@@ -18,10 +18,12 @@ class EasyStageWidget final : public ReferenceContainerWidget<Reference::Stage, 
     using R = Reference::Stage;
     using BaseWidget = ReferenceContainerWidget<R, kVertical>;
 
-    std::shared_ptr<LabWidget> fSpacer1 = addSpacer();
-    std::shared_ptr<EasyKnobsGroupWidget> fEasyKnobs = addWidget<EasyKnobsGroupWidget>();
-    std::shared_ptr<LabWidget> fSpacer2 = addSpacer();
-    std::shared_ptr<LabWidget> fCards = addCards();
+    const std::vector<std::shared_ptr<LabWidget>> _ = {
+        addSpacer(),
+        addWidget<EasyKnobsGroupWidget>(),
+        addSpacer(),
+        addCards(),
+    };
 
 public:
     explicit EasyStageWidget(LabWidget* const parent)
@@ -75,17 +77,15 @@ class ExpertStageWidget final : public ReferenceContainerWidget<Reference::Stage
     using R = Reference::Stage;
     using BaseWidget = ReferenceContainerWidget<R, kVertical>;
 
-    std::shared_ptr<LabWidget> fTopArea = addWidget<PillAreaWidget<>>();
-    std::shared_ptr<LabWidget> fSpacer = addSpacer();
-    std::shared_ptr<ExpertKnobsGroupWidget> fExpertKnobs = addWidget<ExpertKnobsGroupWidget>();
+    const std::vector<std::shared_ptr<LabWidget>> _ = {
+        addWidget<PillAreaWidget<>>(),
+        addSpacer(),
+        addWidget<ExpertKnobsGroupWidget>(),
+    };
 
 public:
     explicit ExpertStageWidget(LabWidget* const parent)
-        : BaseWidget(parent)
-    {
-        // FIXME
-        fTopArea->setHeight(30 * fScaleFactor);
-    }
+        : BaseWidget(parent) {}
 
 private:
     void onNanoDisplay() final
