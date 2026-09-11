@@ -4,7 +4,7 @@ declare license "GPL-3.0-or-later";
 declare name "Transient";
 declare unique_id "LAtd";
 
-declare drywet "true";
+// declare drywet "true";
 
 
 // For some parts of this file, a large language model was involved as a coding assistant.
@@ -19,7 +19,9 @@ maxSR = 192000;
 maxLookaheadMs = 10;
 maxLookaheadSamples = int(maxLookaheadMs * maxSR / 1000);   // 1920
 
-process = si.bus(Nch) : transient : makeup : clipper;
+// The dry tap is the input as this DSP receives it, delayed to meet the wet.
+// The clipper sits after the blend, so its ceiling holds at any Dry/Wet setting.
+process = si.bus(Nch) <: (dryTap, (transient : makeup)) : dryWetMix : clipper;
 
 // --- UI structure ---
 
@@ -51,6 +53,19 @@ range = uiShape(hslider("[03]Range[style:knob][unit:dB][symbol:range][label:Rang
 // makeup
 makeup_dB = uiOutput(hslider("[03]makeup[style:knob][unit:dB][symbol:makeup][label:Makeup][accentcolor:05]", 0, -12, 12, 0.1)) : si.smoo : ba.db2linear;
 makeup = par(i,Nch, _ * makeup_dB);
+
+// dry / wet
+drywet = uiOutput(hslider("[05]Dry / Wet[style:knob][unit:%][symbol:drywet][label:Dry/Wet][accentcolor:05]
+      [tooltip: Blend of the shaped signal against the untouched input, for parallel transient shaping. 100% = shaped only, 0% = untouched. The dry side is delayed to match Lookahead, so the blend never combs. The clipper comes after the blend]",
+      100, 0, 100, 1)) / 100;
+
+dryTap = par(i, Nch, de.delay(maxLookaheadSamples, lookaheadDelay));
+
+dryWetMix = ro.interleave(Nch, 2) : par(i, Nch, blend)
+with {
+    dryAmt = min(1, ((1 - drywet) : si.smoo) * 1.0001);
+    blend(d, w) = d * dryAmt + w * (1 - dryAmt);
+};
 
 // hard clipper
 // The threshold is the ceiling: no sample leaves above it. A quadratic knee
