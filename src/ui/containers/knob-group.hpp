@@ -66,7 +66,7 @@ public:
         for (uint32_t i = parameterStart, numVisibleWidgets = 0, count = parameters.size(); i < count && numVisibleWidgets < kMaxNumParameters; ++i)
         {
             const FaustParameter& parameter = parameters[i];
-            if (parameter.isOutput) {
+            if ((parameter.isEnumerator && kMaxNumParameters == 5) || parameter.isOutput) {
                 d_stdout("knob-group skipped parameter %s", parameter.name);
                 continue;
             }
