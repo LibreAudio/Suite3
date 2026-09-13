@@ -81,6 +81,7 @@ private:
     uint32_t fCurrentPreset = 0; // TODO
 
     float fScaleFactor = 1.f;
+    bool fIsMouseDown = false;
 
     [[nodiscard]] float getScaleFactor() const noexcept final { return fScaleFactor; }
 
@@ -102,6 +103,7 @@ private:
     // Widget Callbacks
 
     void onNanoDisplay() final;
+    bool onMouse(const MouseEvent& ev) final;
     void onResize(const ResizeEvent& ev) final;
 
     // ----------------------------------------------------------------------------------------------------------------
