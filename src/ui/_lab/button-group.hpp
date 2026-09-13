@@ -13,8 +13,8 @@ START_NAMESPACE_DGL
 
 template <class R>
 class ReferenceButtonGroupWidget : public ReferenceContainerWidget<R>,
-                                   private ButtonEventHandler::Callback,
-                                   private IdleCallback
+                                   protected IdleCallback,
+                                   private ButtonEventHandler::Callback
 {
     using BaseWidget = ReferenceContainerWidget<R>;
 
@@ -100,6 +100,16 @@ protected:
 
     std::list<std::shared_ptr<ButtonBaseWidget>> fWidgets;
 
+protected:
+    void idleCallback() override
+    {
+        for (const std::shared_ptr<ButtonBaseWidget>& widget : fWidgets)
+        {
+            widget->setChecked(this->fInterface->isButtonChecked(widget->getId()), false);
+            widget->setEnabled(this->fInterface->isButtonEnabled(widget->getId()));
+        }
+    }
+
 private:
     void onNanoDisplay() final
     {
@@ -110,15 +120,6 @@ private:
     {
         this->fInterface->buttonClicked(widget->getId());
         idleCallback();
-    }
-
-    void idleCallback() final
-    {
-        for (const std::shared_ptr<ButtonBaseWidget>& widget : fWidgets)
-        {
-            widget->setChecked(this->fInterface->isButtonChecked(widget->getId()), false);
-            widget->setEnabled(this->fInterface->isButtonEnabled(widget->getId()));
-        }
     }
 };
 

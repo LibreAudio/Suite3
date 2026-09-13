@@ -17,6 +17,9 @@ enum Page : uint8_t {
     kPageSettings,
 };
 
+// invalid enum used for forced-init
+inline constexpr const Page kPageInit = static_cast<Page>(-1);
+
 enum WidgetIds : uint16_t {
     kWidgetAbout = 1000,
     kWidgetEasy,

@@ -23,10 +23,12 @@ public:
     {
     }
 
-    template<class B, typename = std::enable_if_t<std::is_base_of_v<ButtonBaseWidget, B>>>
-    std::shared_ptr<ButtonBaseWidget> addButton(const WidgetIds id)
+    template<class B,
+             typename... Args,
+             typename = std::enable_if_t<std::is_base_of_v<ButtonBaseWidget, B>>>
+    std::shared_ptr<ButtonBaseWidget> addButton(const WidgetIds id, Args... args)
     {
-        return BaseWidget::addButton<B>(id, WidgetIds2Str(id));
+        return BaseWidget::addButton<B>(id, WidgetIds2Str(id), args...);
     }
 };
 

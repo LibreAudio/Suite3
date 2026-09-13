@@ -11,106 +11,145 @@
 #include "../widgets/button-group.hpp"
 #include "../widgets/plugin-name.hpp"
 
+#include <array>
+
 #include "las-resources.h"
 
 namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-using TopBarLogoWidget = LabImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>;
-
-// --------------------------------------------------------------------------------------------------------------------
-
-class TopBarUndoRedoGroupWidget : public ButtonGroupWidget
-{
-    std::shared_ptr<ButtonBaseWidget> fUndo = addButton<ImageButtonWidget<kCornerLeft, IMAGES_UNDO_PNG_DATA, IMAGES_UNDO_PNG_LEN>>(kWidgetUndo);
-    std::shared_ptr<ButtonBaseWidget> fRedo = addButton<ImageButtonWidget<kCornerRight, IMAGES_REDO_PNG_DATA, IMAGES_REDO_PNG_LEN>>(kWidgetRedo);
-
-public:
-    explicit TopBarUndoRedoGroupWidget(LabWidget* const parent)
-        : ButtonGroupWidget(parent)
-    {
-        done();
-    }
-};
-
-// --------------------------------------------------------------------------------------------------------------------
-
-class TopBarSnapshotsGroupWidget : public ButtonGroupWidget
-{
-    static constexpr const char kTextA[] = "A";
-    static constexpr const char kTextB[] = "B";
-    static constexpr const char kTextC[] = "C";
-    static constexpr const char kTextD[] = "D";
-    std::shared_ptr<ButtonBaseWidget> fCopy = addButton<DualImageButtonWidget<
-        kCornerLeft, IMAGES_X_PNG_DATA, IMAGES_X_PNG_LEN, IMAGES_COPY_PNG_DATA, IMAGES_COPY_PNG_LEN>>(kWidgetSnapshotCopy);
-    std::shared_ptr<ButtonBaseWidget> fA = addButton<StaticTextButtonWidget<kCornerNone, kTextA>>(kWidgetSnapshotSlotA);
-    std::shared_ptr<ButtonBaseWidget> fB = addButton<StaticTextButtonWidget<kCornerNone, kTextB>>(kWidgetSnapshotSlotB);
-    std::shared_ptr<ButtonBaseWidget> fC = addButton<StaticTextButtonWidget<kCornerNone, kTextC>>(kWidgetSnapshotSlotC);
-    std::shared_ptr<ButtonBaseWidget> fD = addButton<StaticTextButtonWidget<kCornerRight, kTextD>>(kWidgetSnapshotSlotD);
-
-public:
-    explicit TopBarSnapshotsGroupWidget(LabWidget* const parent)
-        : ButtonGroupWidget(parent)
-    {
-        fA->setWidth(fCopy->getWidth());
-        fB->setWidth(fCopy->getWidth());
-        fC->setWidth(fCopy->getWidth());
-        fD->setWidth(fCopy->getWidth());
-        done();
-    }
-};
-
-// --------------------------------------------------------------------------------------------------------------------
-
-class TopBarEasyExpertGroupWidget : public ButtonGroupWidget
-{
-    static constexpr const char kTextEasy[] = "Easy";
-    static constexpr const char kTextExpert[] = "Expert";
-    std::shared_ptr<LabWidget> fEasy = addButton<StaticTextButtonWidget<kCornerLeft, kTextEasy>>(kWidgetEasy);
-    std::shared_ptr<LabWidget> fExpert = addButton<StaticTextButtonWidget<kCornerRight, kTextExpert>>(kWidgetExpert);
-
-public:
-    explicit TopBarEasyExpertGroupWidget(LabWidget* const parent)
-        : ButtonGroupWidget(parent)
-    {
-        done();
-    }
-};
-
-// --------------------------------------------------------------------------------------------------------------------
-
-class TopBarMenuPowerGroupWidget : public ButtonGroupWidget
-{
-    std::shared_ptr<LabWidget> fMenu = addButton<ImageButtonWidget<kCornerLeft, IMAGES_MENU_PNG_DATA, IMAGES_MENU_PNG_LEN>>(kWidgetMenu);
-    std::shared_ptr<LabWidget> fPower = addButton<BypassButtonWidget<kCornerRight>>(kWidgetPower);
-
-public:
-    explicit TopBarMenuPowerGroupWidget(LabWidget* const parent)
-        : ButtonGroupWidget(parent)
-    {
-        done();
-    }
-};
-
-// --------------------------------------------------------------------------------------------------------------------
-
-class TopBar : public ReferenceContainerWidget<Reference::TopBar>
+class TopBar : public ReferenceContainerWidget<Reference::TopBar>,
+               private IdleCallback
 {
     using BaseWidget = ReferenceContainerWidget<Reference::TopBar>;
 
-    std::shared_ptr<LabWidget> fLogo = addWidget<TopBarLogoWidget>();
-    std::shared_ptr<LabWidget> fPluginName = addWidget<PluginNameWidget>();
-    std::shared_ptr<LabWidget> fSpacer = addSpacer();
-    std::shared_ptr<LabWidget> fUndoRedoGroup = addWidget<TopBarUndoRedoGroupWidget>();
-    std::shared_ptr<LabWidget> fSnapshotsGroup = addWidget<TopBarSnapshotsGroupWidget>();
-    std::shared_ptr<LabWidget> fEasyExpertGroup = addWidget<TopBarEasyExpertGroupWidget>();
-    std::shared_ptr<LabWidget> fMenuPowerGroup = addWidget<TopBarMenuPowerGroupWidget>();
+    // ----------------------------------------------------------------------------------------------------------------
+
+    using LogoWidget = LabImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>;
+
+    // ----------------------------------------------------------------------------------------------------------------
+
+    class UndoRedoGroupWidget : public ButtonGroupWidget
+    {
+        using UndoButtonWidget = ImageButtonWidget<kCornerLeft, IMAGES_UNDO_PNG_DATA, IMAGES_UNDO_PNG_LEN>;
+        using RedoButtonWidget = ImageButtonWidget<kCornerRight, IMAGES_REDO_PNG_DATA, IMAGES_REDO_PNG_LEN>;
+
+    public:
+        explicit UndoRedoGroupWidget(LabWidget* const parent)
+            : ButtonGroupWidget(parent)
+        {
+            addButton<UndoButtonWidget>(kWidgetUndo);
+            addButton<RedoButtonWidget>(kWidgetRedo);
+            done();
+        }
+    };
+
+    // ----------------------------------------------------------------------------------------------------------------
+
+    class SnapshotsGroupWidget : public ButtonGroupWidget
+    {
+        using SnapshotCopyButtonWidget = DualImageButtonWidget<
+            kCornerLeft, IMAGES_X_PNG_DATA, IMAGES_X_PNG_LEN, IMAGES_COPY_PNG_DATA, IMAGES_COPY_PNG_LEN>;
+
+    public:
+        explicit SnapshotsGroupWidget(LabWidget* const parent)
+            : ButtonGroupWidget(parent)
+        {
+            addButton<SnapshotCopyButtonWidget>(kWidgetSnapshotCopy);
+            addButton<TextButtonWidget<kCornerNone>>(kWidgetSnapshotSlotA, "A");
+            addButton<TextButtonWidget<kCornerNone>>(kWidgetSnapshotSlotB, "B");
+            addButton<TextButtonWidget<kCornerNone>>(kWidgetSnapshotSlotC, "C");
+            addButton<TextButtonWidget<kCornerRight>>(kWidgetSnapshotSlotD, "D");
+            done();
+        }
+    };
+
+    // ----------------------------------------------------------------------------------------------------------------
+
+    class EasyExpertGroupWidget : public ButtonGroupWidget
+    {
+    public:
+        explicit EasyExpertGroupWidget(LabWidget* const parent)
+            : ButtonGroupWidget(parent)
+        {
+            addButton<TextButtonWidget<kCornerLeft>>(kWidgetEasy, "Easy");
+            addButton<TextButtonWidget<kCornerRight>>(kWidgetExpert, "Expert");
+            done();
+        }
+    };
+
+    // ----------------------------------------------------------------------------------------------------------------
+
+    class MenuPowerGroupWidget : public ButtonGroupWidget
+    {
+        using MenuButtonWidget = ImageButtonWidget<kCornerLeft, IMAGES_MENU_PNG_DATA, IMAGES_MENU_PNG_LEN>;
+
+    public:
+        explicit MenuPowerGroupWidget(LabWidget* const parent)
+            : ButtonGroupWidget(parent)
+        {
+            addButton<MenuButtonWidget>(kWidgetMenu);
+            addButton<BypassButtonWidget<kCornerRight>>(kWidgetPower);
+            done();
+        }
+    };
+
+    // ----------------------------------------------------------------------------------------------------------------
+
+    const std::array<std::shared_ptr<LabWidget>, 3> fWidgetsLeft = {
+        addWidget<LogoWidget>(),
+        addWidget<PluginNameWidget>(),
+        addSpacer(),
+    };
+    const std::array<std::shared_ptr<LabWidget>, 2> fWidgetsExpert = {
+        addWidget<UndoRedoGroupWidget>(),
+        addWidget<SnapshotsGroupWidget>(),
+    };
+    const std::array<std::shared_ptr<LabWidget>, 2> fWidgetsRight = {
+        addWidget<EasyExpertGroupWidget>(),
+        addWidget<MenuPowerGroupWidget>()
+    };
+
+    // ----------------------------------------------------------------------------------------------------------------
 
 public:
     TopBar(LabTopLevelWidget* const parent)
         : BaseWidget(parent)
     {
+        updateSize(true);
+        idleCallback();
+
+        addIdleCallback(this);
+    }
+
+private:
+    Page fLastPage = kPageInit;
+
+    void idleCallback() final
+    {
+        if (const Page page = getCurrentPage(fInterface); fLastPage != page)
+        {
+            switch (page)
+            {
+            case kPageAbout:
+            case kPageSettings:
+                if (fLastPage != kPageInit)
+                    break;
+                [[fallthrough]];
+
+            case kPageEasy:
+            case kPageExpert:
+                for (const std::shared_ptr<LabWidget>& widget : fWidgetsExpert)
+                    widget->setVisible(page == kPageExpert);
+
+                if (fLastPage != kPageInit)
+                    updateSize(true);
+
+                fLastPage = page;
+                break;
+            }
+        }
     }
 };
 
