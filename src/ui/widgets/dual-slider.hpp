@@ -19,7 +19,10 @@ class DualSliderWidget final : public LabReferenceWidget<Reference::Widgets::But
 
 public:
     DualSliderWidget(LabWidget* const parent)
-        : BaseWidget(parent) {}
+        : BaseWidget(parent)
+    {
+        setSize(90 * fScaleFactor, 30 * fScaleFactor);
+    }
 
 private:
     void onNanoDisplay() final

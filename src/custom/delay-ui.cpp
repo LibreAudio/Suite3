@@ -40,6 +40,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
             static constexpr const Color color = Reference::Colors::ink2;
             static constexpr const float fontSize = 12;
             static constexpr const float letterSpacing = fontSize * 0.01;
+            static constexpr const uint margin = 0;
         };
 
     public:
@@ -49,7 +50,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         void addDualSlider(const uint32_t parameterA, const uint32_t parameterB)
         {
             std::shared_ptr<LabWidget> spacer { new DualSliderWidget(this) };
-            Layout::widgets.push_back({ spacer.get(), Expanding });
+            Layout::widgets.push_back({ spacer.get(), Fixed });
             fWidgets.emplace_back(std::move(spacer));
         }
 
@@ -85,13 +86,21 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         }
     };
 
+    struct RowRef : Reference::OpaqueStage {
+        static constexpr const uint padding = 0;
+    };
+
+    struct SmallRowRef : Reference::OpaqueSmallStage {
+        static constexpr const uint padding = 0;
+    };
+
     class ControlsColumn : public ReferenceContainerWidget<Reference::TransparentStage, kVertical>
     {
         using BaseWidget = ReferenceContainerWidget<Reference::TransparentStage, kVertical>;
 
     protected:
-        std::shared_ptr<Controls<Reference::OpaqueStage>> fTop = addWidget<Controls<Reference::OpaqueStage>, Expanding>();
-        std::shared_ptr<Controls<Reference::OpaqueSmallStage>> fBottom = addWidget<Controls<Reference::OpaqueSmallStage>>();
+        std::shared_ptr<Controls<RowRef>> fTop = addWidget<Controls<RowRef>, Expanding>();
+        std::shared_ptr<Controls<SmallRowRef>> fBottom = addWidget<Controls<SmallRowRef>>();
 
     public:
         explicit ControlsColumn(LabWidget* const parent)
