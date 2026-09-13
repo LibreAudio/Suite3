@@ -168,7 +168,11 @@ void LibreAudioPlugin::initParameter(uint32_t index, Parameter& parameter)
    #if LIBREAUDIO_WANT_DRYWET
     case kCommonParameterDryWet:
         parameter.hints = kParameterIsAutomatable;
+       #ifdef _DARKGLASS_DEVICE_PABLITO
+        parameter.name = "Blend";
+       #else
         parameter.name = "Dry / Wet";
+       #endif
         parameter.symbol = kCommonParameterSymbols[index];
         parameter.unit = "%";
         parameter.ranges.def = 50.f;
