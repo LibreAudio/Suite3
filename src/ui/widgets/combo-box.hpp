@@ -40,10 +40,16 @@ private:
         BaseWidget::onNanoDisplay();
 
         BaseWidget::fillColor(BaseWidget::isEnabled() ? Reference::Colors::ink : Reference::Colors::ink3);
-        BaseWidget::fontSize(Reference::Common::fontSize);
+        BaseWidget::fontSize(Reference::Common::fontSize * this->fScaleFactor);
         BaseWidget::textAlign(BaseWidget::ALIGN_CENTER | BaseWidget::ALIGN_MIDDLE);
         BaseWidget::textLetterSpacing(Reference::Common::letterSpacing * this->fScaleFactor);
         BaseWidget::text(getWidth() * 0.5f, getHeight() * 0.5f, "combo-box");
+    }
+
+    void updateSize(const bool updateChildren) final
+    {
+        BaseWidget::setHeight(30 * fScaleFactor);
+        BaseWidget::updateSize(updateChildren);
     }
 };
 
