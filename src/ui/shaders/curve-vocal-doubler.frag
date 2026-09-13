@@ -64,7 +64,7 @@ uniform float u_take_timing;
 #define R1 (u_mode == 0.0 ? (u_adt_wow_rate / 5.0) : u_mode == 1.0 ? (u_doubler_wander_rate / 2.0) : 0.55)
 #define R2 (u_mode == 0.0 ? (u_adt_wow_rate / 5.0 * 0.73) : u_mode == 1.0 ? (u_doubler_wander_rate / 2.0 * 1.21) : 0.85)
 #define DEPTH (u_mode == 0.0 ? (u_adt_wow_depth / 10.0) : u_mode == 1.0 ? (u_doubler_wander_depth / 25.0) : (u_take_timing / 80.0) + (u_take_pitch / 60.0))
-#define SHOWB (u_mode == 1.0 || (u_mode == 0.0 && u_adt_2voice == 2.0) ? 1.0 : 0.0)
+#define SHOWB (u_mode != 0.0 || u_adt_2voice == 2.0 ? 1.0 : 0.0)
 #define LPHZ u_eq_lp
 #define HPHZ u_eq_hp
 #define PRESENCE ((u_presence + 12.0) / 24.0)
