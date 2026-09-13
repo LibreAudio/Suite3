@@ -35,7 +35,8 @@ class KnobGroupWidget : public ReferenceContainerWidget<Reference::Widgets::Knob
     using BaseWidget = ReferenceContainerWidget<R>;
 
     std::list<std::shared_ptr<KnobWidget>> fKnobs;
-    std::list<std::shared_ptr<LabWidget>> fOtherWidgets;
+    std::list<std::shared_ptr<ButtonBaseWidget>> fButtons;
+    std::list<std::shared_ptr<ToggleSwitchBaseWidget>> fToggles;
     std::list<std::shared_ptr<LabWidget>> fSpacers;
 
     struct Bracket {
@@ -70,24 +71,24 @@ public:
                 continue;
             }
 
-            if (! fKnobs.empty() || ! fOtherWidgets.empty())
+            if (! fKnobs.empty() || ! fButtons.empty() || ! fToggles.empty())
                 addSpacer(idOffset + i);
 
             if (parameter.isEnumerator && parameter.scalePointCount == 2)
             {
-                std::unique_ptr<LabWidget> widget { new ToggleSwitchWidget<4>(this, idOffset + i, parameter) };
+                std::unique_ptr<ToggleSwitchBaseWidget> widget { new ToggleSwitchWidget<4, kMaxNumParameters == 2>(this, idOffset + i, parameter) };
                 widgets.push_back({ widget.get(), Fixed });
                 if (widget->getSize().isNull())
                     d_stderr2("Error: addToggle called but widget '%s' does not have a known size", widget->getName());
-                fOtherWidgets.emplace_back(std::move(widget));
+                fToggles.emplace_back(std::move(widget));
             }
             else if (parameter.isEnumerator)
             {
-                std::unique_ptr<LabWidget> widget { new ComboBoxWidget(this) };
+                std::unique_ptr<ButtonBaseWidget> widget { new ComboBoxWidget(this, idOffset + i, parameter) };
                 widgets.push_back({ widget.get(), Fixed });
                 if (widget->getSize().isNull())
                     d_stderr2("Error: addComboBox called but widget '%s' does not have a known size", widget->getName());
-                fOtherWidgets.emplace_back(std::move(widget));
+                fButtons.emplace_back(std::move(widget));
             }
             else
             {
@@ -152,6 +153,75 @@ public:
         return fKnobs.back()->getId();
     }
 
+    void updateEnabledById(const uint32_t id, const bool enabled)
+    {
+        for (const std::shared_ptr<KnobWidget>& widget : fKnobs)
+        {
+            if (KnobWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
+            {
+                widgetPtr->setEnabled(enabled, false);
+                break;
+            }
+        }
+
+        for (const std::shared_ptr<ButtonBaseWidget>& widget : fButtons)
+        {
+            if (ButtonBaseWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
+            {
+                widgetPtr->setEnabled(enabled, false);
+                break;
+            }
+        }
+
+        for (const std::shared_ptr<ToggleSwitchBaseWidget>& widget : fToggles)
+        {
+            if (ToggleSwitchBaseWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
+            {
+                widgetPtr->setEnabled(enabled, false);
+                break;
+            }
+        }
+    }
+
+    void updateVisibilityById(const uint32_t id, const bool visible)
+    {
+        for (const std::shared_ptr<KnobWidget>& knob : fKnobs)
+        {
+            if (KnobWidget* const knobPtr = knob.get(); knobPtr->getId() == id)
+            {
+                knobPtr->setVisible(visible);
+                break;
+            }
+        }
+
+        for (const std::shared_ptr<ButtonBaseWidget>& widget : fButtons)
+        {
+            if (LabWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
+            {
+                widgetPtr->setVisible(visible);
+                break;
+            }
+        }
+
+        for (const std::shared_ptr<ToggleSwitchBaseWidget>& widget : fToggles)
+        {
+            if (LabWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
+            {
+                widgetPtr->setVisible(visible);
+                break;
+            }
+        }
+
+        for (const std::shared_ptr<LabWidget>& spacer : fSpacers)
+        {
+            if (LabWidget* const spacerPtr = spacer.get(); spacerPtr->getId() == id)
+            {
+                spacerPtr->setVisible(visible);
+                break;
+            }
+        }
+    }
+
 private:
     const std::vector<FaustParameter>& fParameters;
     const uint32_t fParametersOffset;
@@ -174,58 +244,6 @@ private:
     void idleCallback() final
     {
         update();
-    }
-
-    void updateEnabledById(const uint32_t id, const bool enabled)
-    {
-        for (const std::shared_ptr<KnobWidget>& knob : fKnobs)
-        {
-            if (KnobWidget* const knobPtr = knob.get(); knobPtr->getId() == id)
-            {
-                knobPtr->setEnabled(enabled, false);
-                break;
-            }
-        }
-
-        for (const std::shared_ptr<LabWidget>& widget : fOtherWidgets)
-        {
-            if (LabWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
-            {
-                // FIXME
-                // widgetPtr->setEnabled(enabled, false);
-                break;
-            }
-        }
-    }
-
-    void updateVisibilityById(const uint32_t id, const bool visible)
-    {
-        for (const std::shared_ptr<KnobWidget>& knob : fKnobs)
-        {
-            if (KnobWidget* const knobPtr = knob.get(); knobPtr->getId() == id)
-            {
-                knobPtr->setVisible(visible);
-                break;
-            }
-        }
-
-        for (const std::shared_ptr<LabWidget>& widget : fOtherWidgets)
-        {
-            if (LabWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
-            {
-                widgetPtr->setVisible(visible);
-                break;
-            }
-        }
-
-        for (const std::shared_ptr<LabWidget>& spacer : fSpacers)
-        {
-            if (LabWidget* const spacerPtr = spacer.get(); spacerPtr->getId() == id)
-            {
-                spacerPtr->setVisible(visible);
-                break;
-            }
-        }
     }
 
     bool update()
@@ -304,15 +322,23 @@ private:
 
         // 1st widget must not be a spacer
         uint firstVisibleId = UINT_MAX;
-        for (const std::shared_ptr<KnobWidget>& knob : fKnobs)
+        for (const std::shared_ptr<KnobWidget>& widget : fKnobs)
         {
-            if (KnobWidget* const knobPtr = knob.get(); knobPtr->isVisible())
+            if (KnobWidget* const widgetPtr = widget.get(); widgetPtr->isVisible())
             {
-                firstVisibleId = knobPtr->getId();
+                firstVisibleId = widgetPtr->getId();
                 break;
             }
         }
-        for (const std::shared_ptr<LabWidget>& widget : fOtherWidgets)
+        for (const std::shared_ptr<ButtonBaseWidget>& widget : fButtons)
+        {
+            if (LabWidget* const widgetPtr = widget.get(); widgetPtr->isVisible())
+            {
+                firstVisibleId = widgetPtr->getId();
+                break;
+            }
+        }
+        for (const std::shared_ptr<ToggleSwitchBaseWidget>& widget : fToggles)
         {
             if (LabWidget* const widgetPtr = widget.get(); widgetPtr->isVisible())
             {
@@ -439,8 +465,10 @@ private:
             knobHeight = R::height * fScaleFactor;
         else if (! fKnobs.empty())
             knobHeight = fKnobs.front()->getHeight();
-        else if (! fOtherWidgets.empty())
-            knobHeight = fOtherWidgets.front()->getHeight();
+        else if (! fButtons.empty())
+            knobHeight = fButtons.front()->getHeight();
+        else if (! fToggles.empty())
+            knobHeight = fToggles.front()->getHeight();
         else
             knobHeight = d_roundToUnsignedInt(fScaleFactor);
 

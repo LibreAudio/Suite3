@@ -308,10 +308,10 @@ struct Reference {
             };
         };
 
-        template <uint8_t accent>
-        struct ToggleSwitch : Knob {
+        template <uint8_t accent, bool small = false>
+        struct ToggleSwitch : std::conditional_t<small, SmallKnob, Knob> {
             static constexpr const Color color = Colors::acc2;
-            static constexpr const uint margin = 4;
+            static constexpr const uint margin = small ? 0 : 4;
             static constexpr const float fontSize = 17;
             static constexpr const float letterSpacing = Common::letterSpacing;
 

@@ -62,13 +62,14 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         }
 
         template<class W, uint maxNumParameters>
-        void addKnobGroup(const uint32_t parameterStart)
+        std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> addKnobGroup(const uint32_t parameterStart)
         {
-            std::shared_ptr<LabWidget> widget {
+            std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> widget {
                 new KnobGroupWidget<W, maxNumParameters>(this, kParameters, kParametersMainStart, parameterStart, maxNumParameters <= 2)
             };
             Layout::widgets.push_back({ widget.get(), Fixed });
-            fWidgets.emplace_back(std::move(widget));
+            fWidgets.push_back(widget);
+            return widget;
         }
 
         void addSpacer()
@@ -84,6 +85,15 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
             Layout::widgets.push_back({ spacer.get(), Fixed });
             fWidgets.emplace_back(std::move(spacer));
         }
+
+        std::shared_ptr<LabWidget> getWidgetById(const uint32_t parameter) const noexcept
+        {
+            for (const std::shared_ptr<LabWidget>& widget : fWidgets)
+                if (widget->getId() == parameter)
+                    return widget;
+
+            return {};
+        }
     };
 
     struct RowRef : Reference::OpaqueStage {
@@ -98,17 +108,16 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
     {
         using BaseWidget = ReferenceContainerWidget<Reference::TransparentStage, kVertical>;
 
-    protected:
-        std::shared_ptr<Controls<RowRef>> fTop = addWidget<Controls<RowRef>, Expanding>();
-        std::shared_ptr<Controls<SmallRowRef>> fBottom = addWidget<Controls<SmallRowRef>>();
-
     public:
         explicit ControlsColumn(LabWidget* const parent)
             : BaseWidget(parent)
         {
         }
 
-    private:
+    protected:
+        std::shared_ptr<Controls<RowRef>> fTop = addWidget<Controls<RowRef>, Expanding>();
+        std::shared_ptr<Controls<SmallRowRef>> fBottom = addWidget<Controls<SmallRowRef>>();
+
         void updateSize(const bool updateChildren) final
         {
             // FIXME
@@ -118,7 +127,8 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         }
     };
 
-    class ControlsColumnLeft : public ControlsColumn
+    class ControlsColumnLeft : public ControlsColumn,
+                               private IdleCallback
     {
     public:
         explicit ControlsColumnLeft(LabWidget* const parent)
@@ -128,12 +138,54 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
             // fTop->addSpacer();
             fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterSync);
             // fTop->addSpacer();
-            fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterDiv_l);
+            fKnobsDiv = fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterDiv_l);
+            fKnobsTime = fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterTime_l);
             // fTop->addSpacer();
             fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterOffset_l);
 
             fBottom->addText("DYNAMICS");
             fBottom->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterDeess_amount);
+
+            update(true);
+
+            addIdleCallback(this);
+        }
+
+    private:
+        std::shared_ptr<KnobGroupWidget<SmallestKnobWidget, 2>> fKnobsDiv;
+        std::shared_ptr<KnobGroupWidget<SmallestKnobWidget, 2>> fKnobsTime;
+        bool fSync;
+        bool fLink;
+
+        void idleCallback() final
+        {
+            update();
+        }
+
+        void update(const bool init = false)
+        {
+            bool changed = false;
+            const bool sync = d_isNotZero(fInterface->getParameterValue(kParametersMainStart + delay::kFaustParameterSync));
+            const bool link = d_isNotZero(fInterface->getParameterValue(kParametersMainStart + delay::kFaustParameterLink));
+
+            if (init || fSync != sync)
+            {
+                changed = true;
+                fSync = sync;
+                fKnobsDiv->setVisible(sync);
+                fKnobsTime->setVisible(!sync);
+            }
+
+            if (init || fLink != link)
+            {
+                changed = true;
+                fLink = link;
+                fKnobsDiv->updateEnabledById(kParametersMainStart + delay::kFaustParameterDiv_r, !link);
+                fKnobsTime->updateEnabledById(kParametersMainStart + delay::kFaustParameterTime_r, !link);
+            }
+
+            if (changed && !init)
+                updateSize(true);
         }
     };
 
@@ -146,7 +198,8 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
             : BaseWidget(parent) {}
     };
 
-    class ControlsColumnRight : public ControlsColumn
+    class ControlsColumnRight : public ControlsColumn,
+                                private IdleCallback
     {
     public:
         explicit ControlsColumnRight(LabWidget* const parent)
@@ -154,7 +207,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         {
             fTop->addPillToggle(delay::kFaustParameterPingpong);
             // fTop->addSpacer();
-            fTop->addKnobGroup<SmallestKnobWidget, 3>(delay::kFaustParameterFeedback);
+            fKnobsMode = fTop->addKnobGroup<SmallestKnobWidget, 3>(delay::kFaustParameterFeedback);
             // fTop->addSpacer();
             fTop->addKnobGroup<SmallestKnobWidget, 3>(delay::kFaustParameterMod_rate);
             // fTop->addSpacer();
@@ -162,6 +215,34 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
 
             fBottom->addText("OUTPUT");
             fBottom->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterWidth);
+
+            update(true);
+
+            addIdleCallback(this);
+        }
+
+    private:
+        std::shared_ptr<KnobGroupWidget<SmallestKnobWidget, 3>> fKnobsMode;
+        int fMode;
+
+        void idleCallback() final
+        {
+            update();
+        }
+
+        void update(const bool init = false)
+        {
+            bool changed = false;
+            const int mode = d_roundToIntPositive(fInterface->getParameterValue(kParametersMainStart + delay::kFaustParameterPingpong));
+
+            if (init || fMode != mode)
+            {
+                fMode = mode;
+                fKnobsMode->updateEnabledById(kParametersMainStart + delay::kFaustParameterCross, mode == 0);
+            }
+
+            if (changed && !init)
+                updateSize(true);
         }
     };
 

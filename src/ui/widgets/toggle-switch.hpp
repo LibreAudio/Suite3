@@ -14,10 +14,10 @@ namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template <uint8_t accent>
-class ToggleSwitchWidget : public ReferenceToggleSwitchWidget<Reference::Widgets::ToggleSwitch<accent>>
+template <uint8_t accent, bool small = false>
+class ToggleSwitchWidget : public ReferenceToggleSwitchWidget<Reference::Widgets::ToggleSwitch<accent, small>>
 {
-    using BaseWidget = ReferenceToggleSwitchWidget<Reference::Widgets::ToggleSwitch<accent>>;
+    using BaseWidget = ReferenceToggleSwitchWidget<Reference::Widgets::ToggleSwitch<accent, small>>;
 
 public:
     explicit ToggleSwitchWidget(LabWidget* const parent, const uint id, const char* const name)

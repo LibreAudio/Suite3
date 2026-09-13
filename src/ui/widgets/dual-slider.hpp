@@ -18,7 +18,7 @@ class DualSliderWidget final : public LabReferenceWidget<Reference::Widgets::But
     using BaseWidget = LabReferenceWidget<R>;
 
 public:
-    DualSliderWidget(LabWidget* const parent)
+    explicit DualSliderWidget(LabWidget* const parent)
         : BaseWidget(parent)
     {
         setSize(90 * fScaleFactor, 30 * fScaleFactor);
