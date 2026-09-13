@@ -16,8 +16,7 @@ namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class BackgroundPillToggleCellWidget : public TextButtonWidget<kCornerBoth,
-                                                                         Reference::Widgets::PillToggle::Cell>
+class BackgroundPillToggleCellWidget : public TextButtonWidget<kCornerBoth, Reference::Widgets::PillToggle::Cell>
 {
     using R = Reference::Widgets::PillToggle::Cell;
     using BaseWidget = TextButtonWidget<kCornerBoth, Reference::Widgets::PillToggle::Cell>;
@@ -48,6 +47,7 @@ protected:
 
 // --------------------------------------------------------------------------------------------------------------------
 
+template <SizeHint sizeHint>
 class PillToggleWidget : public ReferenceContainerWidget<Reference::Widgets::PillToggle>,
                          private ButtonEventHandler::Callback,
                          private IdleCallback
@@ -126,33 +126,57 @@ private:
         const uint margin = d_roundToUnsignedInt(R::margin * fScaleFactor);
         const uint padding = d_roundToUnsignedInt(R::padding * fScaleFactor);
 
-        // make all cells have the same width
-        uint cellWidth = 0;
-
-        for (const std::unique_ptr<BackgroundPillToggleCellWidget>& cell : fCells)
-            cellWidth = std::max(cellWidth, cell->getWidth());
-
-        for (const std::unique_ptr<BackgroundPillToggleCellWidget>& cell : fCells)
-            cell->setWidth(cellWidth);
-
-        // set width and height
-        uint width = (border + margin) * 2;
-        uint height = width;
-
-        if (const uint numWidgets = widgets.size())
+        if constexpr (sizeHint == Fixed)
         {
-            width += padding * (numWidgets - 1);
-            width += numWidgets * cellWidth;
+            // make all cells have the same width
+            uint cellWidth = 0;
+
+            for (const std::unique_ptr<BackgroundPillToggleCellWidget>& cell : fCells)
+                cellWidth = std::max(cellWidth, cell->getWidth());
+
+            for (const std::unique_ptr<BackgroundPillToggleCellWidget>& cell : fCells)
+                cell->setWidth(cellWidth);
+
+            // set width and height
+            uint width = (border + margin) * 2;
+            uint height = width;
+
+            if (const uint numWidgets = widgets.size())
+            {
+                width += padding * (numWidgets - 1);
+                width += numWidgets * cellWidth;
+            }
+
+            if constexpr (R::height != 0)
+                height += R::height * fScaleFactor;
+            else if (! fCells.empty())
+                height += d_roundToUnsignedInt(fCells.front()->getHeight());
+            else
+                height += d_roundToUnsignedInt(fScaleFactor);
+
+            LabWidget::setSize(width, height);
         }
-
-        if constexpr (R::height != 0)
-            height += R::height * fScaleFactor;
-        else if (! fCells.empty())
-            height += d_roundToUnsignedInt(fCells.front()->getHeight());
         else
-            height += d_roundToUnsignedInt(fScaleFactor);
+        {
+            if (const uint numCells = fCells.size())
+            {
+                uint cellWidth = (getWidth() - (border + margin) * 2 - padding * (numCells - 1)) / numCells;
 
-        LabWidget::setSize(width, height);
+                for (const std::unique_ptr<BackgroundPillToggleCellWidget>& cell : fCells)
+                    cell->setWidth(cellWidth);
+            }
+
+            uint height = (border + margin) * 2;
+
+            if constexpr (R::height != 0)
+                height += R::height * fScaleFactor;
+            else if (! fCells.empty())
+                height += d_roundToUnsignedInt(fCells.front()->getHeight());
+            else
+                height += d_roundToUnsignedInt(fScaleFactor);
+
+            LabWidget::setHeight(height);
+        }
 
         // update everything else
         BaseWidget::updateSize(false);
@@ -167,8 +191,8 @@ class PillAreaWidget : public ReferenceContainerWidget<Reference::Widgets::PillA
     using R = Reference::Widgets::PillArea;
     using BaseWidget = ReferenceContainerWidget<R>;
 
-    std::list<std::unique_ptr<PillToggleWidget>> fToggles;
-    std::list<std::unique_ptr<Widget>> fSpacers;
+    std::list<std::unique_ptr<LabWidget>> fToggles;
+    std::list<std::unique_ptr<LabWidget>> fSpacers;
 
 public:
     explicit PillAreaWidget(LabWidget* const parent, const uint32_t parameterStart = 0)
@@ -187,8 +211,13 @@ public:
             ++numPills;
         }
 
-        if (numPills == 1)
-            addSpacer();
+        if constexpr (kMaxNumToggles != 1)
+        {
+            if (numPills == 1)
+                addSpacer();
+        }
+
+        static constexpr const SizeHint sizeHint = kMaxNumToggles == 1 ? Expanding : Fixed;
 
         for (uint32_t i = parameterStart, count = parameters.size(); i < count && fToggles.size() < kMaxNumToggles; ++i)
         {
@@ -198,8 +227,8 @@ public:
                 continue;
             }
             d_stdout("using pill for parameter %s", parameter.label);
-            std::unique_ptr<PillToggleWidget> widget { new PillToggleWidget(this, parameter, kParametersMainStart + i) };
-            widgets.push_back({ widget.get(), Fixed });
+            std::unique_ptr<LabWidget> widget { new PillToggleWidget<sizeHint>(this, parameter, kParametersMainStart + i) };
+            widgets.push_back({ widget.get(), sizeHint });
             fToggles.emplace_back(std::move(widget));
 
             if (numPills == 2)
@@ -209,8 +238,11 @@ public:
             }
         }
 
-        if (numPills == 1)
-            addSpacer();
+        if constexpr (kMaxNumToggles != 1)
+        {
+            if (numPills == 1)
+                addSpacer();
+        }
 
         updateSize(true);
     }

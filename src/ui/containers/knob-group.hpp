@@ -187,11 +187,12 @@ private:
             }
         }
 
-        for (const std::shared_ptr<ToggleSwitchBaseWidget>& widget : fOtherWidgets)
+        for (const std::shared_ptr<LabWidget>& widget : fOtherWidgets)
         {
-            if (ToggleSwitchBaseWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
+            if (LabWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
             {
-                widgetPtr->setEnabled(enabled, false);
+                // FIXME
+                // widgetPtr->setEnabled(enabled, false);
                 break;
             }
         }
@@ -208,9 +209,9 @@ private:
             }
         }
 
-        for (const std::shared_ptr<ToggleSwitchBaseWidget>& widget : fOtherWidgets)
+        for (const std::shared_ptr<LabWidget>& widget : fOtherWidgets)
         {
-            if (ToggleSwitchBaseWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
+            if (LabWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
             {
                 widgetPtr->setVisible(visible);
                 break;
@@ -311,9 +312,9 @@ private:
                 break;
             }
         }
-        for (const std::shared_ptr<ToggleSwitchBaseWidget>& widget : fOtherWidgets)
+        for (const std::shared_ptr<LabWidget>& widget : fOtherWidgets)
         {
-            if (ToggleSwitchBaseWidget* const widgetPtr = widget.get(); widgetPtr->isVisible())
+            if (LabWidget* const widgetPtr = widget.get(); widgetPtr->isVisible())
             {
                 firstVisibleId = widgetPtr->getId();
                 break;
@@ -322,7 +323,7 @@ private:
 
         if (firstVisibleId != UINT_MAX)
         {
-            for (const std::shared_ptr<Widget>& spacer : fSpacers)
+            for (const std::shared_ptr<LabWidget>& spacer : fSpacers)
             {
                 if (Widget* const spacerPtr = spacer.get(); spacerPtr->isVisible())
                 {
