@@ -256,11 +256,11 @@ link = uiTime(nentry("[12]link[style:radio{'Linked':0;'Free':1}][symbol:link][ac
 // in its bottom decade: slap at 80 ms and a quarter note at 500 ms are two
 // thirds of the way apart on a linear knob and a comfortable distance apart on
 // this one.
-timeLms = uiTime(hslider("[13]Time L[style:knob][unit:ms][scale:log][symbol:time_l][label:Time L][accentcolor:01][bracket:TIME][easy][requires:sync:0]
+timeLms = uiTime(hslider("[13]Time L[style:knob][unit:ms][scale:log][symbol:time_l][label:Time L][accentcolor:01][bracket:TIME][easy]
       [tooltip: Left channel delay time. In Tempo sync this is replaced by Div L]",
       375, 1, maxDelayMs, 0.1));
 
-timeRms = uiTime(hslider("[14]Time R[style:knob][unit:ms][scale:log][symbol:time_r][label:Time R][accentcolor:01][bracket:TIME][requires:link:1]
+timeRms = uiTime(hslider("[14]Time R[style:knob][unit:ms][scale:log][symbol:time_r][label:Time R][accentcolor:01][bracket:TIME]
       [tooltip: Right channel delay time. Only reaches the output with Link on Free]",
       500, 1, maxDelayMs, 0.1));
 
@@ -269,7 +269,7 @@ timeRms = uiTime(hslider("[14]Time R[style:knob][unit:ms][scale:log][symbol:time
 // glide, so the glide is what removes the steps -- smoothing here would put a
 // second one-pole in series with it and make the same knob's response depend
 // on which of Free or Tempo produced the number.
-bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:bpm][label:BPM][accentcolor:02][requires:sync:1]
+bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:bpm][label:BPM][accentcolor:02]
       [tooltip: Tempo for the note divisions. Set by hand -- the host tempo is not read yet]",
       120, 20, 300, 0.01)) : meter_bpm;
 
@@ -281,10 +281,10 @@ meter_bpm = _ <: attach(_, hbargraph("meter bpm",50,300));
 // makes the menu read as one continuous scale rather than a grouped list.
 NDIV = 11;
 divTable = (4.0, 2.0, 1.5, 1.0, 2.0/3.0, 0.75, 0.5, 1.0/3.0, 0.375, 0.25, 1.0/6.0);
-divIdxL = uiTime(nentry("[16]Div L[style:menu{'1/1':0;'1/2':1;'1/4.':2;'1/4':3;'1/4T':4;'1/8.':5;'1/8':6;'1/8T':7;'1/16.':8;'1/16':9;'1/16T':10}][symbol:div_l][label:Div L][accentcolor:01][bracket:TIME][requires:sync:1]
+divIdxL = uiTime(nentry("[16]Div L[style:menu{'1/1':0;'1/2':1;'1/4.':2;'1/4':3;'1/4T':4;'1/8.':5;'1/8':6;'1/8T':7;'1/16.':8;'1/16':9;'1/16T':10}][symbol:div_l][label:Div L][accentcolor:01][bracket:TIME]
       [tooltip: Left channel note division. A dot lengthens by half, a T shortens to two thirds]", 6, 0, NDIV - 1, 1)) : int;
 
-divIdxR = uiTime(nentry("[17]Div R[style:menu{'1/1':0;'1/2':1;'1/4.':2;'1/4':3;'1/4T':4;'1/8.':5;'1/8':6;'1/8T':7;'1/16.':8;'1/16':9;'1/16T':10}][symbol:div_r][label:Div R][accentcolor:01][bracket:TIME][requires:sync:1][requires:link:1]
+divIdxR = uiTime(nentry("[17]Div R[style:menu{'1/1':0;'1/2':1;'1/4.':2;'1/4':3;'1/4T':4;'1/8.':5;'1/8':6;'1/8T':7;'1/16.':8;'1/16':9;'1/16T':10}][symbol:div_r][label:Div R][accentcolor:01][bracket:TIME]
       [tooltip: Right channel note division. Only reaches the output with Link on Free]", 6, 0, NDIV - 1, 1)) : int;
 
 // Multiplier for a division index, as a signal rather than a compile-time
@@ -435,7 +435,7 @@ feedback = uiRepeats(hslider("[21]Feedback[style:knob][unit:%][symbol:feedback][
 // repeat and only then starts bouncing. Ping-Pong mono-sums the input into one
 // line and throws that away. Inside Ping-Pong the channels are already fully
 // crossed and this knob has nothing left to do, hence the requires.
-crossFb = uiRepeats(hslider("[22]Cross[style:knob][unit:%][symbol:cross][label:Cross][accentcolor:02][bracket:REPEATS][requires:pingpong:0]
+crossFb = uiRepeats(hslider("[22]Cross[style:knob][unit:%][symbol:cross][label:Cross][accentcolor:02][bracket:REPEATS]
       [tooltip: How much of each repeat is fed back into the opposite channel. 0 = two independent delays, 50 = the tail collapses to the centre, 100 = it alternates sides. Ping-Pong is already fully crossed, so this is a Normal-mode control]",
       0, 0, 100, 0.1)) / 100 : smooInit;
 
