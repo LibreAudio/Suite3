@@ -29,7 +29,7 @@ public:
         setDefault(parameter.init);
         setRange(parameter.min, parameter.max);
         setStep(parameter.step);
-        // setUsingLogScale(parameter.isLogarithmic); // FIXME
+        setUsingLogScale(parameter.isLogarithmic);
         setValue(parameter.init, false);
 
         fKnobStyle.bipolar = d_isZero(parameter.init) && parameter.min < 0 && parameter.max > 0;
