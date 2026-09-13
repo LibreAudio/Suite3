@@ -314,6 +314,7 @@ private:
 
 using EasyKnobWidget = DrawableKnobWidget<Reference::Widgets::EasyKnob>;
 using SmallKnobWidget = DrawableKnobWidget<Reference::Widgets::Knob>;
+using SmallestKnobWidget = DrawableKnobWidget<Reference::Widgets::SmallKnob>;
 
 // --------------------------------------------------------------------------------------------------------------------
 

@@ -7,6 +7,7 @@
 #include "ui/_lab/color.hpp"
 
 #include "ui/reference.hpp"
+#include "ui/widgets/dual-slider.hpp"
 #include "ui/widgets/shader.hpp"
 #include "ui/widgets.hpp"
 
@@ -45,6 +46,13 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         explicit Controls(LabWidget* const parent)
             : BaseWidget(parent) {}
 
+        void addDualSlider(const uint32_t parameterA, const uint32_t parameterB)
+        {
+            std::shared_ptr<LabWidget> spacer { new DualSliderWidget(this) };
+            Layout::widgets.push_back({ spacer.get(), Expanding });
+            fWidgets.emplace_back(std::move(spacer));
+        }
+
         void addPillToggle(const uint32_t parameter)
         {
             std::shared_ptr<LabWidget> widget { new PillAreaWidget<1>(this, parameter) };
@@ -52,11 +60,11 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
             fWidgets.emplace_back(std::move(widget));
         }
 
-        template<uint maxNumParameters>
+        template<class W, uint maxNumParameters>
         void addKnobGroup(const uint32_t parameterStart)
         {
             std::shared_ptr<LabWidget> widget {
-                new KnobGroupWidget<SmallKnobWidget, maxNumParameters>(this, kParameters, kParametersMainStart, parameterStart, maxNumParameters <= 2)
+                new KnobGroupWidget<W, maxNumParameters>(this, kParameters, kParametersMainStart, parameterStart, maxNumParameters <= 2)
             };
             Layout::widgets.push_back({ widget.get(), Fixed });
             fWidgets.emplace_back(std::move(widget));
@@ -95,7 +103,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         void updateSize(const bool updateChildren) final
         {
             // FIXME
-            static_cast<LabWidget*>(fBottom.get())->setHeight(120 * fScaleFactor);
+            static_cast<LabWidget*>(fBottom.get())->setHeight(100 * fScaleFactor);
 
             BaseWidget::updateSize(updateChildren);
         }
@@ -109,12 +117,14 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         {
             fTop->addPillToggle(delay::kFaustParameterMode);
             // fTop->addSpacer();
-            fTop->addKnobGroup<2>(delay::kFaustParameterSync);
+            fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterSync);
             // fTop->addSpacer();
-            fTop->addKnobGroup<2>(delay::kFaustParameterTime_l);
+            fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterDiv_l);
+            // fTop->addSpacer();
+            fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterOffset_l);
 
             fBottom->addText("DYNAMICS");
-            fBottom->addKnobGroup<2>(delay::kFaustParameterDeess_amount);
+            fBottom->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterDeess_amount);
         }
     };
 
@@ -135,12 +145,14 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         {
             fTop->addPillToggle(delay::kFaustParameterPingpong);
             // fTop->addSpacer();
-            fTop->addKnobGroup<3>(delay::kFaustParameterFeedback);
+            fTop->addKnobGroup<SmallestKnobWidget, 3>(delay::kFaustParameterFeedback);
             // fTop->addSpacer();
-            fTop->addKnobGroup<3>(delay::kFaustParameterMod_rate);
+            fTop->addKnobGroup<SmallestKnobWidget, 3>(delay::kFaustParameterMod_rate);
+            // fTop->addSpacer();
+            fTop->addDualSlider(delay::kFaustParameterLp_freq, delay::kFaustParameterHp_freq);
 
             fBottom->addText("OUTPUT");
-            fBottom->addKnobGroup<2>(delay::kFaustParameterWidth);
+            fBottom->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterWidth);
         }
     };
 

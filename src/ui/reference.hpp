@@ -226,17 +226,25 @@ struct Reference {
                 static constexpr const float letterSpacing = Common::letterSpacing;
                 // text-shadow
             };
-            struct Value {
-                static constexpr const Color color = Colors::ink2;
-                static constexpr const float fontSize = 15;
-                // font-mono
-            };
             struct Unit {
                 static constexpr const Color color = Colors::ink3;
                 static constexpr const float fontSize = 14;
                 static constexpr const float letterSpacing = fontSize * 0.02f;
                 // font-ui
             };
+            struct Value {
+                static constexpr const Color color = Colors::ink2;
+                static constexpr const float fontSize = 15;
+                // font-mono
+            };
+        };
+
+        struct SmallKnob : Zero {
+            static constexpr const uint height = 50 + 18;
+            static constexpr const uint width = 50;
+            struct Name : Knob::Name {};
+            struct Unit : Knob::Unit {};
+            struct Value : Knob::Value {};
         };
 
         struct EasyKnob : Zero {

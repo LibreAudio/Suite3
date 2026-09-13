@@ -20,6 +20,17 @@ class PillToggleFrameWidget final : public LabReferenceWidget<Reference::Zero>
 public:
     PillToggleFrameWidget(LabWidget* const parent)
         : BaseWidget(parent) {}
+private:
+    void onNanoDisplay() final
+    {
+        BaseWidget::onNanoDisplay();
+
+        BaseWidget::fillColor(Reference::Colors::ink);
+        BaseWidget::fontSize(Reference::Common::fontSize);
+        BaseWidget::textAlign(BaseWidget::ALIGN_CENTER | BaseWidget::ALIGN_MIDDLE);
+        BaseWidget::textLetterSpacing(Reference::Common::letterSpacing * this->fScaleFactor);
+        BaseWidget::text(getWidth() * 0.5f, getHeight() * 0.5f, "This is a pill-toggle frame");
+    }
 };
 
 // --------------------------------------------------------------------------------------------------------------------

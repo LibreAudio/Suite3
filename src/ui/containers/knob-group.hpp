@@ -11,6 +11,7 @@
 #include "../_lab/image.hpp"
 
 #include "../reference.hpp"
+#include "../widgets/combo-box.hpp"
 #include "../widgets/knob.hpp"
 #include "../widgets/toggle-switch.hpp"
 
@@ -34,7 +35,7 @@ class KnobGroupWidget : public ReferenceContainerWidget<Reference::Widgets::Knob
     using BaseWidget = ReferenceContainerWidget<R>;
 
     std::list<std::shared_ptr<KnobWidget>> fKnobs;
-    std::list<std::shared_ptr<ToggleSwitchBaseWidget>> fToggles;
+    std::list<std::shared_ptr<LabWidget>> fOtherWidgets;
     std::list<std::shared_ptr<LabWidget>> fSpacers;
 
     struct Bracket {
@@ -64,21 +65,29 @@ public:
         for (uint32_t i = parameterStart, numVisibleWidgets = 0, count = parameters.size(); i < count && numVisibleWidgets < kMaxNumParameters; ++i)
         {
             const FaustParameter& parameter = parameters[i];
-            if ((parameter.isEnumerator && parameter.scalePointCount != 2) || parameter.isOutput) {
+            if (parameter.isOutput) {
                 d_stdout("knob-group skipped parameter %s", parameter.name);
                 continue;
             }
 
-            if (! fKnobs.empty() || ! fToggles.empty())
+            if (! fKnobs.empty() || ! fOtherWidgets.empty())
                 addSpacer(idOffset + i);
 
             if (parameter.isEnumerator && parameter.scalePointCount == 2)
             {
-                std::unique_ptr<ToggleSwitchBaseWidget> widget { new ToggleSwitchWidget<4>(this, idOffset + i, parameter) };
+                std::unique_ptr<LabWidget> widget { new ToggleSwitchWidget<4>(this, idOffset + i, parameter) };
                 widgets.push_back({ widget.get(), Fixed });
                 if (widget->getSize().isNull())
                     d_stderr2("Error: addToggle called but widget '%s' does not have a known size", widget->getName());
-                fToggles.emplace_back(std::move(widget));
+                fOtherWidgets.emplace_back(std::move(widget));
+            }
+            else if (parameter.isEnumerator)
+            {
+                std::unique_ptr<LabWidget> widget { new ComboBoxWidget(this) };
+                widgets.push_back({ widget.get(), Fixed });
+                if (widget->getSize().isNull())
+                    d_stderr2("Error: addComboBox called but widget '%s' does not have a known size", widget->getName());
+                fOtherWidgets.emplace_back(std::move(widget));
             }
             else
             {
@@ -178,11 +187,11 @@ private:
             }
         }
 
-        for (const std::shared_ptr<ToggleSwitchBaseWidget>& toggle : fToggles)
+        for (const std::shared_ptr<ToggleSwitchBaseWidget>& widget : fOtherWidgets)
         {
-            if (ToggleSwitchBaseWidget* const togglePtr = toggle.get(); togglePtr->getId() == id)
+            if (ToggleSwitchBaseWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
             {
-                togglePtr->setEnabled(enabled, false);
+                widgetPtr->setEnabled(enabled, false);
                 break;
             }
         }
@@ -199,11 +208,11 @@ private:
             }
         }
 
-        for (const std::shared_ptr<ToggleSwitchBaseWidget>& toggle : fToggles)
+        for (const std::shared_ptr<ToggleSwitchBaseWidget>& widget : fOtherWidgets)
         {
-            if (ToggleSwitchBaseWidget* const togglePtr = toggle.get(); togglePtr->getId() == id)
+            if (ToggleSwitchBaseWidget* const widgetPtr = widget.get(); widgetPtr->getId() == id)
             {
-                togglePtr->setVisible(visible);
+                widgetPtr->setVisible(visible);
                 break;
             }
         }
@@ -302,11 +311,11 @@ private:
                 break;
             }
         }
-        for (const std::shared_ptr<ToggleSwitchBaseWidget>& toggle : fToggles)
+        for (const std::shared_ptr<ToggleSwitchBaseWidget>& widget : fOtherWidgets)
         {
-            if (ToggleSwitchBaseWidget* const togglePtr = toggle.get(); togglePtr->isVisible())
+            if (ToggleSwitchBaseWidget* const widgetPtr = widget.get(); widgetPtr->isVisible())
             {
-                firstVisibleId = togglePtr->getId();
+                firstVisibleId = widgetPtr->getId();
                 break;
             }
         }
@@ -429,8 +438,8 @@ private:
             knobHeight = R::height * fScaleFactor;
         else if (! fKnobs.empty())
             knobHeight = fKnobs.front()->getHeight();
-        else if (! fToggles.empty())
-            knobHeight = fToggles.front()->getHeight();
+        else if (! fOtherWidgets.empty())
+            knobHeight = fOtherWidgets.front()->getHeight();
         else
             knobHeight = d_roundToUnsignedInt(fScaleFactor);
 
