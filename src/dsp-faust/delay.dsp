@@ -4,7 +4,8 @@ declare license "GPL-3.0-or-later";
 declare name "Delay";
 declare unique_id "LAdl";
 
-// declare drywet "true";
+// For some parts of this file, a large language model was involved as a coding assistant.
+// The ideas, the design decisions and the listening behind it are purely human.
 
 import("stdfaust.lib");
 
@@ -191,7 +192,7 @@ uiMeters(x)  = hgroup("[9]", x);
 
 // --- Mode pills ---
 
-mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol:mode][bracket:MODE]", 0, 0, 2, 1)) : int;
+mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol:mode][integer]", 0, 0, 2, 1)) : int;
 
 // Three states, and the letter names which side the first repeat lands on:
 // Ping-Pong L bounces L, R, L, R and Ping-Pong R is its mirror image, R first.
@@ -211,7 +212,7 @@ mode = uiMode(nentry("[01]mode[style:radio{'Digital':0;'Tape':1;'BBD':2}][symbol
 // wrong topology for the whole length of its tail. Measured before the fix: an
 // impulse at sample 0 with Ping-Pong selected came out of both channels at
 // once, which is precisely the thing ping-pong is not.
-ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping':1;'Pong':2}][symbol:pingpong][bracket:MODE][integer]", 0, 0, 2, 1)) : int;
+ppSel = uiMode(nentry("[02]pingpong[style:radio{'Normal':0;'Ping':1;'Pong':2}][symbol:pingpong][integer]", 0, 0, 2, 1)) : int;
 
 // One coefficient per handed topology, and their sum is how ping-pong the
 // engine is at all.
@@ -246,8 +247,8 @@ ppAmt = min(1.0, ppL + ppR);
 // what they are: neither changes the character of the delay, they only change
 // how the five time controls beneath them are read. Mode and Ping-Pong stay at
 // the top, where they do change what the engine is.
-sync = uiTime(nentry("[11]sync[style:radio{'Free':0;'Tempo':1}][symbol:sync][bracket:TIME][integer]", 0, 0, 1, 1)) : int;
-link = uiTime(nentry("[12]link[style:radio{'Linked':0;'Free':1}][symbol:link][bracket:TIME][integer]", 0, 0, 1, 1)) : int;
+sync = uiTime(nentry("[11]sync[style:radio{'Free':0;'Tempo':1}][symbol:sync][accentcolor:01][integer]", 0, 0, 1, 1)) : int;
+link = uiTime(nentry("[12]link[style:radio{'Linked':0;'Free':1}][symbol:link][accentcolor:05][integer]", 0, 0, 1, 1)) : int;
 
 // --- Time ---
 
@@ -255,11 +256,11 @@ link = uiTime(nentry("[12]link[style:radio{'Linked':0;'Free':1}][symbol:link][br
 // in its bottom decade: slap at 80 ms and a quarter note at 500 ms are two
 // thirds of the way apart on a linear knob and a comfortable distance apart on
 // this one.
-timeLms = uiTime(hslider("[13]Time L[style:knob][unit:ms][scale:log][symbol:time_l][label:Time L][accentcolor:02][bracket:TIME][easy][requires:sync:0]
+timeLms = uiTime(hslider("[13]Time L[style:knob][unit:ms][scale:log][symbol:time_l][label:Time L][accentcolor:01][bracket:TIME][easy][requires:sync:0]
       [tooltip: Left channel delay time. In Tempo sync this is replaced by Div L]",
       375, 1, maxDelayMs, 0.1));
 
-timeRms = uiTime(hslider("[14]Time R[style:knob][unit:ms][scale:log][symbol:time_r][label:Time R][accentcolor:02][bracket:TIME][requires:link:1]
+timeRms = uiTime(hslider("[14]Time R[style:knob][unit:ms][scale:log][symbol:time_r][label:Time R][accentcolor:01][bracket:TIME][requires:link:1]
       [tooltip: Right channel delay time. Only reaches the output with Link on Free]",
       500, 1, maxDelayMs, 0.1));
 
@@ -268,7 +269,7 @@ timeRms = uiTime(hslider("[14]Time R[style:knob][unit:ms][scale:log][symbol:time
 // glide, so the glide is what removes the steps -- smoothing here would put a
 // second one-pole in series with it and make the same knob's response depend
 // on which of Free or Tempo produced the number.
-bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:bpm][label:BPM][accentcolor:02][bracket:TIME][requires:sync:1]
+bpm = uiTime(hslider("[15]BPM[style:knob][unit:bpm][symbol:bpm][label:BPM][accentcolor:02][requires:sync:1]
       [tooltip: Tempo for the note divisions. Set by hand -- the host tempo is not read yet]",
       120, 20, 300, 0.01)) : meter_bpm;
 
@@ -280,10 +281,10 @@ meter_bpm = _ <: attach(_, hbargraph("meter bpm",50,300));
 // makes the menu read as one continuous scale rather than a grouped list.
 NDIV = 11;
 divTable = (4.0, 2.0, 1.5, 1.0, 2.0/3.0, 0.75, 0.5, 1.0/3.0, 0.375, 0.25, 1.0/6.0);
-divIdxL = uiTime(nentry("[16]Div L[style:menu{'1/1':0;'1/2':1;'1/4.':2;'1/4':3;'1/4T':4;'1/8.':5;'1/8':6;'1/8T':7;'1/16.':8;'1/16':9;'1/16T':10}][symbol:div_l][label:Div L][accentcolor:02][bracket:TIME][requires:sync:1]
+divIdxL = uiTime(nentry("[16]Div L[style:menu{'1/1':0;'1/2':1;'1/4.':2;'1/4':3;'1/4T':4;'1/8.':5;'1/8':6;'1/8T':7;'1/16.':8;'1/16':9;'1/16T':10}][symbol:div_l][label:Div L][accentcolor:01][bracket:TIME][requires:sync:1]
       [tooltip: Left channel note division. A dot lengthens by half, a T shortens to two thirds]", 6, 0, NDIV - 1, 1)) : int;
 
-divIdxR = uiTime(nentry("[17]Div R[style:menu{'1/1':0;'1/2':1;'1/4.':2;'1/4':3;'1/4T':4;'1/8.':5;'1/8':6;'1/8T':7;'1/16.':8;'1/16':9;'1/16T':10}][symbol:div_r][label:Div R][accentcolor:02][bracket:TIME][requires:link:1]
+divIdxR = uiTime(nentry("[17]Div R[style:menu{'1/1':0;'1/2':1;'1/4.':2;'1/4':3;'1/4T':4;'1/8.':5;'1/8':6;'1/8T':7;'1/16.':8;'1/16':9;'1/16T':10}][symbol:div_r][label:Div R][accentcolor:01][bracket:TIME][requires:sync:1][requires:link:1]
       [tooltip: Right channel note division. Only reaches the output with Link on Free]", 6, 0, NDIV - 1, 1)) : int;
 
 // Multiplier for a division index, as a signal rather than a compile-time
@@ -320,11 +321,11 @@ timeMs(freeMs, idx) = select2(sync, freeMs, divMult(idx) * beatMs);
 // exactly as a move on Time does.
 offsetPctMax = 20;
 
-offsetLpct = uiTime(hslider("[18]Offset L[style:knob][unit:%][symbol:offset_l][label:Offset L][accentcolor:02][bracket:TIME]
+offsetLpct = uiTime(hslider("[18]Offset L[style:knob][unit:%][symbol:offset_l][label:Offset L][bracket:OFFSET][accentcolor:05]
       [tooltip: Trims the left delay time by a percentage. Works in every Sync and Link setting, so a Linked pair can still be pulled apart. 0 = off]",
       0, 0 - offsetPctMax, offsetPctMax, 0.1));
 
-offsetRpct = uiTime(hslider("[19]Offset R[style:knob][unit:%][symbol:offset_r][label:Offset R][accentcolor:02][bracket:TIME]
+offsetRpct = uiTime(hslider("[19]Offset R[style:knob][unit:%][symbol:offset_r][label:Offset R][bracket:OFFSET][accentcolor:05]
       [tooltip: Trims the right delay time by a percentage. Works in every Sync and Link setting, so a Linked pair can still be pulled apart. 0 = off]",
       0, 0 - offsetPctMax, offsetPctMax, 0.1));
 
@@ -396,7 +397,7 @@ timeGlide = si.smooth(ba.tau2pole(glideSec) * float(ba.time > 0));
 // Drive shortens that. A saturator in a loop is a level-dependent gain below
 // unity, so the louder the tail the faster it decays -- see driveSat, where
 // that is argued for rather than apologised for.
-feedback = uiRepeats(hslider("[21]Feedback[style:knob][unit:%][symbol:feedback][label:Feedback][accentcolor:01][bracket:REPEATS][easy]
+feedback = uiRepeats(hslider("[21]Feedback[style:knob][unit:%][symbol:feedback][label:Feedback][accentcolor:02][bracket:REPEATS][easy]
       [tooltip: How much of each repeat is fed back into the delay line. At 100% the repeats sustain rather than decay]",
       35, 0, 100, 0.1)) / 100 : smooInit;
 
@@ -434,13 +435,13 @@ feedback = uiRepeats(hslider("[21]Feedback[style:knob][unit:%][symbol:feedback][
 // repeat and only then starts bouncing. Ping-Pong mono-sums the input into one
 // line and throws that away. Inside Ping-Pong the channels are already fully
 // crossed and this knob has nothing left to do, hence the requires.
-crossFb = uiRepeats(hslider("[22]Cross[style:knob][unit:%][symbol:cross][label:Cross][accentcolor:01][bracket:REPEATS][requires:pingpong:0]
+crossFb = uiRepeats(hslider("[22]Cross[style:knob][unit:%][symbol:cross][label:Cross][accentcolor:02][bracket:REPEATS][requires:pingpong:0]
       [tooltip: How much of each repeat is fed back into the opposite channel. 0 = two independent delays, 50 = the tail collapses to the centre, 100 = it alternates sides. Ping-Pong is already fully crossed, so this is a Normal-mode control]",
       0, 0, 100, 0.1)) / 100 : smooInit;
 
 // --- Drive ---
 
-drive = uiRepeats(hslider("[23]Drive[style:knob][unit:%][symbol:drive][label:Drive][accentcolor:01][bracket:REPEATS]
+drive = uiRepeats(hslider("[23]Drive[style:knob][unit:%][symbol:drive][label:Drive][bracket:REPEATS][accentcolor:05]
       [tooltip: Saturation inside the feedback loop. The repeats thicken and compress as they go round, and the loudest of them shorten. 0 = off]",
       0, 0, 100, 0.1)) / 100 : smooInit;
 
@@ -449,11 +450,11 @@ drive = uiRepeats(hslider("[23]Drive[style:knob][unit:%][symbol:drive][label:Dri
 // Detunes the repeats so a long feedback tail moves instead of standing still.
 // One LFO drives both channels, with a settable phase difference between them
 // -- see modPhase.
-modRate = uiRepeats(hslider("[24]Mod Rate[style:knob][unit:Hz][scale:log][symbol:mod_rate][label:Mod Rate][accentcolor:03][bracket:REPEATS]
+modRate = uiRepeats(hslider("[24]Mod Rate[style:knob][unit:Hz][scale:log][symbol:mod_rate][label:Rate][accentcolor:03][bracket:MODULATION]
       [tooltip: Speed of the pitch modulation on the delay lines]",
       0.4, 0.02, 8, 0.001));
 
-modDepthMs = uiRepeats(hslider("[25]Mod Depth[style:knob][unit:ms][symbol:mod_depth][label:Mod Depth][accentcolor:03][bracket:REPEATS]
+modDepthMs = uiRepeats(hslider("[25]Mod Depth[style:knob][unit:ms][symbol:mod_depth][label:Depth][accentcolor:03][bracket:MODULATION]
       [tooltip: How far the delay time is swung by the modulation. 0 = off]",
       0, 0, 20, 0.01)) : smooInit;
 
@@ -480,7 +481,7 @@ modDepthMs = uiRepeats(hslider("[25]Mod Depth[style:knob][unit:ms][symbol:mod_de
 // sine argument, so a step would jump the right channel's LFO to a new value
 // and put a corner in the delay time. Swept, it reads as a momentary detune of
 // the right side, which is what it physically is.
-stereoPhaseDeg = uiRepeats(hslider("[26]Stereo Phase[style:knob][unit:deg][symbol:mod_stereo_phase][label:Stereo Ph][accentcolor:03][bracket:REPEATS]
+stereoPhaseDeg = uiRepeats(hslider("[26]Stereo Phase[style:knob][unit:deg][symbol:mod_stereo_phase][label:Phase][accentcolor:04][bracket:MODULATION]
       [tooltip: Phase difference between the left and right modulation. 0 = both channels sweep together, 180 = they move in opposition. Inert at Depth 0]",
       180, 0, 180, 0.1)) : smooInit;
 
@@ -587,7 +588,7 @@ lerp(a, b, t) = a + (b - a) * t;
 // and detector constants at once, and this file smooths every control that
 // reaches the audio, so stepping the split frequency on an automation ramp
 // would be the one place left that could click.
-hflim_amount = uiRepeats(hslider("[27]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02][bracket:REPEATS]
+hflim_amount = uiRepeats(hslider("[27]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02][bracket:DYNAMICS]
       [tooltip: Tames sibilance in the feed to the delay, so an s does not come back on every repeat. Detects the high band relative to the body of the signal, so it works at any level. 0 = off]",
       0, 0, 100, 1)) / 100 : smooInit;
 
@@ -676,7 +677,7 @@ lpFreq = uiRepeats(hslider("[29]Low Pass[style:knob][unit:Hz][scale:log][symbol:
 
 // --- Ducking ---
 
-duck = uiOutput(hslider("[31]Duck[style:knob][unit:%][symbol:duck][label:Duck][accentcolor:04][bracket:OUTPUT]
+duck = uiOutput(hslider("[31]Duck[style:knob][unit:%][symbol:duck][label:Duck][accentcolor:03][bracket:DYNAMICS]
       [tooltip: Pulls the repeats down while the dry signal plays so they swell into the gaps. 0 = off]",
       0, 0, 100, 1)) / 100 : smooInit;
 
