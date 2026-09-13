@@ -7,9 +7,11 @@
 #include "ui/_lab/color.hpp"
 
 #include "ui/reference.hpp"
+#include "ui/containers/stage.hpp"
+#include "ui/containers/top-bar.hpp"
 #include "ui/widgets/dual-slider.hpp"
+#include "ui/widgets/gain-meter.hpp"
 #include "ui/widgets/shader.hpp"
-#include "ui/widgets.hpp"
 
 // #include "delay-parameters.hpp"
 

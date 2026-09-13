@@ -58,7 +58,7 @@ wetEq = dualFilter;
 // top, right of centre the highpass sweeps up from the bottom, and neither
 // filter is engaged around centre. Wet only, like the rest of this section.
 
-df_knob = uiAdt(hslider("[6]HP/LP Fltr[style:knob][symbol:dual_filter]", 0, -1, 1, 0.001)) : si.smoo;
+df_knob = uiAdt(hslider("[6]HP/LP Filter[style:knob][symbol:dual_filter]", 0, -1, 1, 0.001)) : si.smoo;
 
 df_neutral = 0.05;   // dead zone either side of centre, in knob units
 df_fade    = 0.05;   // knob travel over which the filtered signal fades in

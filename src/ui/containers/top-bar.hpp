@@ -4,18 +4,12 @@
 
 #pragma once
 
-#include "_lab/image.hpp"
-#include "_lab/interface.hpp"
+#include "../_lab/image.hpp"
+#include "../_lab/interface.hpp"
 
-#include "base.hpp"
-#include "containers/root.hpp"
-#include "containers/stage.hpp"
-#include "widgets/button-group.hpp"
-#include "widgets/button.hpp"
-#include "widgets/plugin-name.hpp"
-#if LIBREAUDIO_WANT_COMMON_IO
-#include "widgets/gain-meter.hpp"
-#endif
+#include "../widgets/button.hpp"
+#include "../widgets/button-group.hpp"
+#include "../widgets/plugin-name.hpp"
 
 #include "las-resources.h"
 
@@ -122,39 +116,4 @@ public:
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<class StageWidget = StageWidget<>>
-class MainArea : public ReferenceContainerWidget<Reference::MainArea>
-{
-    using BaseWidget = ReferenceContainerWidget<Reference::MainArea>;
-
-   #if LIBREAUDIO_WANT_COMMON_IO
-    std::shared_ptr<LabWidget> fMetersIn = addWidget<GainMeterWidget<Input>>();
-   #endif
-    std::shared_ptr<StageWidget> fStage = addWidget<StageWidget, Expanding>();
-   #if LIBREAUDIO_WANT_COMMON_IO
-    std::shared_ptr<LabWidget> fMetersOut = addWidget<GainMeterWidget<Output>>();
-   #endif
-
-public:
-    MainArea(LabTopLevelWidget* const parent)
-        : BaseWidget(parent) {}
-
-    [[nodiscard]] Point<int> getMainAreaAbsolutePos() const noexcept
-    {
-        return fStage->getAbsolutePos();
-    }
-
-    [[nodiscard]] Size<uint> getMainAreaSize() const noexcept
-    {
-        return fStage->getSize();
-    }
-
-    [[nodiscard]] float getMainAreaBorderRadius() const noexcept
-    {
-        return fStage->getBorderRadius();
-    }
-};
-
-// --------------------------------------------------------------------------------------------------------------------
-
-} /* namespace LibreAudio */
+}

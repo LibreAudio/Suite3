@@ -4,9 +4,10 @@
 
 #include "LibreAudioBaseUI.hpp"
 
+#include "ui/containers/main-area.hpp"
 #include "ui/containers/parameter-dump-area.hpp"
+#include "ui/containers/top-bar.hpp"
 #include "ui/widgets/shader.hpp"
-#include "ui/widgets.hpp"
 
 #include <list>
 
