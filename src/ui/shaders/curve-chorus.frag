@@ -67,7 +67,6 @@ uniform float u_rate2;
 
 #define TAU 6.28318530718
 
-float log10_(float x){ return log(x) * 0.43429448190325176; }
 float log2_ (float x){ return log(x) * 1.44269504088896341; }
 
 /* resonance peak on the filter response (Gaussian in log-freq) */
@@ -77,10 +76,19 @@ float bump(float f, float fc, float res){
     return res * 17.0 * exp(-(x * x) / (2.0 * 0.45 * 0.45));
 }
 
+/* -10*log10(1 + r^16), evaluated in the log domain as a softplus. The naive
+   pow(r, 16.0) overflows float32 once r > ~257 (e.g. HP at 20 kHz seen at
+   20 Hz), goes to inf, and the slope estimate in mainImage turns that into a
+   full-height vertical line at the overflow boundary. */
+float skirtDb(float r){
+    float u = 16.0 * log(r);
+    return -4.3429448190325176 * (max(u, 0.0) + log(1.0 + exp(-abs(u))));
+}
+
 /* combined HP + LP magnitude response, dB */
 float fdb(float f){
-    float lp = -10.0 * log10_(1.0 + pow(f / LPHZ, 16.0));
-    float hp = -10.0 * log10_(1.0 + pow(HPHZ / f, 16.0));
+    float lp = skirtDb(f / LPHZ);
+    float hp = skirtDb(HPHZ / f);
     return lp + hp + bump(f, LPHZ, LPRES) + bump(f, HPHZ, HPRES);
 }
 

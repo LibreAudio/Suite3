@@ -76,7 +76,6 @@ uniform float u_take_timing;
 #define TAU 6.28318530718
 #define REF_H 210.0   /* reference scope height the plugin's px amplitudes assume */
 
-float log10_(float x){ return log(x) * 0.43429448190325176; }
 float log2_ (float x){ return log(x) * 1.44269504088896341; }
 
 /* resonance peak on the filter response (Gaussian in log-freq) */
@@ -94,10 +93,19 @@ float presBell(float f){
     return presDb * exp(-(x * x) / (2.0 * 0.9 * 0.9));
 }
 
+/* -10*log10(1 + r^16), evaluated in the log domain as a softplus. The naive
+   pow(r, 16.0) overflows float32 once r > ~257 (e.g. HP at 20 kHz seen at
+   20 Hz), goes to inf, and the slope estimate in mainImage turns that into a
+   full-height vertical line at the overflow boundary. */
+float skirtDb(float r){
+    float u = 16.0 * log(r);
+    return -4.3429448190325176 * (max(u, 0.0) + log(1.0 + exp(-abs(u))));
+}
+
 /* wet-EQ magnitude response, dB */
 float fdb(float f){
-    float lp = -10.0 * log10_(1.0 + pow(f / LPHZ, 16.0));
-    float hp = -10.0 * log10_(1.0 + pow(HPHZ / f, 16.0));
+    float lp = skirtDb(f / LPHZ);
+    float hp = skirtDb(HPHZ / f);
     return lp + hp + bump(f, LPHZ, LPRES) + bump(f, HPHZ, HPRES) + presBell(f);
 }
 
@@ -156,7 +164,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord){
     float env = 0.0;
     if (DEESS > 0.001){
 #ifndef LIBREAUDIO_HOSTED
-        max(0.0, 0.6 * sin(TAU * fract(iTime * 4.0)) + 0.4 * sin(TAU * fract(iTime * 6.3) + 1.1));
+        env = max(0.0, 0.6 * sin(TAU * fract(iTime * 4.0)) + 0.4 * sin(TAU * fract(iTime * 6.3) + 1.1));
 #else
         env = u_deess_meter / 30.0;
 #endif
