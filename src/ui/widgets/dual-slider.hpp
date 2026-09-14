@@ -48,6 +48,11 @@ private:
         lineTo(w - 60 * fScaleFactor, h);
         stroke();
 
+        beginPath();
+        moveTo(30 * fScaleFactor, h * 0.75f);
+        lineTo(w - 60 * fScaleFactor, h * 0.75f);
+        stroke();
+
         fillColor(Reference::Colors::ink);
         fontSize(Reference::Common::fontSize * this->fScaleFactor);
         textAlign(ALIGN_CENTER | ALIGN_MIDDLE);
