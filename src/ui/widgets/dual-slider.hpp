@@ -12,34 +12,47 @@ namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class DualSliderWidget final : public LabReferenceWidget<Reference::Widgets::Button>
+class DualSliderWidget final : public LabReferenceWidget<Reference::Widgets::DualSlider>
 {
-    using R = Reference::Widgets::Button;
+    using R = Reference::Widgets::DualSlider;
     using BaseWidget = LabReferenceWidget<R>;
 
 public:
     explicit DualSliderWidget(LabWidget* const parent)
-        : BaseWidget(parent)
-    {
-        setSize(90 * fScaleFactor, 30 * fScaleFactor);
-    }
+        : BaseWidget(parent) {}
 
 private:
     void onNanoDisplay() final
     {
         BaseWidget::onNanoDisplay();
 
-        BaseWidget::fillColor(Reference::Colors::ink);
-        BaseWidget::fontSize(Reference::Common::fontSize * this->fScaleFactor);
-        BaseWidget::textAlign(BaseWidget::ALIGN_CENTER | BaseWidget::ALIGN_MIDDLE);
-        BaseWidget::textLetterSpacing(Reference::Common::letterSpacing * this->fScaleFactor);
-        BaseWidget::text(getWidth() * 0.5f, getHeight() * 0.5f, "This is a dual-slider");
-    }
+        const float w = getWidth();
+        const float h = getHeight();
 
-    void updateSize(const bool updateChildren) final
-    {
-        BaseWidget::setHeight(30 * fScaleFactor);
-        BaseWidget::updateSize(updateChildren);
+        strokeWidth(3 * fScaleFactor);
+
+        strokeColor(Reference::Colors::ink3);
+        beginPath();
+        moveTo(0, h * 0.75f);
+        lineTo(w, h * 0.75f);
+        stroke();
+
+        strokeColor(R::color);
+        beginPath();
+        moveTo(30 * fScaleFactor, h * 0.5f);
+        lineTo(30 * fScaleFactor, h);
+        stroke();
+
+        beginPath();
+        moveTo(w - 60 * fScaleFactor, h * 0.5f);
+        lineTo(w - 60 * fScaleFactor, h);
+        stroke();
+
+        fillColor(Reference::Colors::ink);
+        fontSize(Reference::Common::fontSize * this->fScaleFactor);
+        textAlign(ALIGN_CENTER | ALIGN_MIDDLE);
+        textLetterSpacing(Reference::Common::letterSpacing * this->fScaleFactor);
+        text(getWidth() * 0.5f, getHeight() * 0.5f, "This is a dual-slider");
     }
 };
 

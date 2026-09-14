@@ -214,6 +214,22 @@ struct Reference {
             static constexpr const uint height = 80; // FIXME
         };
 
+        struct DualSlider : Zero {
+            static constexpr const Color color = Colors::acc6;
+            static constexpr const uint height = 30 + 18;
+            struct Unit {
+                static constexpr const Color color = Colors::ink3;
+                static constexpr const float fontSize = 14;
+                static constexpr const float letterSpacing = fontSize * 0.02f;
+                // font-ui
+            };
+            struct Value {
+                static constexpr const Color color = Colors::ink2;
+                static constexpr const float fontSize = 15;
+                // font-mono
+            };
+        };
+
         struct Knob : Zero {
             static constexpr const Color backgroundColor = Colors::transparent;
             static constexpr const Color borderColor = Colors::transparent;
