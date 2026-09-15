@@ -3,35 +3,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DPF-Widgets related libraries
-
-add_library(las-imgui INTERFACE)
-
-set_target_properties(las-imgui
-  PROPERTIES
-    INTERPROCEDURAL_OPTIMIZATION OFF
-    POSITION_INDEPENDENT_CODE ON
-)
-
-target_compile_definitions(las-imgui
-  INTERFACE
-    IMGUI_DISABLE_DEBUG_TOOLS
-    IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
-    # IMGUI_DISABLE_DEMO_WINDOWS
-)
-
-target_include_directories(las-imgui
-  INTERFACE
-    DPF-Widgets/generic
-    DPF-Widgets/opengl
-)
-
-target_sources(las-imgui
-  INTERFACE
-    DPF-Widgets/opengl/DearImGui.cpp
-)
-
-# ---------------------------------------------------------------------------------------------------------------------
 # rnnoise library
 
 add_library(las-rnnoise STATIC)

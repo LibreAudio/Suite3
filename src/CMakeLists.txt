@@ -153,6 +153,103 @@ las_generate_faust_cpp(common/input)
 las_generate_faust_cpp(common/output)
 las_generate_resources()
 
+if (${LIBREAUDIO_CUSTOM_UI})
+  set(dpf__NO_SHARED_RESOURCES TRUE)
+  set(dpf__USE_FILE_BROWSER TRUE)
+  set(dpf__USE_WEB_VIEW FALSE)
+  dpf__add_dgl_opengl(${dpf__NO_SHARED_RESOURCES} ${dpf__USE_FILE_BROWSER} ${dpf__USE_WEB_VIEW})
+endif()
+
+# ---------------------------------------------------------------------------------------------------------------------
+# common las-dsp-common
+
+add_library(las-dsp-common STATIC)
+
+set_target_properties(las-dsp-common
+  PROPERTIES
+    INTERPROCEDURAL_OPTIMIZATION OFF
+    POSITION_INDEPENDENT_CODE ON
+)
+
+target_include_directories(las-dsp-common
+  PRIVATE
+    .
+    ../deps/DPF/distrho
+)
+
+target_sources(las-dsp-common
+  PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}/common_input-dsp.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/common_input-dsp.hpp
+    ${CMAKE_CURRENT_BINARY_DIR}/common_output-dsp.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/common_output-dsp.hpp
+)
+
+# ---------------------------------------------------------------------------------------------------------------------
+# common las-parameters
+
+add_library(las-parameters STATIC)
+
+set_target_properties(las-parameters
+  PROPERTIES
+    INTERPROCEDURAL_OPTIMIZATION OFF
+    POSITION_INDEPENDENT_CODE ON
+)
+
+target_include_directories(las-parameters
+  PRIVATE
+    .
+    ../deps/DPF/distrho
+)
+
+target_sources(las-parameters
+  PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}/common_input-parameters.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/common_input-parameters.hpp
+    ${CMAKE_CURRENT_BINARY_DIR}/common_output-parameters.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/common_output-parameters.hpp
+)
+
+# ---------------------------------------------------------------------------------------------------------------------
+# common las-ui
+
+if (${LIBREAUDIO_CUSTOM_UI})
+  add_library(las-ui STATIC)
+
+  set_target_properties(las-ui
+    PROPERTIES
+      INTERPROCEDURAL_OPTIMIZATION OFF
+      POSITION_INDEPENDENT_CODE ON
+  )
+
+  target_compile_definitions(las-ui
+    INTERFACE
+      IMGUI_DISABLE_DEBUG_TOOLS
+      IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+      IMGUI_DISABLE_DEMO_WINDOWS
+  )
+
+  target_include_directories(las-ui
+    PRIVATE
+      .
+      ../deps/DPF/distrho
+      ../deps/DPF-Widgets/generic
+      ../deps/DPF-Widgets/opengl
+  )
+
+  target_link_libraries(las-ui
+    PUBLIC
+      dgl-opengl
+  )
+
+  target_sources(las-ui
+    PRIVATE
+      LibreAudioSnapshots.cpp
+      LibreAudioUndoRedo.cpp
+      ../deps/DPF-Widgets/opengl/DearImGui.cpp
+  )
+endif()
+
 # ---------------------------------------------------------------------------------------------------------------------
 # function to setup a DPF plugin
 
@@ -187,34 +284,32 @@ function(las_add_plugin LABEL)
       TARGETS
         au clap lv2 vst3 jack
       FILES_COMMON
-        ${CMAKE_CURRENT_BINARY_DIR}/common_input-parameters.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/common_input-parameters.hpp
-        ${CMAKE_CURRENT_BINARY_DIR}/common_output-parameters.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/common_output-parameters.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-parameters.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-parameters.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}/config.h
       FILES_DSP
         ${DSP_FILE}
-        ${CMAKE_CURRENT_BINARY_DIR}/common_input-dsp.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/common_input-dsp.hpp
-        ${CMAKE_CURRENT_BINARY_DIR}/common_output-dsp.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/common_output-dsp.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.hpp
       FILES_UI
         ${UI_FILE}
         LibreAudioBaseUI.cpp
-        LibreAudioSnapshots.cpp
-        LibreAudioUndoRedo.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/las-resources.h
       ${EXTRA_ARGS}
     )
 
+    target_link_libraries(${TARGET}-dsp
+      PRIVATE
+        las-dsp-common
+        las-parameters
+        nlohmann_json::nlohmann_json
+        ${EXTRA_UI_LIBS}
+    )
+
     target_link_libraries(${TARGET}-ui
-      PUBLIC
-        # las-imgui
+      PRIVATE
         las-resources
+        las-ui
         nlohmann_json::nlohmann_json
         ${EXTRA_UI_LIBS}
     )
@@ -232,6 +327,11 @@ function(las_add_plugin LABEL)
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.hpp
       ${EXTRA_ARGS}
+    )
+
+    target_link_libraries(${TARGET}
+      PUBLIC
+        las-parameters
     )
   endif()
 
@@ -262,7 +362,7 @@ function(las_add_plugin LABEL)
   )
 
   target_link_libraries(${TARGET}-dsp
-    PUBLIC
+    PRIVATE
       ${EXTRA_DSP_LIBS}
   )
 endfunction()

@@ -109,7 +109,6 @@ endif()
 
 add_subdirectory(deps)
 add_subdirectory(deps/DPF)
-# add_subdirectory(deps/DPF-Widgets)
 add_subdirectory(deps/json)
 
 # main source folder
