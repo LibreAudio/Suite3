@@ -308,6 +308,7 @@ function(las_add_plugin LABEL)
 
     target_link_libraries(${TARGET}-ui
       PRIVATE
+        las-parameters
         las-resources
         las-ui
         nlohmann_json::nlohmann_json
