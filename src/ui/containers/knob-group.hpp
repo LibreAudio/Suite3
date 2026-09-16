@@ -17,6 +17,8 @@
 
 #include "LibreAudioParameters.hpp"
 
+#include LIBREAUDIO_PLUGIN_PARAMETERS_INCLUDE
+
 #include "Layout.hpp"
 
 #include "las-resources.h"

@@ -8,6 +8,8 @@
 
 #include "../reference.hpp"
 
+#include LIBREAUDIO_PLUGIN_PARAMETERS_INCLUDE
+
 namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -18,10 +20,17 @@ class DualSliderWidget final : public LabReferenceWidget<Reference::Widgets::Dua
     using BaseWidget = LabReferenceWidget<R>;
 
 public:
-    explicit DualSliderWidget(LabWidget* const parent)
-        : BaseWidget(parent) {}
+    explicit DualSliderWidget(LabWidget* const parent,
+                              const LIBREAUDIO_PLUGIN::FaustParameterIndex paramLP,
+                              const LIBREAUDIO_PLUGIN::FaustParameterIndex paramHP)
+        : BaseWidget(parent),
+          fParameterLP(LIBREAUDIO_PLUGIN::kFaustParameters[paramLP]),
+          fParameterHP(LIBREAUDIO_PLUGIN::kFaustParameters[paramHP]) {}
 
 private:
+    const FaustParameter& fParameterLP;
+    const FaustParameter& fParameterHP;
+
     void onNanoDisplay() final
     {
         BaseWidget::onNanoDisplay();

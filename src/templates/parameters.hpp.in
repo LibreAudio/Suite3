@@ -28,18 +28,66 @@
 
 namespace {{id}} {
 
-enum FaustParameterList {
+inline constexpr const uint32_t kNumInputs = {{inputs}};
+inline constexpr const uint32_t kNumOutputs = {{outputs}};
+
+enum FaustParameterIndex {
     {% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] %}
     kFaustParameter{{ w.symbol | title() }},
     {% endfor %}
     kFaustParameterCount
 };
 
-inline constexpr const uint32_t kNumInputs = {{inputs}};
-inline constexpr const uint32_t kNumOutputs = {{outputs}};
-// inline constexpr const uint32_t kNumFaustParametersActive = {{active|length}};
-// inline constexpr const uint32_t kNumFaustParametersPassive = {{passive|length}} - LIBREAUDIO_NUM_HIDDEN_PARAMS;
-// static_assert(kNumFaustParametersActive + kNumFaustParametersPassive == kFaustParameterCount, "mismatch parameter count");
+{% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] and w.entries %}
+inline constexpr const FaustParameterEnumerationValue kFaustScalePoints_{{w.varname}}[{{w.entries|length}} + 1] = {
+    {% for label, value in w.entries %}
+    { {{cstr(label)}}, {{value|int}} },
+    {% endfor %}
+    { nullptr, -1 }
+};
+{% endfor %}
+
+inline constexpr const std::array<FaustParameter, kFaustParameterCount> kFaustParameters = {
+{
+    {% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] %}
+    {
+        .bracket = "{{w.meta.bracket}}",
+        .label = "{{w.meta.label}}",
+        .name = "{{w.label}}",
+        .symbol = "{{w.symbol}}",
+        .tooltip = "{{w.tooltip}}",
+        .unit = "{{w.unit}}",
+        .init = {{w.init}},
+        .min = {{w.min}},
+        .max = {{w.max}},
+        .step = {{w.step}},
+        .accentcolor = {{ w.meta.accentcolor if w.meta.accentcolor is defined else 0 }},
+        .scalePoints = {{ 'kFaustScalePoints_' + w.varname if w.entries else 'nullptr' }},
+        .scalePointCount = {{ w.entries | length }},
+        {% if w.meta.requires is defined %}
+        .requirement = {
+            .context = "{{w.meta.requires}}",
+            .symbol = "{{w.meta.requires[ : w.meta.requires.index(':')]}}",
+            .value = {{w.meta.requires[w.meta.requires.index(':') + 1 : ]|int}},
+        },
+        {% else %}
+        .requirement = {
+            .context = nullptr,
+            .symbol = nullptr,
+            .value = -1,
+        },
+        {% endif %}
+        .isBoolean = {{ 'true' if w.type in ["button", "checkbox"] or w.meta.boolean is defined else 'false' }},
+        .isEasy = {{ 'true' if w.meta.easy is defined else 'false' }},
+        .isEnumerator = {{ 'true' if w.style in ["menu", "radio"] else 'false' }},
+        .isDynamic = {{ 'true' if w.meta.requires is defined else 'false' }},
+        .isInteger = {{ 'true' if w.type in ["button", "checkbox"] or w.meta.boolean is defined or w.meta.integer is defined else 'false' }},
+        .isLogarithmic = {{ 'true'  if w.scale == "log" else 'false' }},
+        .isOutput = {{ 'true' if w in passive else 'false' }},
+        .isTrigger = {{ 'true' if w.type == "button" or w.meta.trigger is defined else 'false' }},
+    },
+    {% endfor %}
+}};
 
 const std::vector<FaustParameter>& getFaustParameters();
 

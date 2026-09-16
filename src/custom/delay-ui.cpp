@@ -4,8 +4,6 @@
 
 #include "LibreAudioBaseUI.hpp"
 
-#include "ui/_lab/color.hpp"
-
 #include "ui/reference.hpp"
 #include "ui/containers/stage.hpp"
 #include "ui/containers/top-bar.hpp"
@@ -13,7 +11,7 @@
 #include "ui/widgets/gain-meter.hpp"
 #include "ui/widgets/shader.hpp"
 
-// #include "delay-parameters.hpp"
+#include "delay-parameters.hpp"
 
 #include <array>
 
@@ -34,7 +32,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         using BaseWidget = ReferenceContainerWidget<R, kVertical>;
         using Layout = typename BaseWidget::Layout;
 
-        const std::vector<FaustParameter>& kParameters = getFaustParameters();
+        const std::vector<FaustParameter>& kParameters = delay::getFaustParameters();
 
         std::list<std::shared_ptr<LabWidget>> fWidgets;
 
@@ -49,14 +47,14 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         explicit Controls(LabWidget* const parent)
             : BaseWidget(parent) {}
 
-        void addDualSlider(const uint32_t parameterA, const uint32_t parameterB)
+        void addDualSlider(const delay::FaustParameterIndex parameterA, const delay::FaustParameterIndex parameterB)
         {
-            std::shared_ptr<LabWidget> spacer { new DualSliderWidget(this) };
+            std::shared_ptr<LabWidget> spacer { new DualSliderWidget(this, parameterA, parameterB) };
             Layout::widgets.push_back({ spacer.get(), Fixed });
             fWidgets.emplace_back(std::move(spacer));
         }
 
-        void addPillToggle(const uint32_t parameter)
+        void addPillToggle(const delay::FaustParameterIndex parameter)
         {
             std::shared_ptr<LabWidget> widget { new PillAreaWidget<1>(this, parameter) };
             Layout::widgets.push_back({ widget.get(), Fixed });
@@ -64,7 +62,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         }
 
         template<class W, uint maxNumParameters>
-        std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> addKnobGroup(const uint32_t parameterStart)
+        std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> addKnobGroup(const delay::FaustParameterIndex parameterStart)
         {
             std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> widget {
                 new KnobGroupWidget<W, maxNumParameters>(this, kParameters, kParametersMainStart, parameterStart, maxNumParameters <= 2)
@@ -294,7 +292,7 @@ public:
         return page == kPageExpert ? fStage->getExpertWidget()->getMiddleAreaSize() : fStage->getSize();
     }
 
-    [[nodiscard]] float getMiddleAreaBorderRadius(const Page page) const noexcept
+    [[nodiscard]] float getMiddleAreaBorderRadius(Page) const noexcept
     {
         return fStage->getBorderRadius();
     }
