@@ -62,9 +62,9 @@ public:
     }
 
 private:
-    const FaustParameter& fParameter = type == Input
-        ? common_input::getFaustParameters().at(common_input::kFaustParameterInput_trim)
-        : common_output::getFaustParameters().at(common_output::kFaustParameterOutput_trim);
+    static constexpr const FaustParameter& fParameter = type == Input
+        ? common_input::kFaustParameters[common_input::kFaustParameterInput_trim]
+        : common_output::kFaustParameters[common_output::kFaustParameterOutput_trim];
 
     float fValueL = fParameter.min;
     float fValueR = fParameter.min;

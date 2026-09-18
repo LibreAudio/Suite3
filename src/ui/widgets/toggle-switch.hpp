@@ -8,7 +8,7 @@
 
 #include "../reference.hpp"
 
-#include "FaustParameters.hpp"
+#include "FaustParameter.hpp"
 
 namespace LibreAudio {
 

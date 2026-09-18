@@ -47,22 +47,6 @@ function(las_generate_faust_cpp TARGET)
 
   add_custom_command(
     OUTPUT
-      ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT}-parameters.cpp
-    COMMAND
-      ${FAUSTDR}
-      -a ${CMAKE_SOURCE_DIR}/src/templates/parameters.cpp.in
-      -c ${TARGET}
-      -o ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT}-parameters.cpp
-      -Did=${OUTPUT}
-      ${CMAKE_SOURCE_DIR}/src/dsp-faust/${TARGET}.dsp
-    DEPENDS
-      dsp-faust/${TARGET}.dsp
-      templates/parameters.cpp.in
-    VERBATIM
-  )
-
-  add_custom_command(
-    OUTPUT
       ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT}-parameters.hpp
     COMMAND
       ${FAUSTDR}
@@ -186,31 +170,6 @@ target_sources(las-dsp-common
 )
 
 # ---------------------------------------------------------------------------------------------------------------------
-# common las-parameters
-
-add_library(las-parameters STATIC)
-
-set_target_properties(las-parameters
-  PROPERTIES
-    INTERPROCEDURAL_OPTIMIZATION OFF
-    POSITION_INDEPENDENT_CODE ON
-)
-
-target_include_directories(las-parameters
-  PRIVATE
-    .
-    ../deps/DPF/distrho
-)
-
-target_sources(las-parameters
-  PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}/common_input-parameters.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/common_input-parameters.hpp
-    ${CMAKE_CURRENT_BINARY_DIR}/common_output-parameters.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/common_output-parameters.hpp
-)
-
-# ---------------------------------------------------------------------------------------------------------------------
 # common las-ui
 
 if (${LIBREAUDIO_CUSTOM_UI})
@@ -284,7 +243,9 @@ function(las_add_plugin LABEL)
       TARGETS
         au clap lv2 vst3 jack
       FILES_COMMON
-        ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-parameters.cpp
+        empty.c
+        ${CMAKE_CURRENT_BINARY_DIR}/common_input-parameters.hpp
+        ${CMAKE_CURRENT_BINARY_DIR}/common_output-parameters.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-parameters.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}/config.h
       FILES_DSP
@@ -301,14 +262,12 @@ function(las_add_plugin LABEL)
     target_link_libraries(${TARGET}-dsp
       PRIVATE
         las-dsp-common
-        las-parameters
         nlohmann_json::nlohmann_json
         ${EXTRA_UI_LIBS}
     )
 
     target_link_libraries(${TARGET}-ui
       PRIVATE
-        las-parameters
         las-resources
         las-ui
         nlohmann_json::nlohmann_json
@@ -320,7 +279,7 @@ function(las_add_plugin LABEL)
       TARGETS
         lv2
       FILES_COMMON
-        ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-parameters.cpp
+        empty.c
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-parameters.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}/config.h
       FILES_DSP
@@ -328,11 +287,6 @@ function(las_add_plugin LABEL)
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/${LABEL}-dsp.hpp
       ${EXTRA_ARGS}
-    )
-
-    target_link_libraries(${TARGET}
-      PUBLIC
-        las-parameters
     )
   endif()
 

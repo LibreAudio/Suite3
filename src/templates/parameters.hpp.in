@@ -21,7 +21,7 @@
 #pragma once
 
 {% block ImplementationIncludeHeader %}
-#include "FaustParameters.hpp"
+#include "FaustParameter.hpp"
 {% endblock %}
 {% block ImplementationIncludeExtra %}
 {% endblock %}
@@ -29,9 +29,6 @@
 #include <array>
 
 namespace {{id}} {
-
-inline constexpr const uint32_t kNumInputs = {{inputs}};
-inline constexpr const uint32_t kNumOutputs = {{outputs}};
 
 enum FaustParameterIndex {
     {% for w in (active + passive) if w.symbol not in ["dpf_bpm", "dpf_vad", "latency_samples"] %}
@@ -90,8 +87,6 @@ inline constexpr const std::array<FaustParameter, kFaustParameterCount> kFaustPa
     },
     {% endfor %}
 }};
-
-const std::vector<FaustParameter>& getFaustParameters();
 
 }
 

@@ -68,10 +68,15 @@
 
 #define LIBREAUDIO_WANT_DRYWET {{1 if meta.drywet == "true" else 0}}
 
+// FIXME remove this
 #define LIBREAUDIO_PLUGIN {{id}}
+
 #define LIBREAUDIO_PLUGIN_DSP_INCLUDE "{{id}}-dsp.hpp"
 #define LIBREAUDIO_PLUGIN_PARAMETERS_INCLUDE "{{id}}-parameters.hpp"
 #define LIBREAUDIO_PLUGIN__{{id}}
+
+namespace {{id}} {}
+using namespace {{id}};
 
 {% block HeaderEpilogue %}
 {% endblock %}

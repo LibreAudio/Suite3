@@ -52,22 +52,23 @@ class KnobGroupWidget : public ReferenceContainerWidget<Reference::Widgets::Knob
 
 public:
     explicit KnobGroupWidget(LabWidget* const parent,
-                             const std::vector<FaustParameter>& parameters,
                              const uint32_t idOffset = 0,
                              const uint32_t parameterStart = 0,
                              const bool withSurroundingSpacers = false)
         : BaseWidget(parent),
-          fParameters(parameters),
           fParametersOffset(idOffset)
     {
-        DISTRHO_SAFE_ASSERT_RETURN(!parameters.empty(),);
+        // FIXME alternative UI if no params exported
+        // static_assert(!kFaustParameters.empty(), "must have at least 1 parameter");
 
         if (withSurroundingSpacers)
             addSpacer(0);
 
-        for (uint32_t i = parameterStart, numVisibleWidgets = 0, count = parameters.size(); i < count && numVisibleWidgets < kMaxNumParameters; ++i)
+        for (uint32_t i = parameterStart, numVisibleWidgets = 0, count = std::size(kFaustParameters);
+             i < count && numVisibleWidgets < kMaxNumParameters;
+             ++i)
         {
-            const FaustParameter& parameter = parameters[i];
+            const FaustParameter& parameter = kFaustParameters[i];
             if ((parameter.isEnumerator && kMaxNumParameters == 5) || parameter.isOutput) {
                 d_stdout("knob-group skipped parameter %s", parameter.name);
                 continue;
@@ -225,7 +226,6 @@ public:
     }
 
 private:
-    const std::vector<FaustParameter>& fParameters;
     const uint32_t fParametersOffset;
     bool fHasCachedValues = false;
     float cachedValue1;
@@ -492,11 +492,9 @@ public:
     {
         addSpacer();
 
-        const std::vector<FaustParameter>& parameters = getFaustParameters();
-
-        for (uint32_t i = 0, count = parameters.size(); i < count; ++i)
+        for (uint32_t i = 0, count = std::size(kFaustParameters); i < count; ++i)
         {
-            const FaustParameter& parameter = parameters[i];
+            const FaustParameter& parameter = kFaustParameters[i];
             if (! parameter.isEasy) {
                 continue;
             }
@@ -562,11 +560,9 @@ public:
     void addWidget() = delete;
 
 private:
-    const std::vector<FaustParameter>& fParameters = getFaustParameters();
-
-    std::shared_ptr<KnobGroupWidget<>> fKnobsLeft { new KnobGroupWidget<>(this, fParameters, kParametersMainStart, 0) };
+    std::shared_ptr<KnobGroupWidget<>> fKnobsLeft { new KnobGroupWidget<>(this, kParametersMainStart, 0) };
     std::shared_ptr<LabWidget> fLogo { new LabImageWidget<IMAGES_LA_PNG_DATA, IMAGES_LA_PNG_LEN>(this) };
-    std::shared_ptr<KnobGroupWidget<>> fKnobsRight { new KnobGroupWidget<>(this, fParameters, kParametersMainStart, fKnobsLeft->getLastKnobId() + 1 - kParametersMainStart) };
+    std::shared_ptr<KnobGroupWidget<>> fKnobsRight { new KnobGroupWidget<>(this, kParametersMainStart, fKnobsLeft->getLastKnobId() + 1 - kParametersMainStart) };
 
     void updateSize(const bool updateChildren) final
     {

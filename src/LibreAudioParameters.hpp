@@ -11,6 +11,8 @@
 #include "common_output-parameters.hpp"
 #endif
 
+#include LIBREAUDIO_PLUGIN_PARAMETERS_INCLUDE
+
 // --------------------------------------------------------------------------------------------------------------------
 
 START_NAMESPACE_DISTRHO
@@ -44,6 +46,7 @@ enum Parameters {
     kParametersOutputEnd = kParametersOutputStart + common_output::kFaustParameterCount - 1 - kCommonIOParameters,
    #endif
     kParametersMainStart,
+    kParametersCount = kParametersMainStart + kFaustParameterCount
 };
 
 inline constexpr const char* kCommonParameterSymbols[kCommonParameterCount] = {

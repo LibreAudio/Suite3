@@ -10,7 +10,6 @@
 #include "../widgets/button.hpp"
 
 #include "LibreAudioParameters.hpp"
-#include "FaustParameters.hpp"
 
 namespace LibreAudio {
 
@@ -198,12 +197,10 @@ public:
     explicit PillAreaWidget(LabWidget* const parent, const uint32_t parameterStart = 0)
         : BaseWidget(parent)
     {
-        const std::vector<FaustParameter>& parameters = getFaustParameters();
-
         uint8_t numPills = 0;
-        for (uint32_t i = parameterStart, count = parameters.size(); i < count && numPills < kMaxNumToggles; ++i)
+        for (uint32_t i = parameterStart, count = std::size(kFaustParameters); i < count && numPills < kMaxNumToggles; ++i)
         {
-            const FaustParameter& parameter = parameters[i];
+            const FaustParameter& parameter = kFaustParameters[i];
             if (! parameter.isEnumerator || parameter.isOutput) {
                 d_stdout("pill area skipped parameter %s", parameter.label);
                 continue;
@@ -219,9 +216,9 @@ public:
 
         static constexpr const SizeHint sizeHint = kMaxNumToggles == 1 ? Expanding : Fixed;
 
-        for (uint32_t i = parameterStart, count = parameters.size(); i < count && fToggles.size() < kMaxNumToggles; ++i)
+        for (uint32_t i = parameterStart, count = std::size(kFaustParameters); i < count && fToggles.size() < kMaxNumToggles; ++i)
         {
-            const FaustParameter& parameter = parameters[i];
+            const FaustParameter& parameter = kFaustParameters[i];
             if (! parameter.isEnumerator || parameter.isOutput) {
                 d_stdout("pill area skipped parameter %s", parameter.label);
                 continue;

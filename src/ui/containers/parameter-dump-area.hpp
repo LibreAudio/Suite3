@@ -25,8 +25,6 @@ class ParameterDumpStageWidget final : public ReferenceContainerWidget<Reference
     std::list<std::shared_ptr<LabWidget>> fSpacers;
     std::list<std::shared_ptr<KnobGroupWidget10>> fKnobGroups;
 
-    const std::vector<FaustParameter>& kParameters = getFaustParameters();
-
 public:
     explicit ParameterDumpStageWidget(LabWidget* const parent)
         : BaseWidget(parent)
@@ -35,7 +33,7 @@ public:
 
         // addSpacer();
 
-        for (uint offset = 0, groups = 0; offset < kParameters.size() && groups < 3; ++groups)
+        for (uint offset = 0, groups = 0; offset < kFaustParameters.size() && groups < 3; ++groups)
         {
             addKnobGroup(offset);
             // addSpacer();
@@ -52,7 +50,7 @@ public:
 private:
     void addKnobGroup(const uint offset)
     {
-        std::shared_ptr<KnobGroupWidget10> widget { new KnobGroupWidget10(this, kParameters, kParametersMainStart, offset) };
+        std::shared_ptr<KnobGroupWidget10> widget { new KnobGroupWidget10(this, kParametersMainStart, offset) };
         widgets.push_back({ widget.get(), Fixed });
         fKnobGroups.emplace_back(std::move(widget));
     }

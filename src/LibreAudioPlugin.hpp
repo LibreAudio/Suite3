@@ -7,7 +7,7 @@
 #include "DistrhoPlugin.hpp"
 #include "extra/ValueSmoother.hpp"
 
-#include "FaustParameters.hpp"
+#include "FaustParameter.hpp"
 
 #include <atomic>
 
@@ -123,15 +123,6 @@ protected:
     void sampleRateChanged(double newSampleRate) final;
 
 private:
-    static const std::vector<FaustParameter>& kFaustParameters;
-
-   #if LIBREAUDIO_WANT_COMMON_IO
-    // TODO convert common IO to C++
-    static const std::vector<FaustParameter>& kFaustParametersIn;
-    static const std::vector<FaustParameter>& kFaustParametersOut;
-   #endif
-
-    const uint32_t kParameterCount;
     float* const fCommonParameterValues;
 
     LinearValueSmoother fGlobalDryValue;

@@ -32,8 +32,6 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         using BaseWidget = ReferenceContainerWidget<R, kVertical>;
         using Layout = typename BaseWidget::Layout;
 
-        const std::vector<FaustParameter>& kParameters = delay::getFaustParameters();
-
         std::list<std::shared_ptr<LabWidget>> fWidgets;
 
         struct TextReference : Reference::Zero {
@@ -65,7 +63,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> addKnobGroup(const delay::FaustParameterIndex parameterStart)
         {
             std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> widget {
-                new KnobGroupWidget<W, maxNumParameters>(this, kParameters, kParametersMainStart, parameterStart, maxNumParameters <= 2)
+                new KnobGroupWidget<W, maxNumParameters>(this, kParametersMainStart, parameterStart, maxNumParameters <= 2)
             };
             Layout::widgets.push_back({ widget.get(), Fixed });
             fWidgets.push_back(widget);

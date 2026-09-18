@@ -31,19 +31,8 @@ static constexpr const float kParameterSmoothingTime = 0.05f; // in seconds
 
 // --------------------------------------------------------------------------------------------------------------------
 
-const std::vector<FaustParameter>& LibreAudioPlugin::kFaustParameters = getFaustParameters();
-
-#if LIBREAUDIO_WANT_COMMON_IO
-// TODO convert common IO to C++
-const std::vector<FaustParameter>& LibreAudioPlugin::kFaustParametersIn = common_input::getFaustParameters();
-const std::vector<FaustParameter>& LibreAudioPlugin::kFaustParametersOut = common_output::getFaustParameters();
-#endif
-
-// --------------------------------------------------------------------------------------------------------------------
-
 LibreAudioPlugin::LibreAudioPlugin()
-    : Plugin(kParametersMainStart  + kFaustParameters.size(), 0, kStateCount),
-      kParameterCount(kParametersMainStart  + kFaustParameters.size()),
+    : Plugin(kParametersCount, 0, kStateCount),
       fCommonParameterValues(new float[kCommonParameterCount]),
       fMainDSP(createDSP())
    #if LIBREAUDIO_WANT_COMMON_IO
@@ -183,15 +172,15 @@ void LibreAudioPlugin::initParameter(uint32_t index, Parameter& parameter)
    #if LIBREAUDIO_WANT_COMMON_IO
     case kParametersInputStart ... kParametersInputEnd:
         parameter.groupId = kGroupInput;
-        initParameterFromFaust(parameter, kFaustParametersIn[index - kParametersInputStart]);
+        initParameterFromFaust(parameter, common_input::kFaustParameters[index - kParametersInputStart]);
         break;
     case kParametersOutputStart ... kParametersOutputEnd:
         parameter.groupId = kGroupOutput;
-        initParameterFromFaust(parameter, kFaustParametersOut[index - kParametersOutputStart + kCommonIOParameters]);
+        initParameterFromFaust(parameter, common_output::kFaustParameters[index - kParametersOutputStart + kCommonIOParameters]);
         break;
    #endif
     default:
-        DISTRHO_SAFE_ASSERT_RETURN(index < kParameterCount,);
+        DISTRHO_SAFE_ASSERT_RETURN(index < kParametersCount,);
        #if LIBREAUDIO_WANT_COMMON_IO
         parameter.groupId = kGroupMain;
        #endif
@@ -268,7 +257,7 @@ float LibreAudioPlugin::getParameterValue(const uint32_t index) const
         return fOutputDSP->get(index - kParametersOutputStart + kCommonIOParameters);
    #endif
     default:
-        DISTRHO_SAFE_ASSERT_RETURN(index < kParameterCount, 0.f);
+        DISTRHO_SAFE_ASSERT_RETURN(index < kParametersCount, 0.f);
         return fMainDSP->get(index - kParametersMainStart);
     }
 }
@@ -290,7 +279,7 @@ void LibreAudioPlugin::setParameterValue(uint32_t index, const float value)
         break;
    #endif
     default:
-        DISTRHO_SAFE_ASSERT_RETURN(index < kParameterCount,);
+        DISTRHO_SAFE_ASSERT_RETURN(index < kParametersCount,);
         fMainDSP->set(index - kParametersMainStart, value);
         break;
     }
