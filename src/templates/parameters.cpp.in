@@ -23,8 +23,6 @@
 
 #include "{{id}}-parameters.hpp"
 
-#include <array>
-
 namespace {{id}} {
 
 const std::vector<FaustParameter>& getFaustParameters()
