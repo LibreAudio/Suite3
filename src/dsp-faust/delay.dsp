@@ -667,11 +667,11 @@ with {
 // Applied on every pass, so the repeats narrow progressively rather than being
 // filtered once on the way in. Both defaults sit at the end of their range
 // where the filter is effectively out of circuit.
-hpFreq = uiRepeats(hslider("[28]High Pass[style:knob][unit:Hz][scale:log][symbol:hp_freq][label:HighPass][accentcolor:06][bracket:REPEATS]
+hpFreq = uiRepeats(hslider("[28]High Pass[style:knob][unit:Hz][scale:log][symbol:hp_freq][label:HighPass][shortlabel:HP][accentcolor:06][bracket:REPEATS]
       [tooltip: Thins the repeats a little more on every pass, so the tail steps back from the low end. 20 Hz = effectively off]",
       20, 20, 2000, 1));
 
-lpFreq = uiRepeats(hslider("[29]Low Pass[style:knob][unit:Hz][scale:log][symbol:lp_freq][label:LowPass][accentcolor:06][bracket:REPEATS]
+lpFreq = uiRepeats(hslider("[29]Low Pass[style:knob][unit:Hz][scale:log][symbol:lp_freq][label:LowPass][shortlabel:LP][accentcolor:06][bracket:REPEATS]
       [tooltip: Darkens the repeats a little more on every pass. 20 kHz = effectively off]",
       20000, 200, 20000, 1));
 

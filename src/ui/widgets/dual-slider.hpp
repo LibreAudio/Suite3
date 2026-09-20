@@ -41,10 +41,6 @@ public:
         if (d_isEqual(fValueA, value))
             return false;
 
-        const float w = getWidth();
-        const int aw = d_roundToIntPositive(3 * fScaleFactor);
-        fAreaA.setX(d_roundToIntPositive(w * ((invlogscale(value) - kMinimum) / (kMaximum - kMinimum)) - aw * 2));
-
         fValueA = value;
         this->repaint();
 
@@ -59,10 +55,6 @@ public:
         if (d_isEqual(fValueB, value))
             return false;
 
-        const float w = getWidth();
-        const int aw = d_roundToIntPositive(3 * fScaleFactor);
-        fAreaB.setX(d_roundToIntPositive(w * ((invlogscale(value) - kMinimum) / (kMaximum - kMinimum)) - aw * 2));
-
         fValueB = value;
         this->repaint();
 
@@ -73,9 +65,6 @@ public:
     }
 
 private:
-    Rectangle<int> fAreaA;
-    Rectangle<int> fAreaB;
-
     float fValueA = kParameterA.init;
     float fValueB = kParameterB.init;
 
@@ -149,11 +138,42 @@ private:
         // ------------------------------------------------------------------------------------------------------------
         // draw text
 
-        fillColor(Reference::Colors::ink);
-        fontSize(Reference::Common::fontSize * this->fScaleFactor);
-        textAlign(ALIGN_CENTER | ALIGN_MIDDLE);
-        textLetterSpacing(Reference::Common::letterSpacing * this->fScaleFactor);
-        text(getWidth() * 0.5f, getHeight() * 0.5f, "This is a dual-slider");
+        float xa, xb;
+        char textBuffer[24];
+
+        fillColor(R::Name::color);
+        fontFace("regular");
+        fontSize(R::Name::fontSize * fScaleFactor);;
+
+        std::snprintf(textBuffer,
+                      sizeof(textBuffer),
+                      "%.8s ",
+                      *kParameterA.shortlabel != '\0' ? kParameterA.shortlabel :
+                      *kParameterA.label != '\0' ? kParameterA.label : kParameterA.name);
+        textBuffer[sizeof(textBuffer) - 1] = '\0';
+        textAlign(ALIGN_LEFT | ALIGN_TOP);
+        xa = text(0, 0, textBuffer);
+
+        std::snprintf(textBuffer,
+                      sizeof(textBuffer),
+                      " %.8s",
+                      *kParameterB.shortlabel != '\0' ? kParameterB.shortlabel :
+                      *kParameterB.label != '\0' ? kParameterB.label : kParameterB.name);
+        textBuffer[sizeof(textBuffer) - 1] = '\0';
+        textAlign(ALIGN_RIGHT | ALIGN_TOP);
+        xb = text(w, 0, textBuffer);
+
+        fillColor(R::Value::color);
+        fontFace("mono");
+        fontSize(R::Value::fontSize * fScaleFactor);;
+
+        std::snprintf(textBuffer, sizeof(textBuffer), "%.0f Hz", fValueA);
+        textAlign(ALIGN_LEFT | ALIGN_TOP);
+        text(xa, 0, textBuffer);
+
+        std::snprintf(textBuffer, sizeof(textBuffer), "%.0f Hz", fValueB);
+        textAlign(ALIGN_RIGHT | ALIGN_TOP);
+        text(w - xa, 0, textBuffer);
     }
 
     bool dragging = false;
@@ -169,13 +189,14 @@ private:
 
         if (ev.press)
         {
-            if (fAreaA.contains(ev.pos))
-                selectedParameter = kParameterIdA;
-            else if (fAreaB.contains(ev.pos))
-                selectedParameter = kParameterIdB;
-            else
+            if (! contains(ev.pos))
                 return false;
 
+            const float pc = static_cast<double>(ev.pos.getX()) / getWidth();
+            const float normA = (invlogscale(fValueA) - kMinimum) / (kMaximum - kMinimum);
+            const float normB = (invlogscale(fValueB) - kMinimum) / (kMaximum - kMinimum);
+
+            selectedParameter = std::abs(pc - normA) < std::abs(pc - normB) ? kParameterIdA : kParameterIdB;
             lastX = ev.pos.getX();
             lastY = ev.pos.getY();
 
@@ -231,16 +252,6 @@ private:
         lastY = ev.pos.getY();
 
         return true;
-    }
-
-    void updateSize(const bool updateChildren) final
-    {
-        const float w = getWidth();
-        const int aw = d_roundToIntPositive(3 * fScaleFactor);
-        const int ah = d_roundToIntPositive(getHeight() * 0.5f);
-        fAreaA = { d_roundToIntPositive(w * ((invlogscale(fValueA) - kMinimum) / (kMaximum - kMinimum)) - aw * 2), ah, aw * 4, ah };
-        fAreaB = { d_roundToIntPositive(w * ((invlogscale(fValueB) - kMinimum) / (kMaximum - kMinimum)) - aw * 2), ah, aw * 4, ah };
-        BaseWidget::updateSize(updateChildren);
     }
 };
 

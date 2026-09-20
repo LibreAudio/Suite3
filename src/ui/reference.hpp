@@ -217,6 +217,11 @@ struct Reference {
         struct DualSlider : Zero {
             static constexpr const Color color = Colors::acc6;
             static constexpr const uint height = 30 + 18;
+            struct Name {
+                static constexpr const Color color = Colors::ink3;
+                static constexpr const float fontSize = 14;
+                static constexpr const float letterSpacing = fontSize * 0.02f;
+            };
             struct Unit {
                 static constexpr const Color color = Colors::ink3;
                 static constexpr const float fontSize = 14;

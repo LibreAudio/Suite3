@@ -52,6 +52,7 @@ inline constexpr const std::array<FaustParameter, kFaustParameterCount> kFaustPa
     {
         .bracket = "{{w.meta.bracket}}",
         .label = "{{w.meta.label}}",
+        .shortlabel = "{{w.meta.shortlabel}}",
         .name = "{{w.label}}",
         .symbol = "{{w.symbol}}",
         .tooltip = "{{w.tooltip}}",
