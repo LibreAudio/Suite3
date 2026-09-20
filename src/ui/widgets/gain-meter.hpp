@@ -31,15 +31,30 @@ class GainMeterWidget final : public LabKnobWidget
     using R = Reference::GainMeter;
     using BaseWidget = LabKnobWidget;
 
-    static constexpr const uint kParameterL = type == Input
+    static constexpr const uint kParameterIdMeterL = type == Input
         ? kParametersInputStart + common_input::kFaustParameterInput_peak_l
-        : kParametersOutputStart + common_output::kFaustParameterOutput_peak_l - 1;
-    static constexpr const uint kParameterR = type == Input
+        : kParametersOutputStart + common_output::kFaustParameterOutput_peak_l - kCommonIOParameters;
+    static constexpr const uint kParameterIdMeterR = type == Input
         ? kParametersInputStart + common_input::kFaustParameterInput_peak_r
-        : kParametersOutputStart + common_output::kFaustParameterOutput_peak_r - 1;
-    static constexpr const uint kParameterMeter = type == Input
+        : kParametersOutputStart + common_output::kFaustParameterOutput_peak_r - kCommonIOParameters;
+    static constexpr const uint kParameterIdGain = type == Input
         ? kParametersInputStart + common_input::kFaustParameterInput_trim
-        : kParametersOutputStart + common_output::kFaustParameterOutput_trim - 1;
+        : kParametersOutputStart + common_output::kFaustParameterOutput_trim - kCommonIOParameters;
+
+    static constexpr const FaustParameter& kParameterMeterL = type == Input
+        ? common_input::kFaustParameters[common_input::kFaustParameterInput_peak_l]
+        : common_output::kFaustParameters[common_output::kFaustParameterOutput_peak_l];
+    static constexpr const FaustParameter& kParameterMeterR = type == Input
+        ? common_input::kFaustParameters[common_input::kFaustParameterInput_peak_r]
+        : common_output::kFaustParameters[common_output::kFaustParameterOutput_peak_r];
+    static constexpr const FaustParameter& kParameterGain = type == Input
+        ? common_input::kFaustParameters[common_input::kFaustParameterInput_trim]
+        : common_output::kFaustParameters[common_output::kFaustParameterOutput_trim];
+
+    static_assert(kParameterGain.max <= kParameterMeterL.max, "gain vs meter max mismatch");
+    static_assert(kParameterGain.min >= kParameterMeterL.min, "gain vs meter min mismatch");
+    static_assert(kParameterMeterL.max == kParameterMeterR.max, "meter L vs R max mismatch");
+    static_assert(kParameterMeterL.min == kParameterMeterR.min, "meter L vs R min mismatch");
 
     static constexpr const float linearPointDB = -12.f;
     static constexpr const float linearPointPC = 0.48f;
@@ -49,25 +64,21 @@ class GainMeterWidget final : public LabKnobWidget
 
 public:
     GainMeterWidget(LabWidget* const parent)
-        : BaseWidget(parent, kParameterMeter)
+        : BaseWidget(parent, kParameterIdGain)
     {
         updateReferenceSize<R>();
 
-        setName(fParameter.label);
-        setDefault(fParameter.init);
-        setRange(fParameter.min, fParameter.max);
-        setStep(fParameter.step);
-        // setUsingLogScale(fParameter.isLogarithmic); // FIXME
-        setValue(fParameter.init, false);
+        setName(kParameterGain.label);
+        setDefault(kParameterGain.init);
+        setRange(kParameterGain.min, kParameterGain.max);
+        setStep(kParameterGain.step);
+        // setUsingLogScale(kParameterGain.isLogarithmic); // FIXME
+        setValue(kParameterGain.init, false);
     }
 
 private:
-    static constexpr const FaustParameter& fParameter = type == Input
-        ? common_input::kFaustParameters[common_input::kFaustParameterInput_trim]
-        : common_output::kFaustParameters[common_output::kFaustParameterOutput_trim];
-
-    float fValueL = fParameter.min;
-    float fValueR = fParameter.min;
+    float fValueL = kParameterGain.min;
+    float fValueR = kParameterGain.min;
 
     bool fDrawingBackground = false;
 
@@ -75,11 +86,11 @@ private:
     {
         if (db >= linearPointDB)
         {
-            const float normalized = 1.f - d_clamp((db - linearPointDB) / (fParameter.max - linearPointDB), 0.f, 1.f);
+            const float normalized = 1.f - d_clamp((db - linearPointDB) / (kParameterGain.max - linearPointDB), 0.f, 1.f);
             return d_roundToIntPositive(linearPointPC * height * normalized);
         }
 
-        const float normalized = 1.f - d_clamp((db - linearPointDB) / (fParameter.min - linearPointDB), 0.f, 1.f);
+        const float normalized = 1.f - d_clamp((db - linearPointDB) / (kParameterGain.min - linearPointDB), 0.f, 1.f);
         return d_roundToIntPositive(height - (1.f - linearPointPC) * height * normalized);
     }
 
@@ -100,14 +111,14 @@ private:
 
     void idleCallback() final
     {
-        if (const float valueL = std::clamp(fInterface->getParameterValue(kParameterL), fParameter.min, fParameter.max);
+        if (const float valueL = std::clamp(fInterface->getParameterValue(kParameterIdMeterL), kParameterMeterL.min, kParameterMeterL.max);
             d_isNotEqual(fValueL, valueL))
         {
             fValueL = valueL;
             repaint();
         }
 
-        if (const float valueR = std::clamp(fInterface->getParameterValue(kParameterR), fParameter.min, fParameter.max);
+        if (const float valueR = std::clamp(fInterface->getParameterValue(kParameterIdMeterR), kParameterMeterR.min, kParameterMeterR.max);
             d_isNotEqual(fValueR, valueR))
         {
             fValueR = valueR;
@@ -150,7 +161,7 @@ private:
 
             fillPaint(linearGradient(0, 0, 0, h, R::Track::colorGradientStart, R::Track::colorGradientStop));
 
-            if (d_isNotEqual(fValueL, fParameter.min))
+            if (d_isNotEqual(fValueL, kParameterGain.min))
             {
                 const float lh = db2height(fValueL, mheight);
 
@@ -159,7 +170,7 @@ private:
                 fill();
             }
 
-            if (d_isNotEqual(fValueR, fParameter.min))
+            if (d_isNotEqual(fValueR, kParameterGain.min))
             {
                 const float rh = db2height(fValueR, mheight);
 
@@ -200,7 +211,7 @@ private:
 
         {
             const float tposx = R::border * fScaleFactor;
-            const float tposy = starty + db2height(fInterface->getParameterValue(kParameterMeter), mheight);
+            const float tposy = starty + db2height(fInterface->getParameterValue(kParameterIdGain), mheight);
 
             strokeColor(R::Slider::color);
             strokeWidth(R::Slider::height * fScaleFactor);
@@ -226,7 +237,7 @@ private:
             fontSize(R::Unit::fontSize * fScaleFactor);
             textAlign(ALIGN_CENTER | ALIGN_BOTTOM);
             // textLetterSpacing(R::Value::letterSpacing * fScaleFactor);
-            text(w * 0.5f, endy, fParameter.unit);
+            text(w * 0.5f, endy, kParameterGain.unit);
 
             char textBuffer[24];
 
