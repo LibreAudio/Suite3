@@ -93,7 +93,9 @@ process = si.bus(Nch) : delayFx;
 uiMode(x)    = hgroup("[0]MODE", x);
 uiTime(x)    = hgroup("[1]TIME", x);
 uiRepeats(x) = hgroup("[2]REPEATS", x);
-uiOutput(x)  = hgroup("[3]OUTPUT", x);
+uiDynamics(x)= hgroup("[3]DYNAMICS", x);
+uiOutput(x)  = hgroup("[4]OUTPUT", x);
+
 
 // Left unnamed and at [9], as in gate.dsp and chorus.dsp: the meters are not a
 // control group and the suite's UIs find them by symbol.
@@ -588,7 +590,7 @@ lerp(a, b, t) = a + (b - a) * t;
 // and detector constants at once, and this file smooths every control that
 // reaches the audio, so stepping the split frequency on an automation ramp
 // would be the one place left that could click.
-hflim_amount = uiRepeats(hslider("[27]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02][bracket:DYNAMICS]
+hflim_amount = uiDynamics(hslider("[31]De-Ess[style:knob][unit:%][symbol:deess_amount][label:De-Ess][accentcolor:02][bracket:DYNAMICS]
       [tooltip: Tames sibilance in the feed to the delay, so an s does not come back on every repeat. Detects the high band relative to the body of the signal, so it works at any level. 0 = off]",
       0, 0, 100, 1)) / 100 : smooInit;
 
@@ -677,7 +679,7 @@ lpFreq = uiRepeats(hslider("[29]Low Pass[style:knob][unit:Hz][scale:log][symbol:
 
 // --- Ducking ---
 
-duck = uiOutput(hslider("[31]Duck[style:knob][unit:%][symbol:duck][label:Duck][accentcolor:03][bracket:DYNAMICS]
+duck = uiDynamics(hslider("[32]Duck[style:knob][unit:%][symbol:duck][label:Duck][accentcolor:03][bracket:DYNAMICS]
       [tooltip: Pulls the repeats down while the dry signal plays so they swell into the gaps. 0 = off]",
       0, 0, 100, 1)) / 100 : smooInit;
 
@@ -749,7 +751,7 @@ duckRel = 0.120;
 
 // --- Mix ---
 
-width = uiOutput(hslider("[32]Width[style:knob][unit:%][symbol:width][label:Width][accentcolor:04][bracket:OUTPUT]
+width = uiOutput(hslider("[41]Width[style:knob][unit:%][symbol:width][label:Width][accentcolor:04][bracket:OUTPUT]
       [tooltip: Stereo width of the repeats only. The dry signal is untouched. 0% mono, 100% unmodified, 200% double width]",
       100, 0, 200, 1)) / 100;
 
@@ -768,7 +770,7 @@ width = uiOutput(hslider("[32]Width[style:knob][unit:%][symbol:width][label:Widt
 // at 0.5 against a dry at unity, a ratio of 0.5 -- near enough the 0.35/0.65 =
 // 0.538 the old 0-to-100 knob had at its 35% default, so the plugin still
 // sounds like itself out of the box.
-drywetPct = uiOutput(hslider("[33]Dry-Wet[style:knob][unit:%][symbol:drywet][label:Dry-Wet][accentcolor:01][bracket:OUTPUT][easy]
+drywetPct = uiOutput(hslider("[42]Dry-Wet[style:knob][unit:%][symbol:drywet][label:Dry-Wet][accentcolor:01][bracket:OUTPUT][easy]
       [tooltip: Balance of repeats against dry. At the centre both pass at full level; toward Wet pulls the dry down, toward Dry pulls the repeats down]",
       -50, -100, 100, 0.1)) / 100 : smooInit;
 
