@@ -75,6 +75,8 @@ public:
             fShaderLine.reset(new LibreAudio::BackgroundShaderWidget<SHADERS_CURVE_CHORUS_FRAG_DATA, SHADERS_CURVE_CHORUS_FRAG_LEN>(this, this));
         else if constexpr (label == "djFilter")
             fShaderLine.reset(new LibreAudio::BackgroundShaderWidget<SHADERS_CURVE_DJ_FILTER_FRAG_DATA, SHADERS_CURVE_DJ_FILTER_FRAG_LEN>(this, this));
+        else if constexpr (label == "limiter")
+            fShaderLine.reset(new LibreAudio::BackgroundShaderWidget<SHADERS_CURVE_LIMITER_FRAG_DATA, SHADERS_CURVE_LIMITER_FRAG_LEN>(this, this));
         else if constexpr (label == "mbComp5")
             fShaderLine.reset(new LibreAudio::BackgroundShaderWidget<SHADERS_CURVE_MB_COMP5_FRAG_DATA, SHADERS_CURVE_MB_COMP5_FRAG_LEN>(this, this));
         else if constexpr (label == "springReverb")

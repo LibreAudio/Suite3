@@ -27,20 +27,20 @@ time_group(x)  = knob_group(hgroup("[1]Timing", x));
 out_group(x)   = knob_group(hgroup("[2]Dither", x));
 
 
-threshold = gain_group(vslider("[0]Threshold[unit:dB][symbol:threshold]
+threshold = gain_group(vslider("[0]Threshold[unit:dB][symbol:threshold][accentcolor:01][easy]
       [tooltip: Where limiting starts. Peaks above this are held down to the
        Ceiling, and everything below is lifted by the gap between the two, so
        lowering it makes the master louder. Read as true peak unless True Peak
        is off. Set it to the Ceiling to limit only what is already over]",
                                -1, -24, 0, 0.1));
 
-ceiling = gain_group(vslider("[1]Ceiling[unit:dB][symbol:ceiling]
+ceiling = gain_group(vslider("[1]Ceiling[unit:dB][symbol:ceiling][accentcolor:06][bracket:CEILING]
       [tooltip: The level the output is held under. With True Peak on that
        includes the peaks a DAC reconstructs between the samples; with it off,
        only the samples themselves]",
                              -1, -24, 0, 0.1));
 
-tpOn = gain_group(nentry("[2]True Peak[symbol:true_peak]
+tpOn = gain_group(nentry("[2]True Peak[symbol:true_peak][accentcolor:06][bracket:CEILING]
       [style:radio{'Off':0;'On':1}]
       [tooltip: Limits the waveform between the samples too, not just the
        samples, so the Ceiling still holds after digital-to-analogue
@@ -48,31 +48,31 @@ tpOn = gain_group(nentry("[2]True Peak[symbol:true_peak]
        on bright material. Latency is the same either way]",
                          1, 0, 1, 1));
 
-unityGain = gain_group(checkbox("[3]Unity Gain[symbol:unity_gain]
+unityGain = gain_group(checkbox("[3]Unity Gain[symbol:unity_gain][accentcolor:04]
       [tooltip: Takes the make-up gain back off at the output, so switching the
        limiter in and out compares its effect at matched level instead of
        rewarding the louder side]"));
 
-lookaheadMs = time_group(vslider("[0]Lookahead[unit:ms][symbol:lookahead]
+lookaheadMs = time_group(vslider("[0]Lookahead[unit:ms][symbol:lookahead][accentcolor:03][bracket:ENVELOPE]
       [tooltip: How far ahead the limiter sees, and so how long it takes to
        reach full reduction. Longer is smoother and cleaner on low end, shorter
        keeps more punch. Reported to the host as latency]",
                                  2, 0.1, 5, 0.1));
 
-releaseMs = time_group(vslider("[1]Release[unit:ms][scale:log][symbol:release]
+releaseMs = time_group(vslider("[1]Release[unit:ms][scale:log][symbol:release][accentcolor:03][bracket:ENVELOPE]
       [tooltip: How quickly the gain recovers once the peaks have passed. With
        Auto Release on this is the recovery under sustained limiting, and short
        peaks let go several times faster]",
                                50, 1, 200, 1));
 
-autoOn = time_group(nentry("[2]Auto Release[symbol:auto_release]
+autoOn = time_group(nentry("[2]Auto Release[symbol:auto_release][accentcolor:03][bracket:ENVELOPE]
       [style:radio{'Off':0;'On':1}]
       [tooltip: Program dependent release. Isolated peaks recover quickly, dense
        passages recover at the Release time, so the limiter neither leaves
        holes after transients nor pumps on sustained material]",
                            1, 0, 1, 1));
 
-ditherMode = out_group(nentry("[0]Dither[symbol:dither]
+ditherMode = out_group(nentry("[0]Dither[symbol:dither][accentcolor:02][bracket:DITHER]
       [style:menu{'Off':0;'16 bit':1;'24 bit':2}]
       [tooltip: Adds TPDF dither and rounds to the chosen word length. Use it
        only on the last plugin before the file is written at that word length,
@@ -80,7 +80,7 @@ ditherMode = out_group(nentry("[0]Dither[symbol:dither]
        the level afterwards undoes it]",
                              0, 0, 2, 1)) : int;
 
-shapeMode = out_group(nentry("[1]Noise Shaping[symbol:noise_shaping]
+shapeMode = out_group(nentry("[1]Noise Shaping[symbol:noise_shaping][accentcolor:02][bracket:DITHER]
       [style:radio{'Off':0;'Simple':1;'Weighted':2}]
       [tooltip: Moves the dither noise away from where hearing is most sensitive.
        Simple tilts it towards the top octave at any sample rate. Weighted
@@ -90,7 +90,7 @@ shapeMode = out_group(nentry("[1]Noise Shaping[symbol:noise_shaping]
 //======================= meters =======================
 
 MAXGR = 24;                 // meter top, dB of gain reduction
-grRel = ba.tau2pole(0.3);
+grRel = ba.tau2pole(0.02);
 
 // Peak-hold with exponential decay: the UI reads the parameter once per block,
 // so an instantaneous gain would show whichever sample the block happened to
@@ -98,8 +98,8 @@ grRel = ba.tau2pole(0.3);
 grHold = max ~ *(grRel);
 
 grMeter = _ <: attach(_, 0 - _ : grHold
-        : meter_group(hbargraph("[0]gr[unit:dB][symbol:gr][label:Reduction]",
-                                0, MAXGR)));
+        : ma.neg : meter_group(hbargraph("[0]gr[unit:dB][symbol:gr][label:Reduction]",
+                                0 - MAXGR, 0)));
 
 // BS.1770-4 short-term loudness of the output
 //

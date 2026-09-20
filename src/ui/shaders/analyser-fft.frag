@@ -45,27 +45,27 @@ const int fftBins = 64;       // number of analyser bins across the width
 // the same sweep the curve shaders use, so the analyser and the response curve
 // agree on what colour a frequency is. paletteAmount fades that back towards
 // fillGrey -- 0.0 gives the plain grey fill.
-const float paletteAmount = 1.0;
-const vec3  fillGrey      = vec3(0.72);
+const float paletteAmount = 0.0;
+const vec3  fillGrey      = vec3(0.6);
 
 // Vertical shading. Full brightness at fillGradientTop (0 .. 1 of the widget
 // height) and above, darkening from there down to the bottom edge. Measured
 // against the widget, not the bin, so neighbouring bins shade the same at the
 // same height and the gradient does not restart per bar.
-const float fillBrightnessTop    = 1.00;
+const float fillBrightnessTop    = 0.8;
 const float fillBrightnessBottom = 0.10;
-const float fillGradientTop      = 0.80;
+const float fillGradientTop      = 0.60;
 
 // Fill opacity over the same span. Flat by default, so the vertical gradient
 // reads as the fill going dark rather than as it fading out -- pull
 // fillAlphaTop down instead if you want it to fade.
-const float fillAlphaBottom = 0.75;
-const float fillAlphaTop    = 0.75;
+const float fillAlphaBottom = 0.5;
+const float fillAlphaTop    = 0.3;
 
 // How far below its top edge the fill starts fading out, as a fraction of the
 // widget height. Softens the top end so the spectrum dissolves into whatever is
 // behind it instead of ending on a hard line. 0.0 gives a crisp edge.
-const float topSoftness = 0.06;
+const float topSoftness = 0.02;
 
 // Overall opacity of the whole layer.
 const float analyserOpacity = 1.0;

@@ -15,6 +15,7 @@
 
 #include "las-resources.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <vector>
@@ -210,7 +211,39 @@ public:
                     fPeakParameterL = static_cast<int>(i);
                 else if (std::strcmp(parameterSymbol, "input_peak_R") == 0)
                     fPeakParameterR = static_cast<int>(i);
+                // ... and the gain-reduction meter, for the scrolling history below
+                else if (std::strcmp(parameterSymbol, "gr") == 0)
+                    fGrParameter = static_cast<int>(i);
             }
+        }
+
+        // A curve that scrolls needs the past, and a fragment program keeps none of
+        // it: every frame starts from nothing. So a shader that asks for the gain
+        // reduction over time -- by declaring iGrHistory -- gets a one-row texture
+        // instead of a uniform, kept and uploaded here. A texture rather than a
+        // uniform array because each fragment looks up its own column, and an
+        // array indexed by gl_FragCoord is exactly what GLSL does not promise to
+        // support; sampling also gives the resampling to the widget's width for
+        // free, whatever that width is.
+        gl3.grHistory = glGetUniformLocation(program, "iGrHistory");
+
+        if (gl3.grHistory >= 0 && fGrParameter >= 0)
+        {
+            fGrHistory.resize(kGrHistoryColumns, 0.f);
+            fGrTexels.resize(kGrHistoryColumns * 4, 0);
+
+            glGenTextures(1, &gl3.grTexture);
+            glBindTexture(GL_TEXTURE_2D, gl3.grTexture);
+            // GL_LINEAR so the columns resample smoothly into whatever width the
+            // widget has; CLAMP_TO_EDGE so the oldest and newest columns are not
+            // interpolated into each other at the seam.
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kGrHistoryColumns, 1, 0,
+                         GL_RGBA, GL_UNSIGNED_BYTE, fGrTexels.data());
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
 
         // Shaders cannot smooth anything themselves -- a fragment program keeps no
@@ -242,6 +275,10 @@ public:
             return;
 
         delete[] gl3.parameterValues;
+
+        if (gl3.grTexture != 0)
+            glDeleteTextures(1, &gl3.grTexture);
+
         glDeleteProgram(gl3.program);
     }
 
@@ -322,6 +359,9 @@ private:
             }
         }
 
+        if (gl3.grTexture != 0)
+            updateGrHistory(frameSeconds);
+
         static const constexpr GLfloat vertices[] = { -1, 1, -1, -1, 1, -1, 1, 1 };
         glBindBuffer(GL_ARRAY_BUFFER, gl3.buffers[0]);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -337,7 +377,62 @@ private:
         glDisableVertexAttribArray(gl3.dpfBounds);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+        if (gl3.grTexture != 0)
+            glBindTexture(GL_TEXTURE_2D, 0);
+
         glUseProgram(0);
+    }
+
+    // One column of gain-reduction history per kGrColumnSeconds, oldest first, the
+    // last one still being written. Each column keeps the deepest reduction that
+    // fell inside it rather than an average, so a transient narrower than a column
+    // still reaches its true depth instead of being diluted by the quiet either
+    // side of it -- the same reason the DSP peak-holds the meter in the first place.
+    void updateGrHistory(const double frameSeconds)
+    {
+        // Gain reduction is negative dB, so the deepest is the smallest.
+        const float grDb = fInterface->getParameterValue(fGrParameter);
+        fGrHistory.back() = std::min(fGrHistory.back(), grDb);
+
+        fGrColumnAccum += frameSeconds;
+
+        if (const int advance = static_cast<int>(fGrColumnAccum / kGrColumnSeconds))
+        {
+            fGrColumnAccum -= advance * kGrColumnSeconds;
+
+            // frameSeconds is clamped to 0.1 s upstream, so this is a handful of
+            // columns at worst; the whole-buffer case is only here so a pathological
+            // one cannot run off the end.
+            if (advance >= static_cast<int>(kGrHistoryColumns))
+            {
+                std::fill(fGrHistory.begin(), fGrHistory.end(), grDb);
+            }
+            else
+            {
+                std::memmove(fGrHistory.data(), fGrHistory.data() + advance,
+                             (kGrHistoryColumns - advance) * sizeof(float));
+                std::fill(fGrHistory.end() - advance, fGrHistory.end(), grDb);
+            }
+        }
+
+        // Normalised to the meter's range and packed 16-bit across red and green.
+        // 8 bits would put the scale in 256 steps, and a release tail crossing the
+        // full height would visibly stair on any scope taller than that; the second
+        // byte costs nothing and removes the question.
+        for (uint i = 0; i < kGrHistoryColumns; ++i)
+        {
+            const float norm = std::clamp(-fGrHistory[i] / kGrRangeDb, 0.f, 1.f);
+            const uint packed = static_cast<uint>(norm * 65535.f + 0.5f);
+            fGrTexels[i * 4 + 0] = static_cast<GLubyte>(packed >> 8);
+            fGrTexels[i * 4 + 1] = static_cast<GLubyte>(packed & 0xff);
+        }
+
+        // Unit 0 is left active by everything else that draws here, and this widget
+        // binds nothing else, so there is no glActiveTexture to get wrong.
+        glBindTexture(GL_TEXTURE_2D, gl3.grTexture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, kGrHistoryColumns, 1,
+                        GL_RGBA, GL_UNSIGNED_BYTE, fGrTexels.data());
+        glUniform1i(gl3.grHistory, 0);
     }
 
     bool onMouse(const MouseEvent& ev) final
@@ -391,6 +486,8 @@ private:
         GLint fixmeLevelSlow;
         GLint fixmeLevelFast;
         GLint fixmeLevelSlowTime;
+        GLint grHistory;
+        GLuint grTexture;
         GLint* parameterValues;
     } gl3 = {};
 
@@ -427,6 +524,14 @@ private:
     static constexpr const float kLevelTimeAttackSeconds  = 1.0f;
     static constexpr const float kLevelTimeReleaseSeconds = 2.0f;
 
+    // The gain-reduction history handed to shaders that ask for it. The window and
+    // the column count are the shader's WIN and HISTN -- change one, change both.
+    // kGrRangeDb is the meter's own range, MAXGR in limiter.dsp.
+    static constexpr const uint kGrHistoryColumns = 512;
+    static constexpr const float kGrWindowSeconds = 8.0f;
+    static constexpr const float kGrRangeDb = 24.0f;
+    static constexpr const double kGrColumnSeconds = kGrWindowSeconds / kGrHistoryColumns;
+
     TopLevelWidget* const fParent;
 
     const double fStartTime = getApp().getTime();
@@ -439,6 +544,10 @@ private:
     float fLevelSlowHeld = 0.f;
     int fPeakParameterL = -1;
     int fPeakParameterR = -1;
+    int fGrParameter = -1;
+    std::vector<float> fGrHistory;    // dB of reduction, oldest first, last in progress
+    std::vector<GLubyte> fGrTexels;   // the same, packed for the texture
+    double fGrColumnAccum = 0.0;
     LinearValueSmoother fMouseX;
     LinearValueSmoother fMouseY;
     float fMouseZ = 0.f;
@@ -466,6 +575,7 @@ private:
     DGL_EXT(PFNGLLINKPROGRAMPROC,              glLinkProgram)
     DGL_EXT(PFNGLSHADERSOURCEPROC,             glShaderSource)
     DGL_EXT(PFNGLUNIFORM1FPROC,                glUniform1f)
+    DGL_EXT(PFNGLUNIFORM1IPROC,                glUniform1i)
     DGL_EXT(PFNGLUNIFORM2FPROC,                glUniform2f)
     DGL_EXT(PFNGLUNIFORM3FPROC,                glUniform3f)
     DGL_EXT(PFNGLUSEPROGRAMPROC,               glUseProgram)
@@ -498,6 +608,7 @@ private:
         DGL_EXT(PFNGLLINKPROGRAMPROC,              glLinkProgram)
         DGL_EXT(PFNGLSHADERSOURCEPROC,             glShaderSource)
         DGL_EXT(PFNGLUNIFORM1FPROC,                glUniform1f)
+        DGL_EXT(PFNGLUNIFORM1IPROC,                glUniform1i)
         DGL_EXT(PFNGLUNIFORM2FPROC,                glUniform2f)
         DGL_EXT(PFNGLUNIFORM3FPROC,                glUniform3f)
         DGL_EXT(PFNGLUSEPROGRAMPROC,               glUseProgram)
