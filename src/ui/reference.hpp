@@ -165,8 +165,8 @@ struct Reference {
 
     struct Widgets {
         struct Button : Zero {
-            static constexpr const Color backgroundColor = { 0x42, 0x42, 0x5a };
-            static constexpr const Color color = Colors::acc1;
+            static constexpr const Color backgroundColor = { 0x45, 0x45, 0x4f };
+            static constexpr const Color color = { 0xa9, 0xc4, 0xf0 };
             static constexpr const Color color〡deactivated = Colors::ink3;
             static constexpr const MouseCursor cursor〡hover = kMouseCursorHand;
             static constexpr const uint borderRadius = 11;
