@@ -70,21 +70,21 @@ private:
     {
         if (mouseEvent(ev, fScaleFactor))
             return true;
-        return Widget::onMouse(ev);
+        return LabWidget::onMouse(ev);
     }
 
     bool onMotion(const Widget::MotionEvent& ev) final
     {
         if (motionEvent(ev, fScaleFactor))
             return true;
-        return Widget::onMotion(ev);
+        return LabWidget::onMotion(ev);
     }
 
     bool onScroll(const Widget::ScrollEvent& ev) final
     {
         if (scrollEvent(ev))
             return true;
-        return Widget::onScroll(ev);
+        return LabWidget::onScroll(ev);
     }
 };
 

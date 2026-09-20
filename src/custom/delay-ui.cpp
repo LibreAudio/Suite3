@@ -45,14 +45,15 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         explicit Controls(LabWidget* const parent)
             : BaseWidget(parent) {}
 
-        void addDualSlider(const delay::FaustParameterIndex parameterA, const delay::FaustParameterIndex parameterB)
+        template <FaustParameterIndex parameterA, FaustParameterIndex parameterB>
+        void addDualSlider()
         {
-            std::shared_ptr<LabWidget> spacer { new DualSliderWidget(this, parameterA, parameterB) };
-            Layout::widgets.push_back({ spacer.get(), Fixed });
-            fWidgets.emplace_back(std::move(spacer));
+            std::shared_ptr<LabWidget> widget { new DualSliderWidget<parameterA, parameterB>(this) };
+            Layout::widgets.push_back({ widget.get(), Fixed });
+            fWidgets.emplace_back(std::move(widget));
         }
 
-        void addPillToggle(const delay::FaustParameterIndex parameter)
+        void addPillToggle(const FaustParameterIndex parameter)
         {
             std::shared_ptr<LabWidget> widget { new PillAreaWidget<1>(this, parameter) };
             Layout::widgets.push_back({ widget.get(), Fixed });
@@ -60,7 +61,7 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         }
 
         template<class W, uint maxNumParameters>
-        std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> addKnobGroup(const delay::FaustParameterIndex parameterStart)
+        std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> addKnobGroup(const FaustParameterIndex parameterStart)
         {
             std::shared_ptr<KnobGroupWidget<W, maxNumParameters>> widget {
                 new KnobGroupWidget<W, maxNumParameters>(this, kParametersMainStart, parameterStart, maxNumParameters <= 2)
@@ -132,17 +133,17 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         explicit ControlsColumnLeft(LabWidget* const parent)
             : ControlsColumn(parent)
         {
-            fTop->addPillToggle(delay::kFaustParameterMode);
+            fTop->addPillToggle(kFaustParameterMode);
             // fTop->addSpacer();
-            fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterSync);
+            fTop->addKnobGroup<SmallestKnobWidget, 2>(kFaustParameterSync);
             // fTop->addSpacer();
-            fKnobsDiv = fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterDiv_l);
-            fKnobsTime = fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterTime_l);
+            fKnobsDiv = fTop->addKnobGroup<SmallestKnobWidget, 2>(kFaustParameterDiv_l);
+            fKnobsTime = fTop->addKnobGroup<SmallestKnobWidget, 2>(kFaustParameterTime_l);
             // fTop->addSpacer();
-            fTop->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterOffset_l);
+            fTop->addKnobGroup<SmallestKnobWidget, 2>(kFaustParameterOffset_l);
 
             fBottom->addText("DYNAMICS");
-            fBottom->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterDeess_amount);
+            fBottom->addKnobGroup<SmallestKnobWidget, 2>(kFaustParameterDeess_amount);
 
             update(true);
 
@@ -163,8 +164,8 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         void update(const bool init = false)
         {
             bool changed = false;
-            const bool sync = d_isNotZero(fInterface->getParameterValue(kParametersMainStart + delay::kFaustParameterSync));
-            const bool link = d_isNotZero(fInterface->getParameterValue(kParametersMainStart + delay::kFaustParameterLink));
+            const bool sync = d_isNotZero(fInterface->getParameterValue(kParametersMainStart + kFaustParameterSync));
+            const bool link = d_isNotZero(fInterface->getParameterValue(kParametersMainStart + kFaustParameterLink));
 
             if (init || fSync != sync)
             {
@@ -178,8 +179,8 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
             {
                 changed = true;
                 fLink = link;
-                fKnobsDiv->updateEnabledById(kParametersMainStart + delay::kFaustParameterDiv_r, !link);
-                fKnobsTime->updateEnabledById(kParametersMainStart + delay::kFaustParameterTime_r, !link);
+                fKnobsDiv->updateEnabledById(kParametersMainStart + kFaustParameterDiv_r, !link);
+                fKnobsTime->updateEnabledById(kParametersMainStart + kFaustParameterTime_r, !link);
             }
 
             if (changed && !init)
@@ -203,16 +204,16 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         explicit ControlsColumnRight(LabWidget* const parent)
             : ControlsColumn(parent)
         {
-            fTop->addPillToggle(delay::kFaustParameterPingpong);
+            fTop->addPillToggle(kFaustParameterPingpong);
             // fTop->addSpacer();
-            fKnobsMode = fTop->addKnobGroup<SmallestKnobWidget, 3>(delay::kFaustParameterFeedback);
+            fKnobsMode = fTop->addKnobGroup<SmallestKnobWidget, 3>(kFaustParameterFeedback);
             // fTop->addSpacer();
-            fTop->addKnobGroup<SmallestKnobWidget, 3>(delay::kFaustParameterMod_rate);
+            fTop->addKnobGroup<SmallestKnobWidget, 3>(kFaustParameterMod_rate);
             // fTop->addSpacer();
-            fTop->addDualSlider(delay::kFaustParameterLp_freq, delay::kFaustParameterHp_freq);
+            fTop->addDualSlider<kFaustParameterHp_freq, kFaustParameterLp_freq>();
 
             fBottom->addText("OUTPUT");
-            fBottom->addKnobGroup<SmallestKnobWidget, 2>(delay::kFaustParameterWidth);
+            fBottom->addKnobGroup<SmallestKnobWidget, 2>(kFaustParameterWidth);
 
             update(true);
 
@@ -231,12 +232,12 @@ class DelayExpertPageWidget final : public ReferenceContainerWidget<Reference::T
         void update(const bool init = false)
         {
             bool changed = false;
-            const int mode = d_roundToIntPositive(fInterface->getParameterValue(kParametersMainStart + delay::kFaustParameterPingpong));
+            const int mode = d_roundToIntPositive(fInterface->getParameterValue(kParametersMainStart + kFaustParameterPingpong));
 
             if (init || fMode != mode)
             {
                 fMode = mode;
-                fKnobsMode->updateEnabledById(kParametersMainStart + delay::kFaustParameterCross, mode == 0);
+                fKnobsMode->updateEnabledById(kParametersMainStart + kFaustParameterCross, mode == 0);
             }
 
             if (changed && !init)
