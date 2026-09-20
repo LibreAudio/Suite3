@@ -41,31 +41,34 @@ const int fftBins = 64;       // number of analyser bins across the width
 // Look
 // --------------------------------------------------------------------------------
 
-// Fill colour. Horizontally it runs through the 7-stop Libre Audio palette,
+// Fill colour. A three-stop vertical gradient measured against the widget
+// height: the top stop at the top edge, the mid stop at fillMidPoint, the bottom
+// stop at the bottom edge. Colour and opacity both travel along it, so the
+// spectrum reads pale blue and near-solid up top and sinks into a dim, almost
+// transparent slate at the bottom. Measured against the widget, not the bin, so
+// neighbouring bins shade the same at the same height and the gradient does not
+// restart per bar.
+const vec3  fillColorTop    = vec3(0.7647, 0.8510, 1.0000) * 0.8; // #C3D9FF, darkened
+const vec3  fillColorMid    = vec3(0.5569, 0.6667, 0.8471); // #8EAAD8
+const vec3  fillColorBottom = vec3(0.3608, 0.4314, 0.5569); // #5C6E8E
+const float fillAlphaTop    = 1.0;
+const float fillAlphaMid    = 0.50;
+const float fillAlphaBottom = 0.00;
+
+// Where the middle stop sits, 0 .. 1 of the widget height.
+const float fillMidPoint = 0.80;
+
+// Horizontally the fill can instead run through the 7-stop Libre Audio palette,
 // the same sweep the curve shaders use, so the analyser and the response curve
-// agree on what colour a frequency is. paletteAmount fades that back towards
-// fillGrey -- 0.0 gives the plain grey fill.
+// agree on what colour a frequency is. paletteAmount crossfades from the
+// vertical gradient above (0.0) to that rainbow (1.0); the gradient still
+// supplies the opacity either way.
 const float paletteAmount = 0.0;
-const vec3  fillGrey      = vec3(0.6);
-
-// Vertical shading. Full brightness at fillGradientTop (0 .. 1 of the widget
-// height) and above, darkening from there down to the bottom edge. Measured
-// against the widget, not the bin, so neighbouring bins shade the same at the
-// same height and the gradient does not restart per bar.
-const float fillBrightnessTop    = 0.8;
-const float fillBrightnessBottom = 0.10;
-const float fillGradientTop      = 0.60;
-
-// Fill opacity over the same span. Flat by default, so the vertical gradient
-// reads as the fill going dark rather than as it fading out -- pull
-// fillAlphaTop down instead if you want it to fade.
-const float fillAlphaBottom = 0.5;
-const float fillAlphaTop    = 0.3;
 
 // How far below its top edge the fill starts fading out, as a fraction of the
 // widget height. Softens the top end so the spectrum dissolves into whatever is
 // behind it instead of ending on a hard line. 0.0 gives a crisp edge.
-const float topSoftness = 0.02;
+const float topSoftness = 0.01;
 
 // Overall opacity of the whole layer.
 const float analyserOpacity = 1.0;
@@ -258,12 +261,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     float aaY = 1.0 / iResolution.y;
     float fill = 1.0 - smoothstep(height - max(topSoftness, aaY), height, uv.y);
 
-    // Horizontal palette sweep, vertical shading on top of it: 0 at the bottom
-    // edge, 1 at fillGradientTop and above.
-    float g = clamp(uv.y / max(fillGradientTop, 0.001), 0.0, 1.0);
-    vec3  fillColor = mix(fillGrey, rainbow(uv.x), paletteAmount)
-                    * mix(fillBrightnessBottom, fillBrightnessTop, g);
-    float fillAlpha = mix(fillAlphaBottom, fillAlphaTop, g) * fill * barMask;
+    // The three-stop gradient, as two straight segments meeting at fillMidPoint.
+    // rgb and alpha ride together in one vec4 so both stops interpolate the same
+    // way, which is what the prototype's gradient does.
+    vec4 grad = uv.y < fillMidPoint
+              ? mix(vec4(fillColorBottom, fillAlphaBottom),
+                    vec4(fillColorMid,    fillAlphaMid),
+                    clamp(uv.y / max(fillMidPoint, 0.001), 0.0, 1.0))
+              : mix(vec4(fillColorMid, fillAlphaMid),
+                    vec4(fillColorTop, fillAlphaTop),
+                    clamp((uv.y - fillMidPoint) / max(1.0 - fillMidPoint, 0.001), 0.0, 1.0));
+
+    vec3  fillColor = mix(grad.rgb, rainbow(uv.x), paletteAmount);
+    float fillAlpha = grad.a * fill * barMask;
 
     // Straight (non-premultiplied) alpha. DPF draws subwidgets with
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA), so the colour must not
