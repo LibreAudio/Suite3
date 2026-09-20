@@ -395,66 +395,51 @@ private:
 
     void onNanoDisplay() final
     {
+        const float margin = R::Bracket::margin * fScaleFactor;
+        const float padding = R::Bracket::padding * fScaleFactor;
+        const float lw = R::Bracket::width * fScaleFactor;
+        const float ly = R::Bracket::height * fScaleFactor;
+
+        strokeWidth(lw);
+
         for (const Bracket& bracket : fBrackets)
         {
             const KnobWidget* const knobS = bracket.start.get();
             const KnobWidget* const knobE = bracket.end.get();
 
-            const float lw = 2;
-            const float sx = knobS->getAbsoluteX() - getAbsoluteX();
-            const float ex = knobE->getAbsoluteX() + knobE->getWidth() - getAbsoluteX();
+            const float sx = knobS->getAbsoluteX() - getAbsoluteX() + margin;
+            const float ex = knobE->getAbsoluteX() + knobE->getWidth() - getAbsoluteX() - margin;
             const float mx = sx + (ex - sx) * 0.5f;
-            const float y = 20;
 
             beginPath();
-            fontSize(Reference::Common::fontSize * fScaleFactor);
+            fontSize(R::Bracket::fontSize * fScaleFactor);
             textAlign(ALIGN_CENTER | ALIGN_MIDDLE);
+            textLetterSpacing(R::Bracket::letterSpacing * fScaleFactor);
 
-            fillColor(Color(Reference::Colors::ink.invert(), 0.5f));
-            text(mx, 1 * fScaleFactor, bracket.label);
+            // TODO text shadow
+            // fillColor(Color(R::Bracket::color.minus(30), 0.5f));
+            // text(mx, margin * 0.5f, bracket.label);
 
-            fillColor(Reference::Colors::ink3);
+            fillColor(R::Bracket::color);
             text(mx, 0, bracket.label);
 
             Rectangle<float> bounds;
             textBounds(mx, 0, bracket.label, nullptr, bounds);
 
-            strokeColor(Reference::Colors::ink3);
-            strokeWidth(lw);
+            strokeColor(R::Bracket::color);
 
             beginPath();
-            moveTo(sx, y);
+            moveTo(sx, ly);
             lineTo(sx, 0);
-            lineTo(bounds.getX() - 2, 0);
+            lineTo(bounds.getX() - padding, 0);
             stroke();
 
             beginPath();
-            moveTo(bounds.getX() + bounds.getWidth() + 2, 0);
+            moveTo(bounds.getX() + bounds.getWidth() + padding, 0);
             lineTo(ex, 0);
-            lineTo(ex, y);
+            lineTo(ex, ly);
             stroke();
         }
-
-        // const float w = getWidth();
-        // const float h = getHeight();
-        //
-        // beginPath();
-        // roundedRect(0, 0, w, h, 4 * this->fScaleFactor);
-        // fillColor(Color(1.f, 0.f, 0.f));
-        // fill();
-
-        // const float border = 18 * this->fScaleFactor;
-        // const float radius = 4 * this->fScaleFactor;
-        // const float feather = 28 * this->fScaleFactor;
-
-        // fillPaint(boxGradient(0, 0, w, h, radius, feather, Color(0.f, 0.f, 0.f, 0.f), Color(0.f, 0.f, 0.f, 1.0f)));
-        // fill();
-        //
-        // beginPath();
-        // roundedRect(border * 0.5f, border * 0.5f, w - border, h - border, radius);
-        // strokeColor(Color(0.f, 1.f, 0.f, 0.5f));
-        // strokeWidth(border);
-        // stroke();
     }
 
     void updateSize(const bool updateChildren) final

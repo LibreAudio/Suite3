@@ -42,6 +42,7 @@ struct Reference {
         static constexpr const Color track { 0x13, 0x13, 0x16 };
         static constexpr const Color line { 0x2a, 0x2a, 0x30 };
         static constexpr const Color line2 { 0x3b, 0x3b, 0x44 };
+        static constexpr const Color bracket { 0xd6, 0xd8, 0xdf, 0.30f };
 
         static constexpr const Color transparent { 0.f, 0.f, 0.f, 0.f };
     };
@@ -292,6 +293,15 @@ struct Reference {
             static constexpr const Color backgroundColor = Colors::transparent;
             static constexpr const Color borderColor = Colors::transparent;
             static constexpr const uint margin = Common::margin;
+            struct Bracket {
+                static constexpr const Color color = Colors::bracket;
+                static constexpr const float fontSize = 15;
+                static constexpr const float letterSpacing = fontSize * 0.01;
+                static constexpr const uint height = 10;
+                static constexpr const uint margin = 0;
+                static constexpr const uint padding = 6;
+                static constexpr const uint width = 1;
+            };
         };
 
         struct PillArea : Zero {
