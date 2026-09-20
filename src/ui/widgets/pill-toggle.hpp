@@ -58,6 +58,20 @@ protected:
 
         drawReferenceBorder<R, R::borderColor>();
     }
+
+    void updateSize(const bool updateChildren) final
+    {
+        const uint margin = d_roundToUnsignedInt(R::margin * this->fScaleFactor) * 2;
+
+        Rectangle<float> bounds;
+        BaseWidget::fontSize(R::fontSize * this->fScaleFactor);
+        BaseWidget::textAlign(0);
+        BaseWidget::textLetterSpacing(R::letterSpacing * this->fScaleFactor);
+        BaseWidget::textBounds(0, 0, getName(), nullptr, bounds);
+        BaseWidget::setWidth(bounds.getWidth() + margin);
+
+        BaseWidget::updateSize(updateChildren);
+    }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
