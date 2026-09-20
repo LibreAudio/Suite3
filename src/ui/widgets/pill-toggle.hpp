@@ -15,14 +15,14 @@ namespace LibreAudio {
 
 // --------------------------------------------------------------------------------------------------------------------
 
-class BackgroundPillToggleCellWidget : public TextButtonWidget<kCornerBoth, Reference::Widgets::PillToggle::Cell>
+class BackgroundPillToggleCellWidget final : public ReferenceButtonWidget<Reference::Widgets::PillToggle::Cell, kCornerBoth>
 {
     using R = Reference::Widgets::PillToggle::Cell;
-    using BaseWidget = TextButtonWidget<kCornerBoth, Reference::Widgets::PillToggle::Cell>;
+    using BaseWidget = ReferenceButtonWidget<Reference::Widgets::PillToggle::Cell, kCornerBoth>;
 
 public:
     explicit BackgroundPillToggleCellWidget(LabWidget* const parent, const uint id, const char* const label)
-        : BaseWidget(parent, label)
+        : BaseWidget(parent)
     {
         BaseWidget::setCheckable(true);
         BaseWidget::setId(id);
@@ -41,6 +41,22 @@ protected:
         //     return R::deactivatedColor;
 
         return BaseWidget::isChecked() ? R::color〡selected : R::color;
+    }
+
+    void onNanoDisplay() final
+    {
+        if (isCheckable() && isChecked())
+        {
+            drawReferenceBackground<R, R::backgroundColor〡selected, kCornerBoth>();
+            drawReferenceText<R, R::color〡selected>(getName());
+        }
+        else
+        {
+            drawReferenceBackground<R, R::backgroundColor, kCornerBoth>();
+            drawReferenceText<R, R::color>(getName());
+        }
+
+        drawReferenceBorder<R, R::borderColor>();
     }
 };
 

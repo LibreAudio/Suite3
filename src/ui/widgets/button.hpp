@@ -178,15 +178,8 @@ private:
     void onNanoDisplay() final
     {
         BaseWidget::onNanoDisplay();
-    
-        const float w = BaseWidget::getWidth();
-        const float h = BaseWidget::getHeight();
-    
-        BaseWidget::fillColor(this->getForegroundColor());
-        BaseWidget::fontSize(R::fontSize * this->fScaleFactor);
-        BaseWidget::textAlign(BaseWidget::ALIGN_CENTER | BaseWidget::ALIGN_MIDDLE);
-        BaseWidget::textLetterSpacing(R::letterSpacing * this->fScaleFactor);
-        BaseWidget::text(w * 0.5f, h * 0.5f, fText);
+
+        BaseWidget::template drawReferenceText<R>(fText);
     }
 
     void updateSize(const bool updateChildren) final

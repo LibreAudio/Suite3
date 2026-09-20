@@ -326,16 +326,19 @@ public:
     }
 
 protected:
+    [[deprecated]]
     [[nodiscard]] const Color& getBackgroundColor() const noexcept override
     {
         return R::backgroundColor;
     }
 
+    [[deprecated]]
     [[nodiscard]] const Color& getBorderColor() const noexcept override
     {
         return R::borderColor;
     }
 
+    [[deprecated]]
     [[nodiscard]] Corner getCorner() const noexcept override
     {
         return corner;
@@ -344,6 +347,7 @@ protected:
     void onNanoDisplay() override
     {
         drawReferenceBackground<R, corner>();
+        drawReferenceBorder<R>();
     }
 
     void updateSize(const bool updateChildren) override

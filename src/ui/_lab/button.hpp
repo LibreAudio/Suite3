@@ -59,19 +59,7 @@ public:
         : BaseWidget(parent) {}
 
 protected:
-    [[nodiscard]] const Color& getBackgroundColor() const noexcept override
-    {
-        if (isCheckable())
-            return isChecked() ? R::color : R::backgroundColor;
-
-        return R::backgroundColor;
-    }
-
-    [[nodiscard]] const Color& getBorderColor() const noexcept override
-    {
-        return R::borderColor;
-    }
-
+    // [[deprecated]]
     [[nodiscard]] const Color& getForegroundColor() const noexcept override
     {
         if (! isEnabled())
@@ -83,14 +71,48 @@ protected:
         return R::color;
     }
 
+    // [[deprecated]]
     [[nodiscard]] Corner getCorner() const noexcept override
     {
         return corner;
     }
 
+    template <class TR>
+    void drawReferenceText(const char* const text)
+    {
+        if (! isEnabled())
+            return drawReferenceText<TR, TR::color〡deactivated>(text);
+
+        if (isCheckable() && isChecked())
+            return drawReferenceText<TR, TR::backgroundColor>(text);
+
+        return drawReferenceText<TR, TR::color>(text);
+    }
+
+    template <class TR, const Color& color>
+    void drawReferenceText(const char* const text)
+    {
+        if constexpr (d_isNotZero(color.alpha))
+        {
+            const float w = getWidth();
+            const float h = getHeight();
+
+            fillColor(color);
+            fontSize(TR::fontSize * fScaleFactor);
+            textAlign(ALIGN_CENTER | ALIGN_MIDDLE);
+            textLetterSpacing(TR::letterSpacing * fScaleFactor);
+            BaseWidget::text(w * 0.5f, h * 0.5f, text);
+        }
+    }
+
     void onNanoDisplay() override
     {
-        drawReferenceBackground<R, corner>();
+        if (isCheckable() && isChecked())
+            drawReferenceBackground<R, R::color, corner>();
+        else
+            drawReferenceBackground<R, R::backgroundColor, corner>();
+
+        drawReferenceBorder<R, R::borderColor>();
     }
 
     void updateSize(const bool updateChildren) override
