@@ -104,7 +104,7 @@ private:
 
         strokeWidth(3 * fScaleFactor);
 
-        strokeColor(Reference::Colors::ink3);
+        strokeColor(R::color〡deactivated);
         beginPath();
         moveTo(0, h * 0.75f);
         lineTo(w, h * 0.75f);
