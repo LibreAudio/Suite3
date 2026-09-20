@@ -33,7 +33,7 @@ protected:
     {
         BaseWidget::onNanoDisplay();
 
-        drawColoredImage(this->getForegroundColor());
+        drawColoredImage(BaseWidget::getForegroundColor());
     }
 
     void drawColoredImage(const Color& color)
@@ -118,7 +118,7 @@ private:
     {
         BaseWidget::onNanoDisplay();
 
-        drawColoredImage(this->getForegroundColor());
+        drawColoredImage(BaseWidget::getForegroundColor());
     }
     
     void drawColoredImage(const Color& color)
@@ -250,11 +250,6 @@ private:
         BaseWidget::template drawReferenceBorder<R, R::borderColor>();
 
         BaseWidget::drawColoredImage(BaseWidget::isChecked() || BaseWidget::isHovered() ? R::colorBypass : R::color);
-    }
-
-    [[nodiscard]] const Color& getForegroundColor() const noexcept final
-    {
-        return BaseWidget::isChecked() || BaseWidget::isHovered() ? R::colorBypass : R::color;
     }
 };
 

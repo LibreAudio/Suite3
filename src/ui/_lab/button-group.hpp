@@ -74,22 +74,6 @@ protected:
 
             for (const std::shared_ptr<ButtonBaseWidget>& widget : fWidgets)
                 width += widget->getWidth();
-
-            if (numWidgets == 1)
-            {
-                DISTRHO_CUSTOM_SAFE_ASSERT(
-                    "Single button must have corner = both",
-                    fWidgets.front()->getCorner() == kCornerBoth);
-            }
-            else
-            {
-                DISTRHO_CUSTOM_SAFE_ASSERT(
-                    "First button must have corner = left",
-                    fWidgets.front()->getCorner() == kCornerLeft || fWidgets.front()->getCorner() == kCornerBoth);
-                DISTRHO_CUSTOM_SAFE_ASSERT(
-                    "First button must have corner = right",
-                    fWidgets.back()->getCorner() == kCornerRight || fWidgets.back()->getCorner() == kCornerBoth);
-            }
         }
 
         LabWidget::setWidth(width);

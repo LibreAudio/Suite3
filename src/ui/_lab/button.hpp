@@ -22,14 +22,6 @@ public:
         : BaseWidget(parent),
           ButtonEventHandler(this) {}
 
-    [[nodiscard]] Corner getCorner() const noexcept override
-    {
-        __builtin_unreachable();
-    }
-
-protected:
-    [[nodiscard]] virtual const Color& getForegroundColor() const noexcept = 0; // TODO remove
-
 private:
     bool onMouse(const MouseEvent& ev) final
     {
@@ -59,8 +51,7 @@ public:
         : BaseWidget(parent) {}
 
 protected:
-    // [[deprecated]]
-    [[nodiscard]] const Color& getForegroundColor() const noexcept override
+    [[nodiscard]] const Color& getForegroundColor() const noexcept
     {
         if (! isEnabled())
             return R::color〡deactivated;
@@ -69,12 +60,6 @@ protected:
             return isChecked() ? R::backgroundColor : R::color;
 
         return R::color;
-    }
-
-    // [[deprecated]]
-    [[nodiscard]] Corner getCorner() const noexcept override
-    {
-        return corner;
     }
 
     template <class TR>

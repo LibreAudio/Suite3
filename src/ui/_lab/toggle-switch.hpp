@@ -94,16 +94,6 @@ public:
     }
 
 protected:
-    [[nodiscard]] const Color& getBackgroundColor() const noexcept override
-    {
-        return R::backgroundColor;
-    }
-
-    [[nodiscard]] const Color& getBorderColor() const noexcept override
-    {
-        return R::borderColor;
-    }
-
     void onNanoDisplay() override
     {
         drawReferenceBackground<R>();

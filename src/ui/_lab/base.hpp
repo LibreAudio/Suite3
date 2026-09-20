@@ -99,21 +99,6 @@ protected:
     LabUIWidgetInterface* const fInterface;
     float fScaleFactor;
 
-    [[nodiscard]] virtual const Color& getBackgroundColor() const noexcept
-    {
-        __builtin_unreachable();
-    }
-
-    [[nodiscard]] virtual const Color& getBorderColor() const noexcept
-    {
-        __builtin_unreachable();
-    }
-
-    [[nodiscard]] virtual Corner getCorner() const noexcept
-    {
-        __builtin_unreachable();
-    }
-
     template <class R, Corner _corner = kCornerAuto>
     void drawReferenceBackground()
     {
@@ -326,24 +311,6 @@ public:
     }
 
 protected:
-    [[deprecated]]
-    [[nodiscard]] const Color& getBackgroundColor() const noexcept override
-    {
-        return R::backgroundColor;
-    }
-
-    [[deprecated]]
-    [[nodiscard]] const Color& getBorderColor() const noexcept override
-    {
-        return R::borderColor;
-    }
-
-    [[deprecated]]
-    [[nodiscard]] Corner getCorner() const noexcept override
-    {
-        return corner;
-    }
-
     void onNanoDisplay() override
     {
         drawReferenceBackground<R, corner>();

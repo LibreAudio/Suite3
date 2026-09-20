@@ -30,19 +30,6 @@ public:
     }
 
 protected:
-    [[nodiscard]] const Color& getBackgroundColor() const noexcept override
-    {
-        return BaseWidget::isChecked() ? R::backgroundColor〡selected : R::backgroundColor;
-    }
-
-    [[nodiscard]] const Color& getForegroundColor() const noexcept override
-    {
-        // if (! BaseWidget::isEnabled())
-        //     return R::deactivatedColor;
-
-        return BaseWidget::isChecked() ? R::color〡selected : R::color;
-    }
-
     void onNanoDisplay() final
     {
         if (isCheckable() && isChecked())

@@ -39,17 +39,6 @@ public:
 private:
     const char* const fSubtitle;
 
-    [[nodiscard]] const Color& getBackgroundColor() const noexcept final
-    {
-        return BaseWidget::isCheckable() && BaseWidget::isChecked() ? R::backgroundColor〡selected : R::backgroundColor;
-    }
-
-    [[nodiscard]] const Color& getBorderColor() const noexcept final
-    {
-        return BaseWidget::isCheckable() && BaseWidget::isChecked() ? R::borderColor〡selected :
-            BaseWidget::isHovered() ? R::glowColor : R::borderColor;
-    }
-
     void onNanoDisplay() final
     {
         const float w = BaseWidget::getWidth();
@@ -80,7 +69,10 @@ private:
             BaseWidget::fill();
         }
 
-        BaseWidget::onNanoDisplay();
+        if (BaseWidget::isCheckable() && BaseWidget::isChecked())
+            drawReferenceBackground<R, R::backgroundColor〡selected, kCornerBoth>();
+        else
+            drawReferenceBackground<R, R::backgroundColor, kCornerBoth>();
 
         if (BaseWidget::isHovered())
         {
@@ -119,6 +111,13 @@ private:
         BaseWidget::textAlign(BaseWidget::ALIGN_CENTER | BaseWidget::ALIGN_MIDDLE);
         BaseWidget::textLetterSpacing(R::Subtitle::letterSpacing * this->fScaleFactor);
         BaseWidget::text(w * 0.5f, h * 0.5f + margin * 0.5f, fSubtitle);
+
+        if (BaseWidget::isCheckable() && BaseWidget::isChecked())
+            drawReferenceBorder<R, R::borderColor〡selected>();
+        else if (BaseWidget::isHovered())
+            drawReferenceBorder<R, R::glowColor>();
+        else
+            drawReferenceBorder<R, R::borderColor>();
     }
 };
 
