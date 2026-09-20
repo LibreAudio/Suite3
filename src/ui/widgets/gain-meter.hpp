@@ -80,8 +80,6 @@ private:
     float fValueL = kParameterGain.min;
     float fValueR = kParameterGain.min;
 
-    bool fDrawingBackground = false;
-
     [[nodiscard]] float db2height(const float db, const float height) noexcept
     {
         if (db >= linearPointDB)
@@ -94,32 +92,19 @@ private:
         return d_roundToIntPositive(height - (1.f - linearPointPC) * height * normalized);
     }
 
-    [[nodiscard]] const Color& getBackgroundColor() const noexcept final
-    {
-        return fDrawingBackground ? R::backgroundColor : Reference::Colors::transparent;
-    }
-
-    [[nodiscard]] const Color& getBorderColor() const noexcept final
-    {
-        return !fDrawingBackground ? R::borderColor : Reference::Colors::transparent;
-    }
-
-    [[nodiscard]] Corner getCorner() const noexcept final
-    {
-        return kCornerBoth;
-    }
-
     void idleCallback() final
     {
-        if (const float valueL = std::clamp(fInterface->getParameterValue(kParameterIdMeterL), kParameterMeterL.min, kParameterMeterL.max);
-            d_isNotEqual(fValueL, valueL))
+        if (const float valueL = std::clamp(fInterface->getParameterValue(kParameterIdMeterL),
+                                            kParameterMeterL.min,
+                                            kParameterMeterL.max); d_isNotEqual(fValueL, valueL))
         {
             fValueL = valueL;
             repaint();
         }
 
-        if (const float valueR = std::clamp(fInterface->getParameterValue(kParameterIdMeterR), kParameterMeterR.min, kParameterMeterR.max);
-            d_isNotEqual(fValueR, valueR))
+        if (const float valueR = std::clamp(fInterface->getParameterValue(kParameterIdMeterR),
+                                            kParameterMeterR.min,
+                                            kParameterMeterR.max); d_isNotEqual(fValueR, valueR))
         {
             fValueR = valueR;
             repaint();
@@ -141,7 +126,6 @@ private:
         // ------------------------------------------------------------------------------------------------------------
         // draw background
 
-        fDrawingBackground = true;
         drawReferenceBackground<R>();
 
         // ------------------------------------------------------------------------------------------------------------
@@ -258,8 +242,7 @@ private:
         // ------------------------------------------------------------------------------------------------------------
         // draw border
 
-        fDrawingBackground = false;
-        drawReferenceBackground<R>();
+        drawReferenceBorder<R>();
     }
 
     void updateSize(const bool updateChildren) final
