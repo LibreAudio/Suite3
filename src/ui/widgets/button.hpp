@@ -28,20 +28,21 @@ public:
         updateSize(false);
     }
 
-private:
-    const NanoImage fImage { NanoVG::createImageFromMemory(imageData, imageDataSize, NanoVG::IMAGE_GENERATE_MIPMAPS) };
-    double fImageWidth;
-    double fImageHeight;
-
-    void onNanoDisplay() final
+protected:
+    void onNanoDisplay() override
     {
         BaseWidget::onNanoDisplay();
-    
+
+        drawColoredImage(this->getForegroundColor());
+    }
+
+    void drawColoredImage(const Color& color)
+    {
         const float w = BaseWidget::getWidth();
         const float h = BaseWidget::getHeight();
 
         BaseWidget::save();
-        BaseWidget::globalTint(this->getForegroundColor());
+        BaseWidget::globalTint(color);
 
         BaseWidget::beginPath();
         BaseWidget::rect((w - fImageWidth) * 0.5,  (h - fImageHeight) * 0.5, fImageWidth, fImageHeight);
@@ -53,9 +54,14 @@ private:
                                                        fImage,
                                                        1.f));
         BaseWidget::fill();
-    
+
         BaseWidget::restore();
     }
+
+private:
+    const NanoImage fImage { NanoVG::createImageFromMemory(imageData, imageDataSize, NanoVG::IMAGE_GENERATE_MIPMAPS) };
+    double fImageWidth;
+    double fImageHeight;
 
     void updateSize(const bool updateChildren) final
     {
@@ -111,12 +117,17 @@ private:
     void onNanoDisplay() final
     {
         BaseWidget::onNanoDisplay();
+
+        drawColoredImage(this->getForegroundColor());
+    }
     
+    void drawColoredImage(const Color& color)
+    {
         const float w = BaseWidget::getWidth();
         const float h = BaseWidget::getHeight();
     
         BaseWidget::save();
-        BaseWidget::globalTint(this->getForegroundColor());
+        BaseWidget::globalTint(color);
     
         BaseWidget::beginPath();
         BaseWidget::rect((w - fImageWidth) * 0.5,  (h - fImageHeight) * 0.5, fImageWidth, fImageHeight);
@@ -128,7 +139,7 @@ private:
                                BaseWidget::isChecked() ? fImage1 : fImage2,
                                1.f));
         BaseWidget::fill();
-    
+
         BaseWidget::restore();
     }
 
@@ -229,9 +240,16 @@ public:
     }
 
 private:
-    [[nodiscard]] const Color& getBackgroundColor() const noexcept final
+    void onNanoDisplay() final
     {
-        return BaseWidget::isChecked() ? R::backgroundColorBypass : R::backgroundColor;
+        if (BaseWidget::isChecked())
+            BaseWidget::template drawReferenceBackground<R, R::backgroundColorBypass, corner>();
+        else
+            BaseWidget::template drawReferenceBackground<R, R::backgroundColor, corner>();
+
+        BaseWidget::template drawReferenceBorder<R, R::borderColor>();
+
+        BaseWidget::drawColoredImage(BaseWidget::isChecked() || BaseWidget::isHovered() ? R::colorBypass : R::color);
     }
 
     [[nodiscard]] const Color& getForegroundColor() const noexcept final
