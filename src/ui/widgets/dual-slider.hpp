@@ -15,7 +15,8 @@ namespace LibreAudio {
 // --------------------------------------------------------------------------------------------------------------------
 
 template <FaustParameterIndex kParameterIdA, FaustParameterIndex kParameterIdB>
-class DualSliderWidget final : public LabReferenceWidget<Reference::Widgets::DualSlider>
+class DualSliderWidget final : public LabReferenceWidget<Reference::Widgets::DualSlider>,
+                               private IdleCallback
 {
     using R = Reference::Widgets::DualSlider;
     using BaseWidget = LabReferenceWidget<R>;
@@ -30,14 +31,20 @@ class DualSliderWidget final : public LabReferenceWidget<Reference::Widgets::Dua
 
 public:
     explicit DualSliderWidget(LabWidget* const parent)
-        : BaseWidget(parent) {}
+        : BaseWidget(parent)
+    {
+        addIdleCallback(this);
+    }
 
     bool setValueA(const float value, const bool sendCallback) noexcept
     {
         if (d_isEqual(fValueA, value))
             return false;
 
-        fAreaA = {};
+        const float w = getWidth();
+        const int aw = d_roundToIntPositive(3 * fScaleFactor);
+        fAreaA.setX(d_roundToIntPositive(w * ((invlogscale(value) - kMinimum) / (kMaximum - kMinimum)) - aw * 2));
+
         fValueA = value;
         this->repaint();
 
@@ -51,6 +58,10 @@ public:
     {
         if (d_isEqual(fValueB, value))
             return false;
+
+        const float w = getWidth();
+        const int aw = d_roundToIntPositive(3 * fScaleFactor);
+        fAreaB.setX(d_roundToIntPositive(w * ((invlogscale(value) - kMinimum) / (kMaximum - kMinimum)) - aw * 2));
 
         fValueB = value;
         this->repaint();
@@ -67,6 +78,27 @@ private:
 
     float fValueA = kParameterA.init;
     float fValueB = kParameterB.init;
+
+    inline float logscale(const float v) const
+    {
+        const float b = std::log(kMaximum / kMinimum) / (kMaximum - kMinimum);
+        const float a = kMaximum / std::exp(kMaximum * b);
+        return a * std::exp(b * v);
+    }
+
+    inline float invlogscale(const float v) const
+    {
+        const float b = std::log(kMaximum / kMinimum) / (kMaximum - kMinimum);
+        const float a = kMaximum / std::exp(kMaximum * b);
+        return std::log(v / a) / b;
+    }
+
+    void idleCallback() final
+    {
+        // NOTE this only triggers updates if the value doesnt match
+        setValueA(fInterface->getParameterValue(kParametersMainStart + kParameterIdA), false);
+        setValueB(fInterface->getParameterValue(kParametersMainStart + kParameterIdB), false);
+    }
 
     void onNanoDisplay() final
     {
@@ -95,8 +127,8 @@ private:
         strokeColor(R::color);
 
         {
-            const float xhp = (fValueA - kMinimum) / (kMaximum - kMinimum) * w;
-            const float xlp = (fValueB - kMinimum) / (kMaximum - kMinimum) * w;
+            const float xhp = (invlogscale(fValueA) - kMinimum) / (kMaximum - kMinimum) * w;
+            const float xlp = (invlogscale(fValueB) - kMinimum) / (kMaximum - kMinimum) * w;
 
             beginPath();
             moveTo(xhp, h * 0.5f);
@@ -122,11 +154,6 @@ private:
         textAlign(ALIGN_CENTER | ALIGN_MIDDLE);
         textLetterSpacing(Reference::Common::letterSpacing * this->fScaleFactor);
         text(getWidth() * 0.5f, getHeight() * 0.5f, "This is a dual-slider");
-
-        beginPath();
-        rect(fAreaA.getX(), fAreaA.getY(), fAreaA.getWidth(), fAreaA.getHeight());
-        fillColor(Reference::Colors::acc2);
-        fill();
     }
 
     bool dragging = false;
@@ -155,7 +182,7 @@ private:
             dragging = true;
             this->repaint();
 
-            fInterface->parameterControlPressed(kParametersMainStart +selectedParameter);
+            fInterface->parameterControlPressed(kParametersMainStart + selectedParameter);
             // if (callback != nullptr)
             //     callback->knobDragStarted(this);
 
@@ -187,14 +214,16 @@ private:
         const double pc = static_cast<double>(ev.pos.getX()) / getWidth();
         float value = std::clamp<float>(kMinimum + pc * (kMaximum - kMinimum), kMinimum, kMaximum);
 
+        value = logscale(value);
+
         if (selectedParameter == kParameterIdA)
         {
-            value = std::clamp(value, kParameterA.min, kParameterA.max);
+            value = std::clamp(value, kParameterA.min, std::min(kParameterA.max, fValueB));
             setValueA(value, true);
         }
         else
         {
-            value = std::clamp(value, kParameterB.min, kParameterB.max);
+            value = std::clamp(value, std::max(kParameterB.min, fValueA), kParameterB.max);
             setValueB(value, true);
         }
 
@@ -206,8 +235,11 @@ private:
 
     void updateSize(const bool updateChildren) final
     {
-        fAreaA = {};
-        fAreaB = {};
+        const float w = getWidth();
+        const int aw = d_roundToIntPositive(3 * fScaleFactor);
+        const int ah = d_roundToIntPositive(getHeight() * 0.5f);
+        fAreaA = { d_roundToIntPositive(w * ((invlogscale(fValueA) - kMinimum) / (kMaximum - kMinimum)) - aw * 2), ah, aw * 4, ah };
+        fAreaB = { d_roundToIntPositive(w * ((invlogscale(fValueB) - kMinimum) / (kMaximum - kMinimum)) - aw * 2), ah, aw * 4, ah };
         BaseWidget::updateSize(updateChildren);
     }
 };
