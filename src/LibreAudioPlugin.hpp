@@ -11,6 +11,11 @@
 
 #include <atomic>
 
+#ifdef LIBREAUDIO_CUSTOM_UI
+#include "extra/RingBuffer.hpp"
+#include "extra/Runner.hpp"
+#endif
+
 #if LIBREAUDIO_WANT_SPEECH_DETECTION
 #include "LibreAudioSpeechDetection.hpp"
 #endif
@@ -28,6 +33,9 @@ START_NAMESPACE_DISTRHO
 // --------------------------------------------------------------------------------------------------------------------
 
 class LibreAudioPlugin : public Plugin
+                      #ifdef LIBREAUDIO_CUSTOM_UI
+                       , private Runner
+                      #endif
 {
    #ifdef LIBREAUDIO_BLOCK_SIZE
     static constexpr const uint32_t kInternalBlockSize = LIBREAUDIO_BLOCK_SIZE;
@@ -60,7 +68,7 @@ protected:
     */
     void initParameter(uint32_t index, Parameter& parameter) final;
 
-  #ifndef _DARKGLASS_DEVICE_PABLITO
+  #ifdef LIBREAUDIO_CUSTOM_UI
    /**
       Initialize the state @a index.
       This function will be called once, shortly after the plugin is created.
@@ -92,7 +100,7 @@ protected:
     */
     void setParameterValue(uint32_t index, float value) final;
 
-  #ifndef _DARKGLASS_DEVICE_PABLITO
+  #ifdef LIBREAUDIO_CUSTOM_UI
    /**
       Change an internal state @a key to @a value.
     */
@@ -106,6 +114,11 @@ protected:
       Activate this plugin.
     */
     void activate() final;
+
+   /**
+      Deactivate this plugin.
+    */
+    void deactivate() final;
 
    /**
       Run/process function for plugins without MIDI input.
@@ -162,6 +175,12 @@ private:
 
     void doMute();
     void doUnmute();
+
+   #ifdef LIBREAUDIO_CUSTOM_UI
+    HeapRingBuffer fRunnerBuffer;
+    uint32_t fRunnerBufferSize;
+    bool run() final;
+   #endif
 
    #if DISTRHO_PLUGIN_WANT_LATENCY
     // called when deactivated or during run()

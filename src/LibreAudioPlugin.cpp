@@ -21,6 +21,10 @@
 #include "common_output-dsp.hpp"
 #endif
 
+#ifdef LIBREAUDIO_CUSTOM_UI
+#include <memory>
+#endif
+
 #include <cassert>
 
 START_NAMESPACE_DISTRHO
@@ -189,7 +193,7 @@ void LibreAudioPlugin::initParameter(uint32_t index, Parameter& parameter)
     }
 }
 
-#ifndef _DARKGLASS_DEVICE_PABLITO
+#ifdef LIBREAUDIO_CUSTOM_UI
 void LibreAudioPlugin::initState(const uint32_t index, State& state)
 {
     state.hints = kStateIsOnlyForUI;
@@ -302,7 +306,7 @@ void LibreAudioPlugin::setParameterValue(uint32_t index, const float value)
     }
 }
 
-#ifndef _DARKGLASS_DEVICE_PABLITO
+#ifdef LIBREAUDIO_CUSTOM_UI
 void LibreAudioPlugin::setState(const char*, const char*)
 {
     // all states in LA plugins are UI-only
@@ -315,6 +319,20 @@ void LibreAudioPlugin::setState(const char*, const char*)
 void LibreAudioPlugin::activate()
 {
     fCommonParameterValues[kCommonParameterReset] = 1.f;
+
+   #ifdef LIBREAUDIO_CUSTOM_UI
+    fRunnerBufferSize = std::max(getBufferSize(), 1024u);
+    fRunnerBuffer.createBuffer(fRunnerBufferSize * 32 * DISTRHO_PLUGIN_NUM_INPUTS * sizeof(float));
+    startRunner(fRunnerBufferSize / (getSampleRate() * 0.001));
+   #endif
+}
+
+void LibreAudioPlugin::deactivate()
+{
+   #ifdef LIBREAUDIO_CUSTOM_UI
+    stopRunner();
+    fRunnerBuffer.deleteBuffer();
+   #endif
 }
 
 void LibreAudioPlugin::run(const float** const inputs, float** const outputs, const uint32_t frames)
@@ -409,6 +427,10 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
                     __builtin_unreachable();
                #endif
 
+               #ifdef LIBREAUDIO_CUSTOM_UI
+                fRunnerBuffer.writeFloat(fCycleBuffer[c][j]);
+               #endif
+
                #if DISTRHO_PLUGIN_WANT_LATENCY
                 input = latencyReadPos >= 0 ? fLatencyBuffer[c][latencyReadPos] * dry : 0.f;
                 outputs[c][i + j] = fCycleBuffer[c][j] * wet + input;
@@ -422,6 +444,10 @@ void LibreAudioPlugin::run(const float** const inputs, float** const outputs, co
                 latencyReadPos = 0;
            #endif
         }
+
+       #ifdef LIBREAUDIO_CUSTOM_UI
+        fRunnerBuffer.commitWrite();
+       #endif
 
         if (fMuting.load() && d_isZero(fGlobalDryValue.peek()) && d_isZero(fGlobalWetValue.peek()))
             unmute();
@@ -508,6 +534,25 @@ inline void LibreAudioPlugin::doUnmute()
         fGlobalWetValue.setTargetValue(0.f);
     }
 }
+
+// --------------------------------------------------------------------------------------------------------------------
+
+#ifdef LIBREAUDIO_CUSTOM_UI
+bool LibreAudioPlugin::run()
+{
+    const uint32_t bufferSize = fRunnerBufferSize * DISTRHO_PLUGIN_NUM_OUTPUTS * sizeof(float);
+
+    if (fRunnerBuffer.getReadableDataSize() < bufferSize)
+        return true;
+
+    std::unique_ptr<float[]> data { new float[bufferSize] };
+    DISTRHO_SAFE_ASSERT_RETURN(fRunnerBuffer.readCustomData(data.get(), bufferSize), false);
+
+    // TODO waveform, fft or other
+
+    return true;
+}
+#endif
 
 #if DISTRHO_PLUGIN_WANT_LATENCY
 bool LibreAudioPlugin::updateLatencyIfNeeded()
