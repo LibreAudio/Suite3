@@ -69,7 +69,7 @@ Supported by the [Prototype Fund](https://www.prototypefund.de/).
 
 ## Licence
 
-`LICENSE` file will be added before the first release.
+GPL-3.0
 
 ---
 
