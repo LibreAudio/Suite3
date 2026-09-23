@@ -62,8 +62,7 @@ once the first release is out.
 ## Who made this
 
 Created with ♥ in Berlin by experienced [mastering engineers](https://4ohm.de) and
-[audio developers](https://falktx.berlin/) — Filipe Coelho and Klaus Scheuermann,
-trading as Coelho & Scheuermann GbR.
+[audio developers](https://falktx.berlin/).
 
 Supported by the [Prototype Fund](https://www.prototypefund.de/).
 
