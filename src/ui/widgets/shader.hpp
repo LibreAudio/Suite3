@@ -234,11 +234,17 @@ public:
 
             glGenTextures(1, &gl3.grTexture);
             glBindTexture(GL_TEXTURE_2D, gl3.grTexture);
-            // GL_LINEAR so the columns resample smoothly into whatever width the
-            // widget has; CLAMP_TO_EDGE so the oldest and newest columns are not
-            // interpolated into each other at the seam.
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            // GL_NEAREST, so each column stays a block with a hard edge. There is
+            // exactly one reading per repaint behind this texture and a column is
+            // one of them, so interpolating between two columns would draw a ramp
+            // the limiter never did -- and it lands on the one place it is most
+            // wrong, the attack edge of a hit, turning a reduction that arrived
+            // in a single frame into a slope several pixels wide. The cost is that
+            // a release tail is a staircase of columns rather than a smooth line,
+            // which is the honest shape: each step is one frame of limiting.
+            // CLAMP_TO_EDGE so nothing wraps between the oldest and newest column.
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kGrHistoryColumns, 1, 0,
@@ -527,7 +533,19 @@ private:
     // The gain-reduction history handed to shaders that ask for it. The window and
     // the column count are the shader's WIN and HISTN -- change one, change both.
     // kGrRangeDb is the meter's own range, MAXGR in limiter.dsp.
-    static constexpr const uint kGrHistoryColumns = 512;
+    //
+    // 480 columns over 8 s is 60 a second: one per repaint on a 60 Hz display, and
+    // a shade longer than the 16 ms idle callback so a frame advances the history
+    // by one column or by none, never by two. That matters now the columns are
+    // drawn as blocks -- advancing by two would fill both with the same reading
+    // and leave a double-width block sitting among the rest. A frame that advances
+    // by none is invisible: the column in progress just keeps peak-holding.
+    //
+    // The count cannot usefully go above the repaint rate. One reading arrives per
+    // frame however many columns there are, so more of them only duplicate, and
+    // the width a block occupies on screen is set by kGrWindowSeconds against the
+    // widget's width -- a longer window is what makes the blocks finer.
+    static constexpr const uint kGrHistoryColumns = 480;
     static constexpr const float kGrWindowSeconds = 8.0f;
     static constexpr const float kGrRangeDb = 24.0f;
     static constexpr const double kGrColumnSeconds = kGrWindowSeconds / kGrHistoryColumns;

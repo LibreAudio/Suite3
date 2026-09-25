@@ -62,7 +62,7 @@
 
 #define DBRANGE 18.0  /* bottom of the scale, dB of reduction - matches MAXGR in limiter.dsp */
 #define WIN     8.0   /* time window shown, seconds - matches kGrWindowSeconds host-side */
-#define HISTN   512.0 /* history columns - matches kGrHistoryColumns host-side */
+#define HISTN   480.0 /* history columns - matches kGrHistoryColumns host-side */
 #define CSEC    WIN   /* seconds per turn of the palette; WIN = one sweep per width */
 #define FADEDB  0.25  /* reduction under which the fill fades away entirely, dB */
 
@@ -149,8 +149,10 @@ float grNorm(float x){
     float db = grDb((1.0 - x) * WIN);
     return clamp(-db / DBRANGE, 0.0, 1.0);
 #else
-    /* texel centres, so x = 0 lands exactly on the oldest column and x = 1 on
-       the newest instead of half a texel outside either */
+    /* Texel centres, so x = 0 lands exactly on the oldest column and x = 1 on the
+       newest instead of half a texel outside either. The texture is sampled
+       GL_NEAREST, so this reads one column per pixel with a hard edge between
+       them and a hit keeps the vertical attack it arrived with. */
     float u = (x * (HISTN - 1.0) + 0.5) / HISTN;
     vec4  c = texture2D(iGrHistory, vec2(u, 0.5));
     return (c.r * 255.0 * 256.0 + c.g * 255.0) / 65535.0;
