@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <functional>
 #include <vector>
 
 #include "OpenGL-include.hpp"
@@ -48,9 +49,23 @@ public:
         repaint();
     }
 
+    // A float uniform that is not a parameter -- something only the UI knows, like an animation's progress.
+    // getter is asked once per repaint; a shader that does not declare the uniform simply never sees it.
+    void setCustomUniform(const char* const name, std::function<float()> getter)
+    {
+        fCustomUniforms.push_back(CustomUniform { String(name), -2, std::move(getter) });
+    }
+
 protected:
+    struct CustomUniform {
+        String name;
+        GLint location; // -2 until looked up
+        std::function<float()> getter;
+    };
+
     LabUIWidgetInterface* const fInterface;
     float fBorderRadius = 0.f;
+    std::vector<CustomUniform> fCustomUniforms;
 };
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -363,6 +378,14 @@ private:
                 if (gl3.parameterValues[i] >= 0)
                     glUniform1f(gl3.parameterValues[i], fInterface->getParameterValue(i));
             }
+        }
+
+        for (CustomUniform& uniform : fCustomUniforms)
+        {
+            if (uniform.location == -2)
+                uniform.location = glGetUniformLocation(gl3.program, uniform.name);
+            if (uniform.location >= 0)
+                glUniform1f(uniform.location, uniform.getter());
         }
 
         if (gl3.grTexture != 0)

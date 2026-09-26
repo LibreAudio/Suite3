@@ -154,6 +154,11 @@ public:
         return fExpert.get();
     }
 
+    [[nodiscard]] ExpertPageWidget* getExpertWidget() noexcept
+    {
+        return fExpert.get();
+    }
+
     [[nodiscard]] float getBorderRadius() const noexcept
     {
         return R::borderRadius * fScaleFactor;
