@@ -201,6 +201,9 @@ void LibreAudioPlugin::initState(const uint32_t index, State& state)
 
     switch (static_cast<States>(index))
     {
+    case kStateAudioPeaks:
+        state.label = "Audio Peaks";
+        break;
     case kStateMode:
         state.label = "Mode";
         break;
@@ -549,6 +552,23 @@ bool LibreAudioPlugin::run()
     DISTRHO_SAFE_ASSERT_RETURN(fRunnerBuffer.readCustomData(data.get(), bufferSize), false);
 
     // TODO waveform, fft or other
+    std::array<float, DISTRHO_PLUGIN_NUM_OUTPUTS> max = {};
+    for (uint32_t i = 0, numSamples = bufferSize / DISTRHO_PLUGIN_NUM_OUTPUTS; i < numSamples; ++i)
+    {
+        if (const float v = std::abs(data[i * 2 + 0]); v > max[0])
+            max[0] = v;
+       #if DISTRHO_PLUGIN_NUM_OUTPUTS >= 2
+        if (const float v = std::abs(data[i * 2 + 1]); v > max[1])
+            max[1] = v;
+       #endif
+    }
+
+    char strbuf[64];
+    {
+        const ScopedSafeLocale ssl;
+        std::snprintf(strbuf, sizeof(strbuf), "%f %f", max[0], max[1]);
+    }
+    updateStateValue(kStateKeys[kStateAudioPeaks], strbuf);
 
     return true;
 }

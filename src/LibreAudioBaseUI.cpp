@@ -244,6 +244,27 @@ void LibreAudioBaseUI::stateChanged(const char* const key, const char* const val
 {
     using namespace LibreAudio;
 
+    if (std::strcmp(key, kStateKeys[kStateAudioPeaks]) == 0)
+    {
+        String value2(value);
+
+        if (const size_t sep = value2.find(' '); sep != value2.length())
+        {
+            value2[sep] = '\0';
+
+            float v1, v2;
+            {
+                const ScopedSafeLocale ssl;
+                v1 = std::atof(value2.buffer());
+                v2 = std::atof(value2.buffer() + sep + 1);
+            }
+
+            // d_stdout("got peaks %f %f", v1, v2);
+        }
+
+        return;
+    }
+
     if (std::strcmp(key, kStateKeys[kStateMode]) == 0)
     {
         DISTRHO_SAFE_ASSERT_RETURN(value[0] != '\0',);
@@ -394,6 +415,8 @@ void LibreAudioBaseUI::stateChanged(const char* const key, const char* const val
         delete[] parameterValues;
         return;
     }
+
+    d_stdout("stateChanged %s %s", key, value);
 }
 
 // --------------------------------------------------------------------------------------------------------------------
