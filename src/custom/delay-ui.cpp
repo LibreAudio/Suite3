@@ -165,7 +165,7 @@ private:
     // rather than a scroll that speeds up toward the long end.
     [[nodiscard]] float spanAt(const double now) const noexcept
     {
-        const double x = std::clamp((now - fStart) / kFlipSeconds, 0.0, 1.0);
+        const double x = std::clamp<double>((now - fStart) / kFlipSeconds, 0.0, 1.0);
         const double e = x < 0.5 ? 4.0 * x * x * x : 1.0 - std::pow(2.0 - 2.0 * x, 3.0) / 2.0;
         return static_cast<float>(std::exp(std::log(fFrom) + (std::log(fTo) - std::log(fFrom)) * e));
     }
