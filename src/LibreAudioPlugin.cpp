@@ -553,32 +553,31 @@ inline void LibreAudioPlugin::doUnmute()
 #ifdef LIBREAUDIO_CUSTOM_UI
 bool LibreAudioPlugin::run()
 {
-    const uint32_t bufferSize = fRunnerBufferSize * DISTRHO_PLUGIN_NUM_OUTPUTS;
+    const uint32_t numSamples = fRunnerBufferSize;
+    const uint32_t bufferSize = numSamples * DISTRHO_PLUGIN_NUM_OUTPUTS;
 
-    if (fRunnerBuffer.getReadableDataSize() < bufferSize)
+    if (fRunnerBuffer.getReadableDataSize() < bufferSize * sizeof(float))
         return true;
 
     std::unique_ptr<float[]> data { new float[bufferSize] };
     DISTRHO_SAFE_ASSERT_RETURN(fRunnerBuffer.readCustomData(data.get(), bufferSize * sizeof(float)), false);
 
     // TODO waveform, fft or other
-    std::array<float, DISTRHO_PLUGIN_NUM_OUTPUTS> max;
-    max.fill(0.f);
-    for (uint32_t i = 0, numSamples = bufferSize / DISTRHO_PLUGIN_NUM_OUTPUTS; i < numSamples; ++i)
+    std::array<float, DISTRHO_PLUGIN_NUM_OUTPUTS> max = {};
+    for (uint32_t i = 0; i < numSamples; ++i)
     {
-        if (const float v = std::abs(data[i * DISTRHO_PLUGIN_NUM_OUTPUTS + 0]); v > max[0])
-            max[0] = v;
-       #if DISTRHO_PLUGIN_NUM_OUTPUTS >= 2
-        if (const float v = std::abs(data[i * DISTRHO_PLUGIN_NUM_OUTPUTS + 1]); v > max[1])
-            max[1] = v;
-       #endif
+        for (uint32_t c = 0; c < DISTRHO_PLUGIN_NUM_OUTPUTS; ++c)
+            if (const float v = std::min(1.f, std::abs(data[i * DISTRHO_PLUGIN_NUM_OUTPUTS + c])); v > max[c])
+                max[c] = v;
     }
 
-    char strbuf[64];
+    char strbuf[9 * DISTRHO_PLUGIN_NUM_OUTPUTS + 1];
     {
         const ScopedSafeLocale ssl;
-        std::snprintf(strbuf, sizeof(strbuf), "%f %f", max[0], max[1]);
+        for (uint32_t c = 0; c < DISTRHO_PLUGIN_NUM_OUTPUTS; ++c)
+            std::snprintf(strbuf + 9 * c, sizeof(strbuf), "%.6f ", max[c]);
     }
+    *(strbuf + DISTRHO_PLUGIN_NUM_OUTPUTS * 9 - 1) = '\0';
     updateStateValue(kStateKeys[kStateAudioPeakValues], strbuf);
 
     return true;
