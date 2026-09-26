@@ -543,13 +543,13 @@ inline void LibreAudioPlugin::doUnmute()
 #ifdef LIBREAUDIO_CUSTOM_UI
 bool LibreAudioPlugin::run()
 {
-    const uint32_t bufferSize = fRunnerBufferSize * DISTRHO_PLUGIN_NUM_OUTPUTS * sizeof(float);
+    const uint32_t bufferSize = fRunnerBufferSize * DISTRHO_PLUGIN_NUM_OUTPUTS;
 
     if (fRunnerBuffer.getReadableDataSize() < bufferSize)
         return true;
 
     std::unique_ptr<float[]> data { new float[bufferSize] };
-    DISTRHO_SAFE_ASSERT_RETURN(fRunnerBuffer.readCustomData(data.get(), bufferSize), false);
+    DISTRHO_SAFE_ASSERT_RETURN(fRunnerBuffer.readCustomData(data.get(), bufferSize * sizeof(float)), false);
 
     // TODO waveform, fft or other
     std::array<float, DISTRHO_PLUGIN_NUM_OUTPUTS> max = {};
