@@ -552,7 +552,8 @@ bool LibreAudioPlugin::run()
     DISTRHO_SAFE_ASSERT_RETURN(fRunnerBuffer.readCustomData(data.get(), bufferSize * sizeof(float)), false);
 
     // TODO waveform, fft or other
-    std::array<float, DISTRHO_PLUGIN_NUM_OUTPUTS> max = {};
+    std::array<float, DISTRHO_PLUGIN_NUM_OUTPUTS> max;
+    max.fill(0.f);
     for (uint32_t i = 0, numSamples = bufferSize / DISTRHO_PLUGIN_NUM_OUTPUTS; i < numSamples; ++i)
     {
         if (const float v = std::abs(data[i * DISTRHO_PLUGIN_NUM_OUTPUTS + 0]); v > max[0])
