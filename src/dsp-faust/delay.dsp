@@ -139,10 +139,10 @@ uiMeters(x)  = hgroup("[9]", x);
       [11] sync               o           o
       [12] link               o           o
       [13] time_l             o           .     requires sync:0
-      [14] time_r             lk          .     requires link:1
+      [14] time_r             lk          .     requires link:0
       [15] bpm                .           o     requires sync:1
       [16] div_l              .           o     requires sync:1
-      [17] div_r              .           lk    requires link:1
+      [17] div_r              .           lk    requires link:0
       [18] offset_l           o           o
       [19] offset_r           o           o
     REPEATS [2]
@@ -250,7 +250,8 @@ ppAmt = min(1.0, ppL + ppR);
 // how the five time controls beneath them are read. Mode and Ping-Pong stay at
 // the top, where they do change what the engine is.
 sync = uiTime(nentry("[11]sync[style:radio{'Free':0;'Tempo':1}][symbol:sync][accentcolor:01][integer]", 0, 0, 1, 1)) : int;
-link = uiTime(nentry("[12]link[style:radio{'Linked':0;'Free':1}][symbol:link][accentcolor:05][integer]", 0, 0, 1, 1)) : int;
+
+link = uiTime(nentry("[12]link[style:radio{'Free':0;'Linked':1}][symbol:link][accentcolor:05][integer]", 1, 0, 1, 1)) : int;
 
 // --- Time ---
 
@@ -349,7 +350,7 @@ clampMs = max(1.0) : min(maxDelayMs);
 // at equal offsets is sample-for-sample a single delay time and cannot drift
 // by a rounding step the way two separately-computed equal numbers could.
 rawMsL = timeMs(timeLms, divIdxL);
-rawMsR = select2(link, rawMsL, timeMs(timeRms, divIdxR));
+rawMsR = select2(link, timeMs(timeRms, divIdxR), rawMsL);
 
 baseMsL = rawMsL * offsetL : clampMs;
 baseMsR = rawMsR * offsetR : clampMs;
