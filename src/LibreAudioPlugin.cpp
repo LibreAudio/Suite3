@@ -555,10 +555,10 @@ bool LibreAudioPlugin::run()
     std::array<float, DISTRHO_PLUGIN_NUM_OUTPUTS> max = {};
     for (uint32_t i = 0, numSamples = bufferSize / DISTRHO_PLUGIN_NUM_OUTPUTS; i < numSamples; ++i)
     {
-        if (const float v = std::abs(data[i * 2 + 0]); v > max[0])
+        if (const float v = std::abs(data[i * DISTRHO_PLUGIN_NUM_OUTPUTS + 0]); v > max[0])
             max[0] = v;
        #if DISTRHO_PLUGIN_NUM_OUTPUTS >= 2
-        if (const float v = std::abs(data[i * 2 + 1]); v > max[1])
+        if (const float v = std::abs(data[i * DISTRHO_PLUGIN_NUM_OUTPUTS + 1]); v > max[1])
             max[1] = v;
        #endif
     }
