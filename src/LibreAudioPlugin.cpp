@@ -201,8 +201,11 @@ void LibreAudioPlugin::initState(const uint32_t index, State& state)
 
     switch (static_cast<States>(index))
     {
-    case kStateAudioPeaks:
-        state.label = "Audio Peaks";
+    case kStateAudioPeakBufferSize:
+        state.label = "Audio Peaks Buffer Size";
+        break;
+    case kStateAudioPeakValues:
+        state.label = "Audio Peak Values";
         break;
     case kStateMode:
         state.label = "Mode";
@@ -326,6 +329,13 @@ void LibreAudioPlugin::activate()
    #ifdef LIBREAUDIO_CUSTOM_UI
     fRunnerBufferSize = std::max(getBufferSize(), 1024u);
     fRunnerBuffer.createBuffer(fRunnerBufferSize * 32 * DISTRHO_PLUGIN_NUM_INPUTS * sizeof(float));
+
+    {
+        char bufsizestr[32];
+        std::snprintf(bufsizestr, sizeof(bufsizestr), "%u", fRunnerBufferSize);
+        updateStateValue(kStateKeys[kStateAudioPeakBufferSize], bufsizestr);
+    }
+
     startRunner(fRunnerBufferSize / (getSampleRate() * 0.001));
    #endif
 }
@@ -569,7 +579,7 @@ bool LibreAudioPlugin::run()
         const ScopedSafeLocale ssl;
         std::snprintf(strbuf, sizeof(strbuf), "%f %f", max[0], max[1]);
     }
-    updateStateValue(kStateKeys[kStateAudioPeaks], strbuf);
+    updateStateValue(kStateKeys[kStateAudioPeakValues], strbuf);
 
     return true;
 }

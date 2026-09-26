@@ -76,6 +76,7 @@ private:
     uint32_t fCurrentPreset = 0; // TODO
 
     float fScaleFactor = 1.f;
+    double fRunnerRate = 0;
     bool fIsMouseDown = false;
 
     [[nodiscard]] float getScaleFactor() const noexcept final { return fScaleFactor; }

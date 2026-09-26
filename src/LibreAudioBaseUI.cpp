@@ -244,8 +244,19 @@ void LibreAudioBaseUI::stateChanged(const char* const key, const char* const val
 {
     using namespace LibreAudio;
 
-    if (std::strcmp(key, kStateKeys[kStateAudioPeaks]) == 0)
+    if (std::strcmp(key, kStateKeys[kStateAudioPeakBufferSize]) == 0)
     {
+        if (const int size = std::atoi(value); size > 0)
+            fRunnerRate = static_cast<double>(size) / (getSampleRate() * 0.001);
+        else
+            fRunnerRate = 0;
+        return;
+    }
+
+    if (std::strcmp(key, kStateKeys[kStateAudioPeakValues]) == 0)
+    {
+        DISTRHO_SAFE_ASSERT_RETURN(d_isNotZero(fRunnerRate),);
+
         String value2(value);
 
         if (const size_t sep = value2.find(' '); sep != value2.length())
